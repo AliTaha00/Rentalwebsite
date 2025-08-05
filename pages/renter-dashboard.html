@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Dashboard - ViewVista</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/dashboard.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="../index.html"><h2>ViewVista</h2></a>
+            </div>
+            <div class="nav-menu">
+                <a href="../index.html" class="nav-link">Home</a>
+                <a href="properties.html" class="nav-link">Browse Properties</a>
+                <a href="#" class="nav-link active">My Dashboard</a>
+                <button id="logoutBtn" class="nav-link logout-btn">Logout</button>
+            </div>
+            <div class="nav-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="dashboard-main">
+        <div class="container">
+            <!-- Dashboard Header -->
+            <div class="dashboard-header">
+                <div class="welcome-section">
+                    <h1>Welcome back, <span id="userName">Guest</span>!</h1>
+                    <p>Manage your bookings and discover new properties with amazing views</p>
+                </div>
+                <div class="quick-actions">
+                    <a href="properties.html" class="btn btn-primary">Browse Properties</a>
+                    <button class="btn btn-secondary" onclick="alert('Profile management coming soon!')">Edit Profile</button>
+                </div>
+            </div>
+
+            <!-- Dashboard Stats -->
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <div class="stat-icon">📅</div>
+                    <div class="stat-content">
+                        <h3 id="upcomingBookings">0</h3>
+                        <p>Upcoming Trips</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✈️</div>
+                    <div class="stat-content">
+                        <h3 id="completedBookings">0</h3>
+                        <p>Completed Trips</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">♥</div>
+                    <div class="stat-content">
+                        <h3 id="wishlistCount">0</h3>
+                        <p>Saved Properties</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⭐</div>
+                    <div class="stat-content">
+                        <h3 id="reviewsGiven">0</h3>
+                        <p>Reviews Given</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Content -->
+            <div class="dashboard-content">
+                <!-- Upcoming Bookings -->
+                <section class="dashboard-section">
+                    <div class="section-header">
+                        <h2>Upcoming Trips</h2>
+                        <a href="properties.html" class="section-link">Book New Trip</a>
+                    </div>
+                    <div class="bookings-grid" id="upcomingBookingsGrid">
+                        <!-- Upcoming bookings will be loaded here -->
+                        <div class="empty-state">
+                            <div class="empty-icon">✈️</div>
+                            <h3>No upcoming trips</h3>
+                            <p>Time to plan your next adventure! Browse properties with stunning views.</p>
+                            <a href="properties.html" class="btn btn-primary">Explore Properties</a>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Recent Activity -->
+                <section class="dashboard-section">
+                    <div class="section-header">
+                        <h2>Recent Activity</h2>
+                        <a href="#" class="section-link">View All</a>
+                    </div>
+                    <div class="activity-list" id="recentActivity">
+                        <!-- Recent activity will be loaded here -->
+                        <div class="empty-state">
+                            <div class="empty-icon">📋</div>
+                            <h3>No recent activity</h3>
+                            <p>Your booking history and activity will appear here.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Saved Properties / Wishlist -->
+                <section class="dashboard-section">
+                    <div class="section-header">
+                        <h2>Saved Properties</h2>
+                        <a href="#" class="section-link">Manage Wishlist</a>
+                    </div>
+                    <div class="wishlist-grid" id="wishlistGrid">
+                        <!-- Wishlist items will be loaded here -->
+                        <div class="empty-state">
+                            <div class="empty-icon">♥</div>
+                            <h3>No saved properties</h3>
+                            <p>Save properties you love to easily find them later.</p>
+                            <a href="properties.html" class="btn btn-primary">Browse Properties</a>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Past Trips -->
+                <section class="dashboard-section">
+                    <div class="section-header">
+                        <h2>Past Trips</h2>
+                        <a href="#" class="section-link">View All</a>
+                    </div>
+                    <div class="bookings-grid" id="pastBookingsGrid">
+                        <!-- Past bookings will be loaded here -->
+                        <div class="empty-state">
+                            <div class="empty-icon">📸</div>
+                            <h3>No past trips yet</h3>
+                            <p>Your travel memories will be saved here.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>ViewVista</h3>
+                    <p>Connecting travelers with properties that offer unforgettable views.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>For Guests</h4>
+                    <a href="properties.html">Browse Properties</a>
+                    <a href="#support">Support</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Account</h4>
+                    <a href="#profile">My Profile</a>
+                    <a href="#settings">Settings</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <a href="#contact">Contact Us</a>
+                    <a href="#help">Help Center</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 ViewVista. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../assets/js/supabase-client.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/dashboard.js"></script>
+</body>
+</html>

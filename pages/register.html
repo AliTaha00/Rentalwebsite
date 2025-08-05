@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join ViewVista - Choose Your Account Type</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/auth.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="../index.html"><h2>ViewVista</h2></a>
+            </div>
+            <div class="nav-menu">
+                <a href="../index.html" class="nav-link">Home</a>
+                <a href="login.html" class="nav-link">Login</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="auth-main">
+        <div class="auth-container">
+            <!-- Account Type Selection (shown first) -->
+            <div id="account-type-selection" class="auth-card account-type-card">
+                <h1>Choose Your Account Type</h1>
+                <p>Select how you plan to use ViewVista</p>
+                
+                <div class="account-type-options">
+                    <div class="account-type-option" data-type="renter">
+                        <div class="account-type-icon">🏠</div>
+                        <h3>I'm Looking to Rent</h3>
+                        <p>Find and book beautiful properties with stunning views</p>
+                        <ul>
+                            <li>Browse property listings</li>
+                            <li>Make secure bookings</li>
+                            <li>Leave reviews and ratings</li>
+                            <li>Manage your trips</li>
+                        </ul>
+                        <button class="btn btn-primary select-type-btn" data-type="renter">
+                            Continue as Renter
+                        </button>
+                    </div>
+                    
+                    <div class="account-type-option" data-type="owner">
+                        <div class="account-type-icon">🏔️</div>
+                        <h3>I'm a Property Owner</h3>
+                        <p>List your property and earn from its beautiful views</p>
+                        <ul>
+                            <li>Create property listings</li>
+                            <li>Manage bookings and calendar</li>
+                            <li>Set your own rates</li>
+                            <li>Communicate with guests</li>
+                        </ul>
+                        <button class="btn btn-primary select-type-btn" data-type="owner">
+                            Continue as Owner
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Registration Form (shown after account type selection) -->
+            <div id="registration-form" class="auth-card registration-form" style="display: none;">
+                <div class="form-header">
+                    <button id="back-to-selection" class="back-btn">&larr; Back</button>
+                    <h1 id="form-title">Create Your Account</h1>
+                    <p id="form-subtitle">Join ViewVista today</p>
+                </div>
+
+                <form id="registerForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required>
+                        <small class="form-help">At least 8 characters with numbers and letters</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="firstName">First Name</label>
+                        <input type="text" id="firstName" name="firstName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lastName">Last Name</label>
+                        <input type="text" id="lastName" name="lastName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" required>
+                    </div>
+
+                    <!-- Additional fields for property owners -->
+                    <div id="owner-fields" style="display: none;">
+                        <div class="form-group">
+                            <label for="businessName">Business Name (Optional)</label>
+                            <input type="text" id="businessName" name="businessName">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="address">Property Address</label>
+                            <textarea id="address" name="address" rows="3" placeholder="Primary property address"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="agreeTerms" name="agreeTerms" required>
+                            <span class="checkmark"></span>
+                            I agree to the <a href="#terms" target="_blank">Terms of Service</a> and <a href="#privacy" target="_blank">Privacy Policy</a>
+                        </label>
+                    </div>
+
+                    <input type="hidden" id="accountType" name="accountType" value="">
+
+                    <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+                </form>
+
+                <div class="form-footer">
+                    <p>Already have an account? <a href="login.html">Sign in here</a></p>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loading-state" class="auth-card loading-card" style="display: none;">
+                <div class="loading-spinner"></div>
+                <h2>Creating Your Account...</h2>
+                <p>Please wait while we set up your ViewVista profile</p>
+            </div>
+
+            <!-- Success State -->
+            <div id="success-state" class="auth-card success-card" style="display: none;">
+                <div class="success-icon">✓</div>
+                <h1>Welcome to ViewVista!</h1>
+                <p>Your account has been created successfully. Please check your email to verify your account.</p>
+                <button class="btn btn-primary" onclick="window.location.href='login.html'">
+                    Continue to Login
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script src="../assets/js/supabase-client.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/register.js"></script>
+</body>
+</html>

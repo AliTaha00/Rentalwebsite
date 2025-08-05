@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Host Dashboard - ViewVista</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/dashboard.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="../index.html"><h2>ViewVista</h2></a>
+            </div>
+            <div class="nav-menu">
+                <a href="../index.html" class="nav-link">Home</a>
+                <a href="properties.html" class="nav-link">Browse Properties</a>
+                <a href="#" class="nav-link active">Host Dashboard</a>
+                <button id="logoutBtn" class="nav-link logout-btn">Logout</button>
+            </div>
+            <div class="nav-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="dashboard-main">
+        <div class="container">
+            <!-- Dashboard Header -->
+            <div class="dashboard-header">
+                <div class="welcome-section">
+                    <h1>Welcome, <span id="userName">Host</span>!</h1>
+                    <p>Manage your properties and connect with guests from around the world</p>
+                </div>
+                <div class="quick-actions">
+                    <button class="btn btn-primary" onclick="alert('Property creation coming soon!')">Add New Property</button>
+                    <button class="btn btn-secondary" onclick="alert('Profile management coming soon!')">Edit Profile</button>
+                </div>
+            </div>
+
+            <!-- Dashboard Stats -->
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <div class="stat-icon">🏠</div>
+                    <div class="stat-content">
+                        <h3 id="totalProperties">0</h3>
+                        <p>Active Properties</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📅</div>
+                    <div class="stat-content">
+                        <h3 id="activeBookings">0</h3>
+                        <p>Active Bookings</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-content">
+                        <h3 id="monthlyEarnings">$0</h3>
+                        <p>This Month</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⭐</div>
+                    <div class="stat-content">
+                        <h3 id="averageRating">0.0</h3>
+                        <p>Average Rating</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Content -->
+            <div class="dashboard-content">
+                <!-- Properties Management -->
+                <section class="dashboard-section">
+                    <div class="section-header">
+                        <h2>My Properties</h2>
+                        <button class="btn btn-primary" onclick="alert('Property creation coming soon!')">Add Property</button>
+                    </div>
+                    <div class="properties-grid" id="propertiesGrid">
+                        <!-- Properties will be loaded here -->
+                        <div class="empty-state">
+                            <div class="empty-icon">🏠</div>
+                            <h3>No properties listed</h3>
+                            <p>Start earning by listing your property with beautiful views.</p>
+                            <button class="btn btn-primary" onclick="alert('Property creation coming soon!')">List Your First Property</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Recent Bookings -->
+                <section class="dashboard-section">
+                    <div class="section-header">
+                        <h2>Recent Bookings</h2>
+                        <a href="#" class="section-link">View All</a>
+                    </div>
+                    <div class="bookings-list" id="recentBookings">
+                        <!-- Recent bookings will be loaded here -->
+                        <div class="empty-state">
+                            <div class="empty-icon">📋</div>
+                            <h3>No bookings yet</h3>
+                            <p>Bookings from guests will appear here.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Messages -->
+                <section class="dashboard-section">
+                    <div class="section-header">
+                        <h2>Messages</h2>
+                        <a href="#" class="section-link">View All</a>
+                    </div>
+                    <div class="messages-list" id="recentMessages">
+                        <!-- Messages will be loaded here -->
+                        <div class="empty-state">
+                            <div class="empty-icon">💬</div>
+                            <h3>No messages</h3>
+                            <p>Communications with guests will appear here.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Recent Reviews -->
+                <section class="dashboard-section">
+                    <div class="section-header">
+                        <h2>Recent Reviews</h2>
+                        <a href="#" class="section-link">View All</a>
+                    </div>
+                    <div class="reviews-list" id="recentReviews">
+                        <!-- Reviews will be loaded here -->
+                        <div class="empty-state">
+                            <div class="empty-icon">⭐</div>
+                            <h3>No reviews yet</h3>
+                            <p>Guest reviews will help build your reputation.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Performance Analytics -->
+                <section class="dashboard-section">
+                    <div class="section-header">
+                        <h2>Performance</h2>
+                        <a href="#" class="section-link">Detailed Analytics</a>
+                    </div>
+                    <div class="analytics-grid">
+                        <div class="analytics-card">
+                            <h4>Property Views</h4>
+                            <div class="metric">
+                                <span class="number">0</span>
+                                <span class="period">this month</span>
+                            </div>
+                        </div>
+                        <div class="analytics-card">
+                            <h4>Booking Rate</h4>
+                            <div class="metric">
+                                <span class="number">0%</span>
+                                <span class="period">conversion</span>
+                            </div>
+                        </div>
+                        <div class="analytics-card">
+                            <h4>Response Time</h4>
+                            <div class="metric">
+                                <span class="number">--</span>
+                                <span class="period">avg hours</span>
+                            </div>
+                        </div>
+                        <div class="analytics-card">
+                            <h4>Occupancy</h4>
+                            <div class="metric">
+                                <span class="number">0%</span>
+                                <span class="period">this month</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>ViewVista</h3>
+                    <p>Connecting travelers with properties that offer unforgettable views.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>For Hosts</h4>
+                    <a href="#list-property">List Property</a>
+                    <a href="#host-support">Host Support</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Account</h4>
+                    <a href="#profile">My Profile</a>
+                    <a href="#settings">Settings</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <a href="#contact">Contact Us</a>
+                    <a href="#help">Help Center</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 ViewVista. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../assets/js/supabase-client.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/dashboard.js"></script>
+</body>
+</html>

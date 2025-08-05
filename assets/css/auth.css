@@ -1,0 +1,431 @@
+/* ===== AUTHENTICATION LAYOUT ===== */
+.auth-main {
+    min-height: calc(100vh - 70px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* ===== AUTHENTICATION CARDS ===== */
+.auth-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2.5rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    margin: 0 auto;
+}
+
+.auth-card.account-type-card {
+    max-width: 100%;
+}
+
+.auth-card.registration-form,
+.auth-card:not(.account-type-card) {
+    max-width: 500px;
+}
+
+/* ===== FORM HEADERS ===== */
+.form-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.form-header h1 {
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.form-header p {
+    color: #6b7280;
+    margin-bottom: 0;
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    color: #6b7280;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.back-btn:hover {
+    background-color: #f3f4f6;
+    color: #374151;
+}
+
+/* ===== ACCOUNT TYPE SELECTION ===== */
+.account-type-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.account-type-option {
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.account-type-option:hover {
+    border-color: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.1);
+}
+
+.account-type-option.selected {
+    border-color: #2563eb;
+    background-color: #eff6ff;
+}
+
+.account-type-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.account-type-option h3 {
+    color: #1f2937;
+    margin-bottom: 1rem;
+}
+
+.account-type-option p {
+    color: #6b7280;
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+}
+
+.account-type-option ul {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0;
+    text-align: left;
+}
+
+.account-type-option ul li {
+    color: #4b5563;
+    margin-bottom: 0.75rem;
+    position: relative;
+    padding-left: 1.5rem;
+    font-size: 0.9rem;
+}
+
+.account-type-option ul li:before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #10b981;
+    font-weight: bold;
+}
+
+.select-type-btn {
+    margin-top: 1rem;
+    width: 100%;
+}
+
+/* ===== AUTHENTICATION FORM ===== */
+.auth-form {
+    margin-top: 1.5rem;
+}
+
+.auth-form .form-group {
+    margin-bottom: 1.25rem;
+}
+
+.auth-form input {
+    background-color: #f9fafb;
+    border: 1px solid #d1d5db;
+    transition: all 0.2s ease;
+}
+
+.auth-form input:focus {
+    background-color: white;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* ===== FORM OPTIONS ===== */
+.form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+}
+
+.forgot-password-link {
+    color: #2563eb;
+    font-weight: 500;
+}
+
+.forgot-password-link:hover {
+    text-decoration: underline;
+}
+
+/* ===== FORM DIVIDER ===== */
+.form-divider {
+    text-align: center;
+    margin: 1.5rem 0;
+    position: relative;
+}
+
+.form-divider:before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: #e5e7eb;
+}
+
+.form-divider span {
+    background-color: white;
+    color: #9ca3af;
+    padding: 0 1rem;
+    font-size: 0.9rem;
+}
+
+/* ===== SOCIAL LOGIN ===== */
+.social-login {
+    margin-bottom: 1.5rem;
+}
+
+.btn-social {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    border: 1px solid #d1d5db;
+    background-color: white;
+    color: #374151;
+    font-weight: 500;
+}
+
+.btn-social:hover {
+    background-color: #f9fafb;
+    border-color: #9ca3af;
+    color: #374151;
+    transform: translateY(-1px);
+}
+
+.social-icon {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.google-btn .social-icon {
+    color: #4285f4;
+}
+
+/* ===== FORM FOOTER ===== */
+.form-footer {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.form-footer p {
+    margin: 0;
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.form-footer a {
+    color: #2563eb;
+    font-weight: 500;
+}
+
+.form-footer a:hover {
+    text-decoration: underline;
+}
+
+/* ===== SPECIAL CARD STATES ===== */
+.loading-card {
+    text-align: center;
+    max-width: 400px;
+}
+
+.loading-card h2 {
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.loading-card p {
+    color: #6b7280;
+    margin-bottom: 0;
+}
+
+.success-card {
+    text-align: center;
+    max-width: 450px;
+}
+
+.success-icon {
+    width: 80px;
+    height: 80px;
+    background-color: #10b981;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 0 auto 1.5rem;
+}
+
+.success-card h1 {
+    color: #1f2937;
+    margin-bottom: 1rem;
+}
+
+.success-card p {
+    color: #6b7280;
+    margin-bottom: 2rem;
+}
+
+/* ===== OWNER-SPECIFIC FIELDS ===== */
+#owner-fields {
+    border-top: 1px solid #e5e7eb;
+    padding-top: 1.5rem;
+    margin-top: 1rem;
+}
+
+#owner-fields .form-group:first-child {
+    margin-top: 0.5rem;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+    .auth-main {
+        padding: 1rem;
+    }
+    
+    .auth-card {
+        padding: 1.5rem;
+    }
+    
+    .account-type-options {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .account-type-option {
+        padding: 1.5rem;
+    }
+    
+    .account-type-icon {
+        font-size: 2.5rem;
+    }
+    
+    .form-options {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 1.25rem;
+    }
+    
+    .account-type-option {
+        padding: 1.25rem;
+    }
+    
+    .account-type-icon {
+        font-size: 2rem;
+    }
+    
+    .form-header h1 {
+        font-size: 1.75rem;
+    }
+    
+    .success-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+    }
+}
+
+/* ===== ANIMATION ENHANCEMENTS ===== */
+.auth-card {
+    animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.account-type-option {
+    animation: fadeIn 0.6s ease-out;
+}
+
+.account-type-option:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== ENHANCED CHECKBOX STYLING ===== */
+.checkbox-label {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: #2563eb;
+}
+
+.checkbox-label a {
+    color: #2563eb;
+    text-decoration: underline;
+}
+
+.checkbox-label a:hover {
+    color: #1d4ed8;
+}

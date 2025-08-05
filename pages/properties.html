@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Properties - ViewVista</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/properties.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="../index.html"><h2>ViewVista</h2></a>
+            </div>
+            <div class="nav-menu">
+                <a href="../index.html" class="nav-link">Home</a>
+                <a href="properties.html" class="nav-link active">Browse Properties</a>
+                <a href="login.html" class="nav-link" id="auth-link">Login</a>
+                <a href="register.html" class="nav-link register-btn" id="register-link">Get Started</a>
+            </div>
+            <div class="nav-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="properties-main">
+        <!-- Search Filters -->
+        <section class="search-filters">
+            <div class="container">
+                <div class="search-header">
+                    <h1>Discover Your Perfect View</h1>
+                    <p>Find properties with breathtaking views around the world</p>
+                </div>
+                
+                <form class="search-form" id="propertySearchForm">
+                    <div class="search-row">
+                        <div class="search-field">
+                            <label for="location">Location</label>
+                            <input type="text" id="location" name="location" placeholder="Where do you want to go?">
+                        </div>
+                        
+                        <div class="search-field">
+                            <label for="checkIn">Check In</label>
+                            <input type="date" id="checkIn" name="checkIn">
+                        </div>
+                        
+                        <div class="search-field">
+                            <label for="checkOut">Check Out</label>
+                            <input type="date" id="checkOut" name="checkOut">
+                        </div>
+                        
+                        <div class="search-field">
+                            <label for="guests">Guests</label>
+                            <select id="guests" name="guests">
+                                <option value="1">1 Guest</option>
+                                <option value="2" selected>2 Guests</option>
+                                <option value="3">3 Guests</option>
+                                <option value="4">4 Guests</option>
+                                <option value="5">5+ Guests</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary search-btn">
+                            <span class="search-icon">🔍</span>
+                            Search
+                        </button>
+                    </div>
+                    
+                    <!-- Advanced Filters (collapsible) -->
+                    <div class="advanced-filters" id="advancedFilters" style="display: none;">
+                        <div class="filter-row">
+                            <div class="filter-group">
+                                <label for="priceRange">Price Range</label>
+                                <div class="price-inputs">
+                                    <input type="number" id="minPrice" name="minPrice" placeholder="Min">
+                                    <span>to</span>
+                                    <input type="number" id="maxPrice" name="maxPrice" placeholder="Max">
+                                </div>
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label for="viewType">View Type</label>
+                                <select id="viewType" name="viewType">
+                                    <option value="">Any View</option>
+                                    <option value="mountain">Mountain</option>
+                                    <option value="ocean">Ocean</option>
+                                    <option value="city">City</option>
+                                    <option value="forest">Forest</option>
+                                    <option value="lake">Lake</option>
+                                    <option value="countryside">Countryside</option>
+                                </select>
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label for="propertyType">Property Type</label>
+                                <select id="propertyType" name="propertyType">
+                                    <option value="">Any Type</option>
+                                    <option value="house">House</option>
+                                    <option value="apartment">Apartment</option>
+                                    <option value="cabin">Cabin</option>
+                                    <option value="villa">Villa</option>
+                                    <option value="condo">Condo</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="filter-row">
+                            <div class="amenities-group">
+                                <label>Amenities</label>
+                                <div class="amenities-checkboxes">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="amenities" value="wifi">
+                                        <span class="checkmark"></span>
+                                        WiFi
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="amenities" value="parking">
+                                        <span class="checkmark"></span>
+                                        Parking
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="amenities" value="pool">
+                                        <span class="checkmark"></span>
+                                        Pool
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="amenities" value="kitchen">
+                                        <span class="checkmark"></span>
+                                        Kitchen
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="amenities" value="petFriendly">
+                                        <span class="checkmark"></span>
+                                        Pet Friendly
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="button" class="advanced-toggle" id="advancedToggle">
+                        Advanced Filters <span class="toggle-icon">▼</span>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section class="search-results">
+            <div class="container">
+                <div class="results-header">
+                    <div class="results-count">
+                        <span id="resultsCount">Loading...</span>
+                    </div>
+                    <div class="results-controls">
+                        <div class="sort-controls">
+                            <label for="sortBy">Sort by:</label>
+                            <select id="sortBy" name="sortBy">
+                                <option value="relevance">Relevance</option>
+                                <option value="price_low">Price: Low to High</option>
+                                <option value="price_high">Price: High to Low</option>
+                                <option value="rating">Guest Rating</option>
+                                <option value="newest">Newest First</option>
+                            </select>
+                        </div>
+                        <div class="view-controls">
+                            <button class="view-btn active" data-view="grid">
+                                <span class="view-icon">⊞</span>
+                            </button>
+                            <button class="view-btn" data-view="list">
+                                <span class="view-icon">☰</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Properties Grid -->
+                <div class="properties-grid" id="propertiesGrid">
+                    <!-- Loading state -->
+                    <div class="loading-properties" id="loadingState">
+                        <div class="loading-spinner"></div>
+                        <p>Finding amazing properties for you...</p>
+                    </div>
+
+                    <!-- Properties will be loaded here by JavaScript -->
+                </div>
+
+                <!-- No Results State -->
+                <div class="no-results" id="noResults" style="display: none;">
+                    <div class="no-results-icon">🏠</div>
+                    <h3>No properties found</h3>
+                    <p>Try adjusting your filters or search in a different location</p>
+                    <button class="btn btn-primary" onclick="clearFilters()">Clear Filters</button>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination" id="pagination" style="display: none;">
+                    <button class="pagination-btn" id="prevBtn" disabled>← Previous</button>
+                    <div class="pagination-numbers" id="paginationNumbers"></div>
+                    <button class="pagination-btn" id="nextBtn">Next →</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>ViewVista</h3>
+                    <p>Connecting travelers with properties that offer unforgettable views.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>For Guests</h4>
+                    <a href="properties.html">Browse Properties</a>
+                    <a href="register.html?type=renter">Sign Up</a>
+                </div>
+                <div class="footer-section">
+                    <h4>For Hosts</h4>
+                    <a href="register.html?type=owner">List Property</a>
+                    <a href="login.html">Host Login</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <a href="#contact">Contact Us</a>
+                    <a href="#help">Help Center</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 ViewVista. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Property Detail Modal (for quick view) -->
+    <div id="propertyModal" class="modal" style="display: none;">
+        <div class="modal-content property-modal">
+            <div class="modal-header">
+                <h2 id="modalTitle">Property Details</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Property details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="../assets/js/supabase-client.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/properties.js"></script>
+</body>
+</html>
