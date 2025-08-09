@@ -66,7 +66,7 @@ class DashboardManager {
         const quickActionBtns = document.querySelectorAll('.quick-actions .btn');
         quickActionBtns.forEach(btn => {
             if (btn.textContent.includes('Add New Property')) {
-                btn.addEventListener('click', () => this.handleAddProperty());
+                btn.addEventListener('click', () => this.navigateToPropertyForm());
             } else if (btn.textContent.includes('Edit Profile')) {
                 btn.addEventListener('click', () => this.handleEditProfile());
             }
@@ -394,10 +394,16 @@ class DashboardManager {
             <p>${window.viewVistaApp.sanitizeHTML(property.city)}, ${window.viewVistaApp.sanitizeHTML(property.state)}</p>
             <p><strong>$${property.base_price}/night</strong></p>
             <div class="property-actions">
-                <button class="btn btn-secondary" onclick="alert('Edit property functionality coming soon!')">Edit</button>
-                <button class="btn btn-primary" onclick="alert('View analytics coming soon!')">Analytics</button>
+                <button class="btn btn-secondary" data-action="edit" data-id="${property.id}">Edit</button>
+                <button class="btn btn-primary" data-action="analytics" data-id="${property.id}">Analytics</button>
             </div>
         `;
+
+        // Wire edit button
+        const editBtn = card.querySelector('[data-action="edit"]');
+        if (editBtn) {
+            editBtn.addEventListener('click', () => this.navigateToPropertyForm(property.id));
+        }
 
         return card;
     }
@@ -456,9 +462,17 @@ class DashboardManager {
         }
     }
 
-    // Handle add property (placeholder)
-    handleAddProperty() {
-        this.showNotification('Property creation feature coming soon!', 'info');
+    // Navigate to property form (create or edit)
+    navigateToPropertyForm(propertyId = null) {
+        const base = 'property-form.html';
+        if (window.location.protocol === 'file:') {
+            const currentDir = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
+            const target = propertyId ? `${currentDir}/${base}?id=${encodeURIComponent(propertyId)}` : `${currentDir}/${base}`;
+            window.location.href = target;
+        } else {
+            const target = propertyId ? `${base}?id=${encodeURIComponent(propertyId)}` : base;
+            window.location.href = target;
+        }
     }
 
     // Handle edit profile (placeholder)
