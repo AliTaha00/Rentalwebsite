@@ -13,8 +13,9 @@ class SupabaseClient {
         this.session = null;
         this._isRedirecting = false;
         this._isInitializing = true;
+        this._initPromise = null;
         
-        this.init();
+        this._initPromise = this.init();
     }
 
     // Get configuration from environment or local storage
@@ -22,6 +23,13 @@ class SupabaseClient {
         // In production, these should come from environment variables
         // For development, you can set them in localStorage temporarily
         return localStorage.getItem(key) || window.ENV?.[key];
+    }
+
+    // Wait for initialization to complete
+    async waitForInit() {
+        if (this._initPromise) {
+            await this._initPromise;
+        }
     }
 
     // Initialize Supabase
@@ -84,7 +92,16 @@ class SupabaseClient {
             console.log('User signed in:', session.user);
             // Only redirect if not initializing and not already on a dashboard page
             if (!this._isInitializing) {
+                console.log('Calling redirectToDashboardIfNeeded...');
                 this.redirectToDashboardIfNeeded();
+            } else {
+                console.log('Still initializing, skipping redirect. Will retry in 1 second...');
+                setTimeout(() => {
+                    if (this.isAuthenticated()) {
+                        console.log('Retrying redirect after initialization...');
+                        this.redirectToDashboardIfNeeded();
+                    }
+                }, 1000);
             }
         } else if (event === 'SIGNED_OUT') {
             console.log('User signed out');

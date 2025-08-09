@@ -15,14 +15,22 @@ class PropertiesManager {
         this.init();
     }
 
-    init() {
-        this.setupEventListeners();
-        this.setupAdvancedFilters();
-        this.setupViewControls();
-        this.setupPagination();
-        this.handleUrlParameters();
-        this.loadProperties();
-        this.updateAuthUI();
+    async init() {
+        try {
+            // Wait for Supabase to be initialized
+            await this.supabaseClient.waitForInit();
+            
+            this.setupEventListeners();
+            this.setupAdvancedFilters();
+            this.setupViewControls();
+            this.setupPagination();
+            this.handleUrlParameters();
+            this.loadProperties();
+            this.updateAuthUI();
+        } catch (error) {
+            console.error('Properties initialization error:', error);
+            this.showError('Failed to initialize properties page. Please refresh.');
+        }
     }
 
     // Setup event listeners
@@ -478,8 +486,8 @@ class PropertiesManager {
             <div class="property-card" data-property-id="${property.id}" tabindex="0">
                 <div class="property-image">
                     ${hasImage 
-                        ? `<img src="${imageUrl}" alt="${property.title}" loading="lazy">`
-                        : `<div class="image-placeholder">${property.title}</div>`
+                        ? `<img src="${window.viewVistaApp.sanitizeHTML(imageUrl)}" alt="${window.viewVistaApp.sanitizeHTML(property.title)}" loading="lazy">`
+                        : `<div class="image-placeholder">${window.viewVistaApp.sanitizeHTML(property.title)}</div>`
                     }
                     ${property.featured ? '<div class="property-badge">Featured</div>' : ''}
                     <button class="wishlist-btn" data-property-id="${property.id}" aria-label="Add to wishlist">
@@ -487,10 +495,10 @@ class PropertiesManager {
                     </button>
                 </div>
                 <div class="property-info">
-                    <h3 class="property-title">${property.title}</h3>
+                    <h3 class="property-title">${window.viewVistaApp.sanitizeHTML(property.title)}</h3>
                     <p class="property-location">
                         <span class="location-icon">📍</span>
-                        ${property.city}, ${property.state}
+                        ${window.viewVistaApp.sanitizeHTML(property.city)}, ${window.viewVistaApp.sanitizeHTML(property.state)}
                     </p>
                     <div class="property-features">
                         ${property.bedrooms ? `<span>${property.bedrooms} bed${property.bedrooms > 1 ? 's' : ''}</span>` : ''}
@@ -585,15 +593,17 @@ class PropertiesManager {
         
         return `
             ${hasImage 
-                ? `<img src="${imageUrl}" alt="${property.title}" class="modal-property-image">`
-                : `<div class="image-placeholder" style="height: 300px;">${property.title}</div>`
+                ? `<img src="${window.viewVistaApp.sanitizeHTML(imageUrl)}" alt="${window.viewVistaApp.sanitizeHTML(property.title)}" class="modal-property-image">`
+                : `<div class="image-placeholder" style="height: 300px;">${window.viewVistaApp.sanitizeHTML(property.title)}</div>`
             }
             <div class="modal-property-content">
                 <div class="modal-property-header">
                     <div>
-                        <h2 class="modal-property-title">${property.title}</h2>
+                        <h2 class="modal-property-title">${window.viewVistaApp.sanitizeHTML(property.title)}</h2>
                         <p class="modal-property-location">
-                            📍 ${property.address || `${property.city}, ${property.state}, ${property.country}`}
+                            📍 ${property.address 
+                                ? window.viewVistaApp.sanitizeHTML(property.address) 
+                                : `${window.viewVistaApp.sanitizeHTML(property.city)}, ${window.viewVistaApp.sanitizeHTML(property.state)}, ${window.viewVistaApp.sanitizeHTML(property.country)}`}
                         </p>
                     </div>
                     <div class="modal-property-price">
@@ -605,8 +615,8 @@ class PropertiesManager {
                 <div class="modal-property-details">
                     <div class="detail-section">
                         <h4>Property Details</h4>
-                        <p><strong>Type:</strong> ${property.property_type}</p>
-                        <p><strong>View:</strong> ${property.view_type}</p>
+                        <p><strong>Type:</strong> ${window.viewVistaApp.sanitizeHTML(property.property_type)}</p>
+                        <p><strong>View:</strong> ${window.viewVistaApp.sanitizeHTML(property.view_type)}</p>
                         ${property.bedrooms ? `<p><strong>Bedrooms:</strong> ${property.bedrooms}</p>` : ''}
                         ${property.bathrooms ? `<p><strong>Bathrooms:</strong> ${property.bathrooms}</p>` : ''}
                         <p><strong>Max Guests:</strong> ${property.max_guests}</p>
@@ -615,14 +625,14 @@ class PropertiesManager {
                     
                     <div class="detail-section">
                         <h4>Description</h4>
-                        <p>${property.description || 'No description available.'}</p>
+                        <p>${window.viewVistaApp.sanitizeHTML(property.description) || 'No description available.'}</p>
                     </div>
                     
                     ${property.amenities && property.amenities.length > 0 ? `
                         <div class="detail-section">
                             <h4>Amenities</h4>
                             <ul>
-                                ${property.amenities.map(amenity => `<li>${amenity}</li>`).join('')}
+                                ${property.amenities.map(amenity => `<li>${window.viewVistaApp.sanitizeHTML(amenity)}</li>`).join('')}
                             </ul>
                         </div>
                     ` : ''}

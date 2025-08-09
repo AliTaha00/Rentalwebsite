@@ -10,10 +10,18 @@ class AuthManager {
         this.init();
     }
 
-    init() {
-        this.setupFormValidation();
-        this.setupErrorHandling();
-        this.checkAuthRedirect();
+    async init() {
+        try {
+            // Wait for Supabase to be initialized
+            await this.client.waitForInit();
+            
+            this.setupFormValidation();
+            this.setupErrorHandling();
+            this.checkAuthRedirect();
+        } catch (error) {
+            console.error('Auth initialization error:', error);
+            this.showError('Failed to initialize authentication. Please refresh the page.');
+        }
     }
 
     // Check if user is already authenticated and redirect

@@ -10,10 +10,18 @@ class RegistrationManager {
         this.init();
     }
 
-    init() {
-        this.setupAccountTypeSelection();
-        this.setupRegistrationForm();
-        this.handleUrlParameters();
+    async init() {
+        try {
+            // Wait for Supabase to be initialized
+            await this.supabaseClient.waitForInit();
+            
+            this.setupAccountTypeSelection();
+            this.setupRegistrationForm();
+            this.handleUrlParameters();
+        } catch (error) {
+            console.error('Registration initialization error:', error);
+            this.authManager.showError('Failed to initialize registration. Please refresh the page.');
+        }
     }
 
     // Setup account type selection

@@ -9,11 +9,19 @@ class LoginManager {
         this.init();
     }
 
-    init() {
-        this.setupLoginForm();
-        this.setupForgotPassword();
-        this.setupSocialLogin();
-        this.handleRememberMe();
+    async init() {
+        try {
+            // Wait for Supabase to be initialized
+            await this.supabaseClient.waitForInit();
+            
+            this.setupLoginForm();
+            this.setupForgotPassword();
+            this.setupSocialLogin();
+            this.handleRememberMe();
+        } catch (error) {
+            console.error('Login initialization error:', error);
+            this.authManager.showError('Failed to initialize login. Please refresh the page.');
+        }
     }
 
     // Setup login form

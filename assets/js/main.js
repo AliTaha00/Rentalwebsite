@@ -429,6 +429,14 @@ class ViewVistaApp {
         const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return regex.test(email);
     }
+
+    // Utility: Sanitize HTML to prevent XSS
+    sanitizeHTML(str) {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
 }
 
 // Initialize app when DOM is loaded

@@ -11,11 +11,19 @@ class DashboardManager {
         this.init();
     }
 
-    init() {
-        if (this.checkAuthentication()) {
-            this.setupEventListeners();
-            this.loadUserData();
-            this.determineUserType();
+    async init() {
+        try {
+            // Wait for Supabase to be initialized
+            await this.supabaseClient.waitForInit();
+            
+            if (this.checkAuthentication()) {
+                this.setupEventListeners();
+                this.loadUserData();
+                this.determineUserType();
+            }
+        } catch (error) {
+            console.error('Dashboard initialization error:', error);
+            this.showError('Failed to initialize dashboard. Please refresh the page.');
         }
     }
 
@@ -381,9 +389,9 @@ class DashboardManager {
             <div class="property-status ${property.is_active ? 'active' : 'inactive'}">
                 ${property.is_active ? 'Active' : 'Inactive'}
             </div>
-            ${imageUrl ? `<img src="${imageUrl}" alt="${property.title}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 6px; margin-bottom: 1rem;">` : ''}
-            <h4>${property.title}</h4>
-            <p>${property.city}, ${property.state}</p>
+            ${imageUrl ? `<img src="${window.viewVistaApp.sanitizeHTML(imageUrl)}" alt="${window.viewVistaApp.sanitizeHTML(property.title)}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 6px; margin-bottom: 1rem;">` : ''}
+            <h4>${window.viewVistaApp.sanitizeHTML(property.title)}</h4>
+            <p>${window.viewVistaApp.sanitizeHTML(property.city)}, ${window.viewVistaApp.sanitizeHTML(property.state)}</p>
             <p><strong>$${property.base_price}/night</strong></p>
             <div class="property-actions">
                 <button class="btn btn-secondary" onclick="alert('Edit property functionality coming soon!')">Edit</button>
