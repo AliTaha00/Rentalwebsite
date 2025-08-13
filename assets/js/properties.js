@@ -566,6 +566,9 @@ class PropertiesManager {
             modalTitle.textContent = property.title;
             modalBody.innerHTML = this.renderPropertyModalContent(property);
             
+            // Initialize gallery with property images
+            this.initGallery(property.images || []);
+            
             // Show modal
             modal.style.display = 'flex';
             
@@ -583,17 +586,125 @@ class PropertiesManager {
                     modal.style.display = 'none';
                 }
             });
+
+            // Add keyboard navigation for gallery
+            const handleKeyPress = (e) => {
+                if (modal.style.display === 'flex') {
+                    if (e.key === 'ArrowLeft') {
+                        e.preventDefault();
+                        this.prevImage();
+                    } else if (e.key === 'ArrowRight') {
+                        e.preventDefault();
+                        this.nextImage();
+                    } else if (e.key === 'Escape') {
+                        e.preventDefault();
+                        modal.style.display = 'none';
+                    }
+                }
+            };
+
+            // Remove existing listener and add new one
+            document.removeEventListener('keydown', this.galleryKeyListener);
+            this.galleryKeyListener = handleKeyPress;
+            document.addEventListener('keydown', this.galleryKeyListener);
+
+            // Add touch/swipe support for mobile
+            let touchStartX = 0;
+            let touchEndX = 0;
+
+            const galleryElement = modal.querySelector('.property-gallery');
+            if (galleryElement) {
+                galleryElement.addEventListener('touchstart', (e) => {
+                    touchStartX = e.changedTouches[0].screenX;
+                });
+
+                galleryElement.addEventListener('touchend', (e) => {
+                    touchEndX = e.changedTouches[0].screenX;
+                    const swipeThreshold = 50;
+                    
+                    if (touchStartX - touchEndX > swipeThreshold) {
+                        // Swiped left - next image
+                        this.nextImage();
+                    } else if (touchEndX - touchStartX > swipeThreshold) {
+                        // Swiped right - previous image
+                        this.prevImage();
+                    }
+                });
+            }
         }
+    }
+
+    // Render image gallery for modal
+    renderImageGallery(images, title) {
+        if (!images || images.length === 0) return '';
+
+        const sanitizedImages = images.map(img => window.viewVistaApp.sanitizeHTML(img));
+        const sanitizedTitle = window.viewVistaApp.sanitizeHTML(title);
+
+        return `
+            <div class="property-gallery" style="position: relative; height: 400px; background: #f5f5f5; border-radius: 8px; overflow: hidden;">
+                <!-- Main image display -->
+                <div class="gallery-main-image" style="height: 100%; position: relative;">
+                    <img id="galleryMainImage" 
+                         src="${sanitizedImages[0]}" 
+                         alt="${sanitizedTitle}" 
+                         style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                    
+                    <!-- Navigation arrows -->
+                    ${images.length > 1 ? `
+                        <button class="gallery-prev" onclick="window.propertiesManager.prevImage()" 
+                                style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); 
+                                       background: rgba(0,0,0,0.7); color: white; border: none; 
+                                       width: 40px; height: 40px; border-radius: 50%; cursor: pointer; 
+                                       display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                            ‹
+                        </button>
+                        <button class="gallery-next" onclick="window.propertiesManager.nextImage()" 
+                                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); 
+                                       background: rgba(0,0,0,0.7); color: white; border: none; 
+                                       width: 40px; height: 40px; border-radius: 50%; cursor: pointer; 
+                                       display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                            ›
+                        </button>
+                    ` : ''}
+                    
+                    <!-- Image counter -->
+                    ${images.length > 1 ? `
+                        <div class="gallery-counter" style="position: absolute; bottom: 10px; right: 10px; 
+                                                           background: rgba(0,0,0,0.7); color: white; 
+                                                           padding: 4px 8px; border-radius: 12px; font-size: 12px;">
+                            <span id="galleryCurrentIndex">1</span> / ${images.length}
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <!-- Thumbnail strip -->
+                ${images.length > 1 ? `
+                    <div class="gallery-thumbnails" style="position: absolute; bottom: 0; left: 0; right: 0; 
+                                                           background: rgba(0,0,0,0.8); padding: 10px; 
+                                                           display: flex; gap: 5px; overflow-x: auto;">
+                        ${sanitizedImages.map((img, index) => `
+                            <img src="${img}" alt="${sanitizedTitle} ${index + 1}" 
+                                 onclick="window.propertiesManager.showImage(${index})"
+                                 style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px; 
+                                        cursor: pointer; opacity: ${index === 0 ? '1' : '0.7'}; 
+                                        border: 2px solid ${index === 0 ? 'white' : 'transparent'};" 
+                                 data-thumbnail-index="${index}">
+                        `).join('')}
+                    </div>
+                ` : ''}
+            </div>
+        `;
     }
 
     // Render property modal content
     renderPropertyModalContent(property) {
-        const imageUrl = property.primaryImage || property.images?.[0];
-        const hasImage = imageUrl && imageUrl !== null;
+        const allImages = property.images || [];
+        const hasImages = allImages.length > 0;
         
         return `
-            ${hasImage 
-                ? `<img src="${window.viewVistaApp.sanitizeHTML(imageUrl)}" alt="${window.viewVistaApp.sanitizeHTML(property.title)}" class="modal-property-image">`
+            ${hasImages 
+                ? this.renderImageGallery(allImages, property.title)
                 : `<div class="image-placeholder" style="height: 300px;">${window.viewVistaApp.sanitizeHTML(property.title)}</div>`
             }
             <div class="modal-property-content">
@@ -649,9 +760,12 @@ class PropertiesManager {
                     <button class="btn btn-secondary" onclick="document.getElementById('propertyModal').style.display='none'">
                         Close
                     </button>
-                    <button class="btn btn-primary" onclick="alert('Booking functionality coming soon!')">
-                        Book Now
-                    </button>
+                    ${this.supabaseClient.isAuthenticated() && this.supabaseClient.getCurrentUser()?.user_metadata?.account_type === 'renter' 
+                        ? `<button class="btn btn-primary" onclick="window.propertiesManager.showBookingForm('${property.id}')">Book Now</button>`
+                        : this.supabaseClient.isAuthenticated() 
+                            ? `<button class="btn btn-secondary" disabled title="Only renters can book properties">Book Now</button>`
+                            : `<button class="btn btn-primary" onclick="window.location.href='login.html'">Login to Book</button>`
+                    }
                 </div>
             </div>
         `;
@@ -930,6 +1044,361 @@ class PropertiesManager {
             clearTimeout(timeout);
             timeout = setTimeout(later, wait);
         };
+    }
+
+    // Show booking form
+    showBookingForm(propertyId) {
+        const property = this.properties.find(p => p.id === propertyId);
+        if (!property) return;
+
+        // Create booking modal
+        const bookingModal = this.createBookingModal(property);
+        document.body.appendChild(bookingModal);
+
+        // Initialize booking form
+        this.initBookingForm(property);
+    }
+
+    // Create booking modal
+    createBookingModal(property) {
+        const modal = document.createElement('div');
+        modal.id = 'bookingModal';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+        `;
+
+        modal.innerHTML = `
+            <div class="booking-modal-content" style="
+                background: white;
+                border-radius: 12px;
+                padding: 0;
+                max-width: 500px;
+                width: 90%;
+                max-height: 90vh;
+                overflow-y: auto;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            ">
+                <div class="booking-header" style="
+                    padding: 1.5rem;
+                    border-bottom: 1px solid #eee;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                ">
+                    <h3 style="margin: 0;">Book ${window.viewVistaApp.sanitizeHTML(property.title)}</h3>
+                    <button class="booking-close" style="
+                        background: none;
+                        border: none;
+                        font-size: 1.5rem;
+                        cursor: pointer;
+                        padding: 0;
+                        width: 30px;
+                        height: 30px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    ">&times;</button>
+                </div>
+                
+                <div class="booking-body" style="padding: 1.5rem;">
+                    <form id="bookingForm">
+                        <!-- Check-in Date -->
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label for="checkInDate" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Check-in Date</label>
+                            <input type="date" id="checkInDate" required style="
+                                width: 100%;
+                                padding: 0.75rem;
+                                border: 1px solid #ddd;
+                                border-radius: 6px;
+                                font-size: 1rem;
+                            ">
+                        </div>
+
+                        <!-- Check-out Date -->
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label for="checkOutDate" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Check-out Date</label>
+                            <input type="date" id="checkOutDate" required style="
+                                width: 100%;
+                                padding: 0.75rem;
+                                border: 1px solid #ddd;
+                                border-radius: 6px;
+                                font-size: 1rem;
+                            ">
+                        </div>
+
+                        <!-- Number of Guests -->
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label for="numGuests" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Number of Guests</label>
+                            <select id="numGuests" required style="
+                                width: 100%;
+                                padding: 0.75rem;
+                                border: 1px solid #ddd;
+                                border-radius: 6px;
+                                font-size: 1rem;
+                            ">
+                                ${Array.from({length: property.max_guests}, (_, i) => 
+                                    `<option value="${i + 1}">${i + 1} guest${i + 1 > 1 ? 's' : ''}</option>`
+                                ).join('')}
+                            </select>
+                            <small style="color: #666; font-size: 0.85rem;">Maximum ${property.max_guests} guests</small>
+                        </div>
+
+                        <!-- Special Requests -->
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label for="specialRequests" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Special Requests (Optional)</label>
+                            <textarea id="specialRequests" rows="3" placeholder="Any special requests or messages for the host..." style="
+                                width: 100%;
+                                padding: 0.75rem;
+                                border: 1px solid #ddd;
+                                border-radius: 6px;
+                                font-size: 1rem;
+                                resize: vertical;
+                            "></textarea>
+                        </div>
+
+                        <!-- Pricing Summary -->
+                        <div class="pricing-summary" style="
+                            background: #f8f9fa;
+                            padding: 1rem;
+                            border-radius: 8px;
+                            margin-bottom: 1.5rem;
+                        ">
+                            <h4 style="margin: 0 0 0.5rem 0;">Pricing Summary</h4>
+                            <div class="pricing-breakdown">
+                                <div class="pricing-line" style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                                    <span>$${property.base_price} x <span id="nightCount">0</span> nights</span>
+                                    <span id="baseTotal">$0</span>
+                                </div>
+                                ${property.cleaning_fee ? `
+                                    <div class="pricing-line" style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                                        <span>Cleaning fee</span>
+                                        <span>$${property.cleaning_fee}</span>
+                                    </div>
+                                ` : ''}
+                                <hr style="margin: 0.5rem 0; border: none; border-top: 1px solid #ddd;">
+                                <div class="pricing-total" style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.1rem;">
+                                    <span>Total</span>
+                                    <span id="totalAmount">$0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="booking-actions" style="display: flex; gap: 1rem;">
+                            <button type="button" class="btn btn-secondary booking-cancel" style="flex: 1;">Cancel</button>
+                            <button type="submit" class="btn btn-primary" id="submitBooking" style="flex: 2;">Request Booking</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+
+        // Close modal handlers
+        modal.querySelector('.booking-close').addEventListener('click', () => this.closeBookingModal());
+        modal.querySelector('.booking-cancel').addEventListener('click', () => this.closeBookingModal());
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) this.closeBookingModal();
+        });
+
+        return modal;
+    }
+
+    // Close booking modal
+    closeBookingModal() {
+        const modal = document.getElementById('bookingModal');
+        if (modal) {
+            modal.remove();
+        }
+    }
+
+    // Initialize booking form
+    initBookingForm(property) {
+        const form = document.getElementById('bookingForm');
+        const checkInInput = document.getElementById('checkInDate');
+        const checkOutInput = document.getElementById('checkOutDate');
+        const numGuestsInput = document.getElementById('numGuests');
+        const nightCountSpan = document.getElementById('nightCount');
+        const baseTotalSpan = document.getElementById('baseTotal');
+        const totalAmountSpan = document.getElementById('totalAmount');
+
+        // Set minimum date to today
+        const today = new Date().toISOString().split('T')[0];
+        checkInInput.min = today;
+        checkOutInput.min = today;
+
+        // Calculate pricing when dates change
+        const updatePricing = () => {
+            if (checkInInput.value && checkOutInput.value) {
+                const checkIn = new Date(checkInInput.value);
+                const checkOut = new Date(checkOutInput.value);
+                const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+
+                if (nights > 0) {
+                    const baseTotal = nights * property.base_price;
+                    const cleaningFee = property.cleaning_fee || 0;
+                    const total = baseTotal + cleaningFee;
+
+                    nightCountSpan.textContent = nights;
+                    baseTotalSpan.textContent = `$${baseTotal}`;
+                    totalAmountSpan.textContent = `$${total}`;
+
+                    // Validate minimum stay
+                    if (property.min_stay && nights < property.min_stay) {
+                        checkOutInput.setCustomValidity(`Minimum stay is ${property.min_stay} night${property.min_stay > 1 ? 's' : ''}`);
+                    } else {
+                        checkOutInput.setCustomValidity('');
+                    }
+                } else {
+                    nightCountSpan.textContent = '0';
+                    baseTotalSpan.textContent = '$0';
+                    totalAmountSpan.textContent = '$0';
+                    checkOutInput.setCustomValidity('Check-out must be after check-in');
+                }
+            }
+        };
+
+        // Update check-out min date when check-in changes
+        checkInInput.addEventListener('change', () => {
+            if (checkInInput.value) {
+                const checkInDate = new Date(checkInInput.value);
+                checkInDate.setDate(checkInDate.getDate() + 1);
+                checkOutInput.min = checkInDate.toISOString().split('T')[0];
+                updatePricing();
+            }
+        });
+
+        checkOutInput.addEventListener('change', updatePricing);
+
+        // Handle form submission
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.submitBooking(property, {
+                checkIn: checkInInput.value,
+                checkOut: checkOutInput.value,
+                guests: parseInt(numGuestsInput.value),
+                specialRequests: document.getElementById('specialRequests').value.trim()
+            });
+        });
+    }
+
+    // Submit booking
+    async submitBooking(property, bookingData) {
+        try {
+            if (!this.supabaseClient.supabase) {
+                this.showError('Booking system not configured');
+                return;
+            }
+
+            const user = this.supabaseClient.getCurrentUser();
+            if (!user) {
+                this.showError('You must be logged in to make a booking');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitBooking');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+
+            // Calculate pricing
+            const checkIn = new Date(bookingData.checkIn);
+            const checkOut = new Date(bookingData.checkOut);
+            const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+            const baseAmount = nights * property.base_price;
+            const cleaningFee = property.cleaning_fee || 0;
+            const totalAmount = baseAmount + cleaningFee;
+
+            // Create booking record
+            const { data, error } = await this.supabaseClient.supabase
+                .from('bookings')
+                .insert([{
+                    property_id: property.id,
+                    guest_id: user.id,
+                    owner_id: property.owner_id,
+                    check_in_date: bookingData.checkIn,
+                    check_out_date: bookingData.checkOut,
+                    num_guests: bookingData.guests,
+                    base_amount: baseAmount,
+                    cleaning_fee: cleaningFee,
+                    service_fee: 0, // Add service fee calculation if needed
+                    tax_amount: 0, // Add tax calculation if needed
+                    total_amount: totalAmount,
+                    special_requests: bookingData.specialRequests || null,
+                    status: 'pending'
+                }])
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            this.showNotification('Booking request submitted successfully! The property owner will review your request.', 'success');
+            this.closeBookingModal();
+
+            // Optionally redirect to user dashboard
+            setTimeout(() => {
+                if (confirm('Would you like to view your bookings in your dashboard?')) {
+                    this.supabaseClient.redirectToDashboard();
+                }
+            }, 2000);
+
+        } catch (error) {
+            console.error('Error submitting booking:', error);
+            this.showError('Failed to submit booking request. Please try again.');
+            
+            const submitBtn = document.getElementById('submitBooking');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Request Booking';
+            }
+        }
+    }
+
+    // Gallery navigation methods
+    initGallery(images) {
+        this.currentGalleryImages = images || [];
+        this.currentImageIndex = 0;
+    }
+
+    showImage(index) {
+        if (!this.currentGalleryImages || index < 0 || index >= this.currentGalleryImages.length) return;
+        
+        this.currentImageIndex = index;
+        const mainImage = document.getElementById('galleryMainImage');
+        const counter = document.getElementById('galleryCurrentIndex');
+        
+        if (mainImage) {
+            mainImage.src = this.currentGalleryImages[index];
+        }
+        
+        if (counter) {
+            counter.textContent = index + 1;
+        }
+        
+        // Update thumbnail highlights
+        document.querySelectorAll('[data-thumbnail-index]').forEach((thumb, i) => {
+            thumb.style.opacity = i === index ? '1' : '0.7';
+            thumb.style.border = i === index ? '2px solid white' : '2px solid transparent';
+        });
+    }
+
+    nextImage() {
+        if (!this.currentGalleryImages) return;
+        const nextIndex = (this.currentImageIndex + 1) % this.currentGalleryImages.length;
+        this.showImage(nextIndex);
+    }
+
+    prevImage() {
+        if (!this.currentGalleryImages) return;
+        const prevIndex = (this.currentImageIndex - 1 + this.currentGalleryImages.length) % this.currentGalleryImages.length;
+        this.showImage(prevIndex);
     }
 
     // Get sample properties (for when Supabase is not configured)

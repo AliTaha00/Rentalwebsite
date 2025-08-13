@@ -7,6 +7,7 @@ class PropertyFormManager {
         this.formTitle = document.getElementById('formTitle');
         this.photosInput = document.getElementById('photos');
         this.saveBtn = document.getElementById('saveBtn');
+        this.deleteBtn = document.getElementById('deleteBtn');
         this.editPropertyId = null; // from query param ?id=
 
         this.init();
@@ -34,6 +35,7 @@ class PropertyFormManager {
 
             if (this.editPropertyId) {
                 this.formTitle.textContent = 'Edit Property';
+                if (this.deleteBtn) this.deleteBtn.style.display = 'inline-block';
                 await this.loadProperty(this.editPropertyId);
             }
         } catch (error) {
@@ -62,13 +64,21 @@ class PropertyFormManager {
                 try { await this.supabaseClient.signOut(); } catch {}
             });
         }
+
+        if (this.deleteBtn) {
+            this.deleteBtn.addEventListener('click', () => this.handleDeleteProperty());
+        }
     }
 
     async loadProperty(propertyId) {
         try {
+            // Load property data with images
             const { data, error } = await this.supabaseClient.supabase
                 .from('properties')
-                .select('*')
+                .select(`
+                    *,
+                    property_images(id, image_url, is_primary, display_order)
+                `)
                 .eq('id', propertyId)
                 .single();
 
@@ -83,6 +93,7 @@ class PropertyFormManager {
             }
 
             this.fillForm(data);
+            this.displayExistingImages(data.property_images || []);
         } catch (error) {
             console.error('Failed to load property:', error);
             this.showError('Could not load property for editing.');
@@ -301,6 +312,242 @@ class PropertyFormManager {
         alert.style.zIndex = '10000';
         document.body.appendChild(alert);
         setTimeout(() => alert.remove(), 3000);
+    }
+
+    // Display existing images for editing
+    displayExistingImages(images) {
+        // Create or find existing images container
+        let container = document.getElementById('existingImagesContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'existingImagesContainer';
+            container.style.cssText = `
+                margin-bottom: 1rem;
+                padding: 1rem;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                background: #f9f9f9;
+            `;
+
+            // Insert before the photos input
+            const photosInput = this.photosInput;
+            if (photosInput && photosInput.parentNode) {
+                const label = photosInput.previousElementSibling;
+                if (label && label.tagName === 'LABEL') {
+                    photosInput.parentNode.insertBefore(container, label);
+                } else {
+                    photosInput.parentNode.insertBefore(container, photosInput);
+                }
+            }
+        }
+
+        if (images.length === 0) {
+            container.innerHTML = '<p><em>No images uploaded yet.</em></p>';
+            return;
+        }
+
+        // Sort images by display order, primary first
+        const sortedImages = [...images].sort((a, b) => {
+            if (a.is_primary && !b.is_primary) return -1;
+            if (!a.is_primary && b.is_primary) return 1;
+            return (a.display_order || 0) - (b.display_order || 0);
+        });
+
+        container.innerHTML = `
+            <h4 style="margin: 0 0 1rem 0;">Existing Images</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem;">
+                ${sortedImages.map(img => `
+                    <div class="image-item" data-image-id="${img.id}" style="
+                        position: relative;
+                        border: 2px solid ${img.is_primary ? '#28a745' : '#ddd'};
+                        border-radius: 6px;
+                        overflow: hidden;
+                        background: white;
+                    ">
+                        <img src="${window.viewVistaApp.sanitizeHTML(img.image_url)}" 
+                             alt="Property image" 
+                             style="width: 100%; height: 120px; object-fit: cover; display: block;">
+                        
+                        <div style="padding: 0.5rem; font-size: 0.85rem;">
+                            ${img.is_primary ? '<div style="color: #28a745; font-weight: bold; margin-bottom: 0.25rem;">✓ Primary</div>' : ''}
+                            <div style="display: flex; gap: 0.25rem;">
+                                ${!img.is_primary ? `<button type="button" class="btn-small btn-primary" onclick="window.propertyFormManager.setPrimaryImage('${img.id}')" style="flex: 1; padding: 0.25rem; font-size: 0.75rem;">Set Primary</button>` : ''}
+                                <button type="button" class="btn-small btn-danger" onclick="window.propertyFormManager.deleteImage('${img.id}')" style="flex: 1; padding: 0.25rem; font-size: 0.75rem;">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+            <p style="margin-top: 1rem; font-size: 0.9rem; color: #666;">
+                <strong>Tip:</strong> The primary image will be shown as the main photo on your listing.
+            </p>
+        `;
+    }
+
+    // Set primary image
+    async setPrimaryImage(imageId) {
+        try {
+            if (!this.supabaseClient.supabase) {
+                this.showError('Database not configured');
+                return;
+            }
+
+            // First, unset all primary flags for this property
+            await this.supabaseClient.supabase
+                .from('property_images')
+                .update({ is_primary: false })
+                .eq('property_id', this.editPropertyId);
+
+            // Set new primary image
+            const { error } = await this.supabaseClient.supabase
+                .from('property_images')
+                .update({ is_primary: true })
+                .eq('id', imageId);
+
+            if (error) throw error;
+
+            this.showSuccess('Primary image updated successfully');
+            
+            // Reload the property to refresh images
+            if (this.editPropertyId) {
+                await this.loadProperty(this.editPropertyId);
+            }
+
+        } catch (error) {
+            console.error('Error setting primary image:', error);
+            this.showError('Failed to set primary image');
+        }
+    }
+
+    // Delete individual image
+    async deleteImage(imageId) {
+        try {
+            if (!confirm('Are you sure you want to delete this image?')) {
+                return;
+            }
+
+            if (!this.supabaseClient.supabase) {
+                this.showError('Database not configured');
+                return;
+            }
+
+            // Get image details to delete from storage
+            const { data: imageData, error: fetchError } = await this.supabaseClient.supabase
+                .from('property_images')
+                .select('image_url')
+                .eq('id', imageId)
+                .single();
+
+            if (fetchError) throw fetchError;
+
+            // Delete from database first
+            const { error: dbError } = await this.supabaseClient.supabase
+                .from('property_images')
+                .delete()
+                .eq('id', imageId);
+
+            if (dbError) throw dbError;
+
+            // Try to delete from storage (extract path from URL)
+            if (imageData?.image_url) {
+                const url = new URL(imageData.image_url);
+                const pathMatch = url.pathname.match(/\/storage\/v1\/object\/public\/property-images\/(.+)/);
+                if (pathMatch) {
+                    const filePath = pathMatch[1];
+                    await this.supabaseClient.supabase
+                        .storage
+                        .from('property-images')
+                        .remove([filePath]);
+                }
+            }
+
+            this.showSuccess('Image deleted successfully');
+            
+            // Reload the property to refresh images
+            if (this.editPropertyId) {
+                await this.loadProperty(this.editPropertyId);
+            }
+
+        } catch (error) {
+            console.error('Error deleting image:', error);
+            this.showError('Failed to delete image');
+        }
+    }
+
+    // Handle delete property from form
+    async handleDeleteProperty() {
+        if (!this.editPropertyId) return;
+
+        const confirmed = confirm('Are you sure you want to delete this property? This action cannot be undone.');
+        if (!confirmed) return;
+
+        try {
+            if (!this.supabaseClient.supabase) {
+                this.showError('Database not configured');
+                return;
+            }
+
+            this.deleteBtn.disabled = true;
+            this.deleteBtn.textContent = 'Deleting...';
+
+            // Delete property images from storage first
+            await this.deleteAllPropertyImages(this.editPropertyId);
+
+            // Delete property record (cascade will handle property_images table)
+            const { error } = await this.supabaseClient.supabase
+                .from('properties')
+                .delete()
+                .eq('id', this.editPropertyId)
+                .eq('owner_id', this.supabaseClient.getCurrentUser()?.id);
+
+            if (error) throw error;
+
+            this.showSuccess('Property deleted successfully! Redirecting...');
+            setTimeout(() => { this.safeNavigate('owner-dashboard.html'); }, 1500);
+
+        } catch (error) {
+            console.error('Error deleting property:', error);
+            this.showError('Failed to delete property. Please try again.');
+            this.deleteBtn.disabled = false;
+            this.deleteBtn.textContent = 'Delete Property';
+        }
+    }
+
+    // Delete all property images from storage
+    async deleteAllPropertyImages(propertyId) {
+        try {
+            const userId = this.supabaseClient.getCurrentUser()?.id;
+            if (!userId) return;
+
+            // List all files in the property folder
+            const { data: files, error: listError } = await this.supabaseClient.supabase
+                .storage
+                .from('property-images')
+                .list(`properties/${userId}/${propertyId}`, { recursive: true });
+
+            if (listError) {
+                console.warn('Could not list property images for deletion:', listError);
+                return;
+            }
+
+            if (!files || files.length === 0) return;
+
+            // Delete all files in the property folder
+            const filesToDelete = files.map(file => `properties/${userId}/${propertyId}/${file.name}`);
+            
+            const { error: deleteError } = await this.supabaseClient.supabase
+                .storage
+                .from('property-images')
+                .remove(filesToDelete);
+
+            if (deleteError) {
+                console.warn('Could not delete some property images:', deleteError);
+            }
+
+        } catch (error) {
+            console.warn('Error deleting property images:', error);
+            // Don't throw - let property deletion continue
+        }
     }
 }
 

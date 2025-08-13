@@ -385,6 +385,19 @@ class SupabaseClient {
         }
         return true;
     }
+
+    // Helper to navigate to property form
+    redirectToPropertyForm(propertyId = null) {
+        const base = 'property-form.html';
+        if (window.location.protocol === 'file:') {
+            const currentDir = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
+            const target = propertyId ? `${currentDir}/${base}?id=${encodeURIComponent(propertyId)}` : `${currentDir}/${base}`;
+            window.location.href = target;
+        } else {
+            const target = propertyId ? `${base}?id=${encodeURIComponent(propertyId)}` : base;
+            window.location.href = target;
+        }
+    }
 }
 
 // Global instance

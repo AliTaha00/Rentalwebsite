@@ -386,7 +386,7 @@ class DashboardManager {
         const imageUrl = primaryImage?.image_url;
 
         card.innerHTML = `
-            <div class="property-status ${property.is_active ? 'active' : 'inactive'}">
+            <div class="property-status ${property.is_active ? 'active' : 'inactive'}" data-action="toggle-status" data-id="${property.id}" title="Click to ${property.is_active ? 'deactivate' : 'activate'}" style="cursor: pointer;">
                 ${property.is_active ? 'Active' : 'Inactive'}
             </div>
             ${imageUrl ? `<img src="${window.viewVistaApp.sanitizeHTML(imageUrl)}" alt="${window.viewVistaApp.sanitizeHTML(property.title)}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 6px; margin-bottom: 1rem;">` : ''}
@@ -395,14 +395,26 @@ class DashboardManager {
             <p><strong>$${property.base_price}/night</strong></p>
             <div class="property-actions">
                 <button class="btn btn-secondary" data-action="edit" data-id="${property.id}">Edit</button>
+                <button class="btn btn-danger" data-action="delete" data-id="${property.id}" data-title="${window.viewVistaApp.sanitizeHTML(property.title)}">Delete</button>
                 <button class="btn btn-primary" data-action="analytics" data-id="${property.id}">Analytics</button>
             </div>
         `;
 
-        // Wire edit button
+        // Wire action buttons
         const editBtn = card.querySelector('[data-action="edit"]');
+        const deleteBtn = card.querySelector('[data-action="delete"]');
+        const statusToggle = card.querySelector('[data-action="toggle-status"]');
+
         if (editBtn) {
             editBtn.addEventListener('click', () => this.navigateToPropertyForm(property.id));
+        }
+
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', () => this.handleDeleteProperty(property.id, property.title));
+        }
+
+        if (statusToggle) {
+            statusToggle.addEventListener('click', () => this.handleTogglePropertyStatus(property.id, property.is_active));
         }
 
         return card;
@@ -478,6 +490,188 @@ class DashboardManager {
     // Handle edit profile (placeholder)
     handleEditProfile() {
         this.showNotification('Profile editing feature coming soon!', 'info');
+    }
+
+    // Handle delete property
+    async handleDeleteProperty(propertyId, propertyTitle) {
+        // Show confirmation dialog
+        const confirmed = await this.showConfirmDialog(
+            'Delete Property',
+            `Are you sure you want to delete "${propertyTitle}"? This action cannot be undone.`,
+            'Delete',
+            'btn-danger'
+        );
+
+        if (!confirmed) return;
+
+        try {
+            if (!this.supabaseClient.supabase) {
+                this.showError('Database not configured');
+                return;
+            }
+
+            // Delete property images from storage first
+            await this.deletePropertyImages(propertyId);
+
+            // Delete property record (cascade will handle property_images table)
+            const { error } = await this.supabaseClient.supabase
+                .from('properties')
+                .delete()
+                .eq('id', propertyId)
+                .eq('owner_id', this.supabaseClient.getCurrentUser()?.id); // Additional security check
+
+            if (error) throw error;
+
+            this.showNotification('Property deleted successfully', 'success');
+            
+            // Reload dashboard data
+            this.isLoaded = false;
+            this.loadUserData();
+
+        } catch (error) {
+            console.error('Error deleting property:', error);
+            this.showError('Failed to delete property. Please try again.');
+        }
+    }
+
+    // Delete property images from storage
+    async deletePropertyImages(propertyId) {
+        try {
+            const userId = this.supabaseClient.getCurrentUser()?.id;
+            if (!userId) return;
+
+            // List all files in the property folder
+            const { data: files, error: listError } = await this.supabaseClient.supabase
+                .storage
+                .from('property-images')
+                .list(`properties/${userId}/${propertyId}`, { recursive: true });
+
+            if (listError) {
+                console.warn('Could not list property images for deletion:', listError);
+                return;
+            }
+
+            if (!files || files.length === 0) return;
+
+            // Delete all files in the property folder
+            const filesToDelete = files.map(file => `properties/${userId}/${propertyId}/${file.name}`);
+            
+            const { error: deleteError } = await this.supabaseClient.supabase
+                .storage
+                .from('property-images')
+                .remove(filesToDelete);
+
+            if (deleteError) {
+                console.warn('Could not delete some property images:', deleteError);
+            }
+
+        } catch (error) {
+            console.warn('Error deleting property images:', error);
+            // Don't throw - let property deletion continue
+        }
+    }
+
+    // Handle toggle property status
+    async handleTogglePropertyStatus(propertyId, currentStatus) {
+        const newStatus = !currentStatus;
+        const action = newStatus ? 'activate' : 'deactivate';
+
+        try {
+            if (!this.supabaseClient.supabase) {
+                this.showError('Database not configured');
+                return;
+            }
+
+            const { error } = await this.supabaseClient.supabase
+                .from('properties')
+                .update({ is_active: newStatus })
+                .eq('id', propertyId)
+                .eq('owner_id', this.supabaseClient.getCurrentUser()?.id); // Additional security check
+
+            if (error) throw error;
+
+            this.showNotification(`Property ${action}d successfully`, 'success');
+            
+            // Reload dashboard data
+            this.isLoaded = false;
+            this.loadUserData();
+
+        } catch (error) {
+            console.error(`Error ${action}ing property:`, error);
+            this.showError(`Failed to ${action} property. Please try again.`);
+        }
+    }
+
+    // Show confirmation dialog
+    showConfirmDialog(title, message, confirmText = 'Confirm', buttonClass = 'btn-primary') {
+        return new Promise((resolve) => {
+            // Create modal overlay
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+            `;
+
+            // Create modal
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                background: white;
+                padding: 2rem;
+                border-radius: 8px;
+                max-width: 400px;
+                width: 90%;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            `;
+
+            modal.innerHTML = `
+                <h3 style="margin-top: 0; margin-bottom: 1rem;">${title}</h3>
+                <p style="margin-bottom: 2rem;">${message}</p>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                    <button class="btn ${buttonClass}" id="confirmBtn">${confirmText}</button>
+                </div>
+            `;
+
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+
+            // Handle buttons
+            const cancelBtn = modal.querySelector('#cancelBtn');
+            const confirmBtn = modal.querySelector('#confirmBtn');
+
+            const cleanup = () => {
+                document.body.removeChild(overlay);
+            };
+
+            cancelBtn.addEventListener('click', () => {
+                cleanup();
+                resolve(false);
+            });
+
+            confirmBtn.addEventListener('click', () => {
+                cleanup();
+                resolve(true);
+            });
+
+            // Close on overlay click
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    cleanup();
+                    resolve(false);
+                }
+            });
+
+            // Focus confirm button
+            confirmBtn.focus();
+        });
     }
 
     // Show notification
