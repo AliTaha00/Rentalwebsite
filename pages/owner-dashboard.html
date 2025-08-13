@@ -51,6 +51,13 @@
                     </div>
                 </div>
                 <div class="stat-card">
+                    <div class="stat-icon">⏳</div>
+                    <div class="stat-content">
+                        <h3 id="pendingBookings">0</h3>
+                        <p>Pending Requests</p>
+                    </div>
+                </div>
+                <div class="stat-card">
                     <div class="stat-icon">📅</div>
                     <div class="stat-content">
                         <h3 id="activeBookings">0</h3>
@@ -174,6 +181,34 @@
                                 <span class="number">0%</span>
                                 <span class="period">this month</span>
                             </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Booking Management -->
+                <section class="dashboard-section">
+                    <div class="section-header">
+                        <h3>Booking Requests</h3>
+                    </div>
+                    <div class="section-content" id="bookingRequestsContainer">
+                        <!-- Booking requests will be loaded here -->
+                    </div>
+                </section>
+
+                <!-- Availability Calendar -->
+                <section class="dashboard-section">
+                    <div class="section-header">
+                        <h3>Availability Calendar</h3>
+                        <div class="calendar-controls">
+                            <select id="calendarPropertySelect" style="margin-right: 1rem; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="">Select a property...</option>
+                            </select>
+                            <button class="btn btn-primary" id="bulkAvailabilityBtn" disabled>Bulk Update</button>
+                        </div>
+                    </div>
+                    <div class="section-content" id="availabilityCalendarContainer">
+                        <div class="calendar-empty-state" style="text-align: center; padding: 2rem; color: #666;">
+                            <p>Select a property to manage its availability calendar.</p>
                         </div>
                     </div>
                 </section>
