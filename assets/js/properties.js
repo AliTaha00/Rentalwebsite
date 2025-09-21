@@ -1010,22 +1010,16 @@ class PropertiesManager {
 
     // Show notification
     showNotification(message, type = 'info') {
-        // Create notification element
+        if (window.UI && window.UI.showToast) {
+            window.UI.showToast(message, type);
+            return;
+        }
+        // Fallback
         const notification = document.createElement('div');
         notification.className = `alert alert-${type}`;
         notification.textContent = message;
-        notification.style.position = 'fixed';
-        notification.style.top = '20px';
-        notification.style.right = '20px';
-        notification.style.zIndex = '10000';
-        notification.style.minWidth = '250px';
-        
         document.body.appendChild(notification);
-        
-        // Auto-hide after 3 seconds
-        setTimeout(() => {
-            notification.remove();
-        }, 3000);
+        setTimeout(() => notification.remove(), 3000);
     }
 
     // Show error message

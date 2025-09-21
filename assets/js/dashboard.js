@@ -22,7 +22,6 @@ class DashboardManager {
                 this.determineUserType();
             }
         } catch (error) {
-            console.error('Dashboard initialization error:', error);
             this.showError('Failed to initialize dashboard. Please refresh the page.');
         }
     }
@@ -30,14 +29,11 @@ class DashboardManager {
     // Check if user is authenticated
     checkAuthentication() {
         if (!this.supabaseClient.isAuthenticated()) {
-            console.log('No user found, waiting for auth state...');
             // Wait a moment for auth state to load, then check again
             setTimeout(() => {
                 if (!this.supabaseClient.isAuthenticated()) {
-                    console.log('Still no user after wait, redirecting to login');
                     window.location.href = 'login.html';
                 } else {
-                    console.log('User found after wait, loading dashboard');
                     this.setupEventListeners();
                     this.loadUserData();
                     this.determineUserType();
@@ -86,7 +82,6 @@ class DashboardManager {
     // Load user data and populate dashboard
     async loadUserData() {
         if (this.isLoaded) {
-            console.log('Dashboard already loaded, skipping');
             return;
         }
         
@@ -94,7 +89,6 @@ class DashboardManager {
             const user = this.supabaseClient.getCurrentUser();
             
             if (!user) {
-                console.warn('No user found');
                 return;
             }
             
@@ -113,7 +107,6 @@ class DashboardManager {
             }
 
         } catch (error) {
-            console.error('Error loading user data:', error);
             this.showError('Failed to load dashboard data');
         }
     }
@@ -140,7 +133,6 @@ class DashboardManager {
                 .single();
 
             if (error) {
-                console.warn('User profile not found, creating...');
                 // Profile might not exist yet, create it
                 await this.createUserProfile(userId);
                 return;
@@ -187,10 +179,9 @@ class DashboardManager {
             if (error) throw error;
 
             this.userProfile = data;
-            console.log('User profile created successfully');
 
         } catch (error) {
-            console.error('Error creating user profile:', error);
+            // Ignore create errors for now; dashboard can continue rendering
         }
     }
 
@@ -246,7 +237,6 @@ class DashboardManager {
             this.setupAvailabilityCalendar(properties);
 
         } catch (error) {
-            console.error('Error loading owner data:', error);
             this.loadSampleOwnerData();
         }
     }
@@ -291,7 +281,6 @@ class DashboardManager {
             this.updateWishlist(wishlist);
 
         } catch (error) {
-            console.error('Error loading renter data:', error);
             this.loadSampleRenterData();
         }
     }
@@ -478,13 +467,10 @@ class DashboardManager {
 
     // Handle logout
     async handleLogout() {
-        console.log('Logout button clicked, attempting to sign out...');
         try {
             await this.supabaseClient.signOut();
-            console.log('Sign out completed');
             // Redirect will be handled by supabaseClient
         } catch (error) {
-            console.error('Logout error:', error);
             this.showError('Failed to logout. Please try again.');
         }
     }
@@ -544,7 +530,6 @@ class DashboardManager {
             this.loadUserData();
 
         } catch (error) {
-            console.error('Error deleting property:', error);
             this.showError('Failed to delete property. Please try again.');
         }
     }
@@ -612,7 +597,6 @@ class DashboardManager {
             this.loadUserData();
 
         } catch (error) {
-            console.error(`Error ${action}ing property:`, error);
             this.showError(`Failed to ${action} property. Please try again.`);
         }
     }
@@ -691,20 +675,16 @@ class DashboardManager {
 
     // Show notification
     showNotification(message, type = 'info') {
-        const notification = document.createElement('div');
-        notification.className = `alert alert-${type}`;
-        notification.textContent = message;
-        notification.style.position = 'fixed';
-        notification.style.top = '20px';
-        notification.style.right = '20px';
-        notification.style.zIndex = '10000';
-        notification.style.minWidth = '250px';
-        
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            notification.remove();
-        }, 3000);
+        if (window.UI && window.UI.showToast) {
+            window.UI.showToast(message, type);
+            return;
+        }
+        // Fallback
+        const fallback = document.createElement('div');
+        fallback.className = `alert alert-${type}`;
+        fallback.textContent = message;
+        document.body.appendChild(fallback);
+        setTimeout(() => fallback.remove(), 3000);
     }
 
     // Show error message
@@ -979,7 +959,6 @@ class DashboardManager {
             this.renderCalendar(propertyId, availabilityResult.data || [], bookingsResult.data || []);
 
         } catch (error) {
-            console.error('Error loading calendar:', error);
             const container = document.getElementById('availabilityCalendarContainer');
             if (container) {
                 container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #e74c3c;">Error loading calendar. Please try again.</div>';
@@ -1340,7 +1319,6 @@ class DashboardManager {
             this.loadPropertyCalendar(propertyId);
 
         } catch (error) {
-            console.error('Error applying bulk availability:', error);
             this.showError('Failed to update availability. Please try again.');
         }
     }

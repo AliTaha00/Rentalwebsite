@@ -3,9 +3,9 @@
 
 class SupabaseClient {
     constructor() {
-        // These will be set from environment variables or config
-        this.supabaseUrl = this.getConfig('SUPABASE_URL') || 'https://jdiowyithfsgmjvfwlpq.supabase.co';
-        this.supabaseKey = this.getConfig('SUPABASE_ANON_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkaW93eWl0aGZzZ21qdmZ3bHBxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzOTM4MDQsImV4cCI6MjA2OTk2OTgwNH0.WoUSHajc9yIkI0T1lxwBd_oRR-nrEOPCaia8W4fFgDU';
+        // Read from runtime (localStorage for dev, window.ENV for hosted). Never hardcode.
+        this.supabaseUrl = this.getConfig('SUPABASE_URL');
+        this.supabaseKey = this.getConfig('SUPABASE_ANON_KEY');
         
         // Initialize Supabase client (will be loaded from CDN)
         this.supabase = null;
@@ -40,10 +40,8 @@ class SupabaseClient {
                 await this.loadSupabaseSDK();
             }
             
-            if (!this.supabaseUrl || !this.supabaseKey || 
-                this.supabaseUrl === 'YOUR_SUPABASE_URL' || 
-                this.supabaseKey === 'YOUR_SUPABASE_ANON_KEY') {
-                console.warn('Supabase configuration not found. Please set SUPABASE_URL and SUPABASE_ANON_KEY.');
+            if (!this.supabaseUrl || !this.supabaseKey) {
+                console.warn('Supabase not configured. Set SUPABASE_URL and SUPABASE_ANON_KEY.');
                 return;
             }
 
@@ -61,6 +59,11 @@ class SupabaseClient {
             const { data: { session } } = await this.supabase.auth.getSession();
             this.session = session;
             this.user = session?.user || null;
+            try {
+                window.dispatchEvent(new CustomEvent('auth:state', {
+                    detail: { event: 'INITIAL_SESSION', user: this.user }
+                }));
+            } catch {}
 
         } catch (error) {
             console.error('Failed to initialize Supabase:', error);
@@ -89,24 +92,26 @@ class SupabaseClient {
     // Handle authentication state changes
     handleAuthStateChange(event, session) {
         if (event === 'SIGNED_IN') {
-            console.log('User signed in:', session.user);
             // Only redirect if not initializing and not already on a dashboard page
             if (!this._isInitializing) {
-                console.log('Calling redirectToDashboardIfNeeded...');
                 this.redirectToDashboardIfNeeded();
             } else {
-                console.log('Still initializing, skipping redirect. Will retry in 1 second...');
                 setTimeout(() => {
                     if (this.isAuthenticated()) {
-                        console.log('Retrying redirect after initialization...');
                         this.redirectToDashboardIfNeeded();
                     }
                 }, 1000);
             }
         } else if (event === 'SIGNED_OUT') {
-            console.log('User signed out');
             this.redirectToHome();
         }
+
+        // Notify listeners (e.g., nav UI) about auth state changes
+        try {
+            window.dispatchEvent(new CustomEvent('auth:state', {
+                detail: { event, user: this.user }
+            }));
+        } catch {}
     }
 
     // Authentication methods
@@ -148,21 +153,14 @@ class SupabaseClient {
     }
 
     async signOut() {
-        console.log('signOut called, supabase:', !!this.supabase);
-        
         if (!this.supabase) {
             throw new Error('Supabase not initialized');
         }
-
-        console.log('Calling supabase.auth.signOut()...');
         const { error } = await this.supabase.auth.signOut();
         
         if (error) {
-            console.error('Supabase signOut error:', error);
             throw error;
         }
-        
-        console.log('Supabase signOut successful');
     }
 
     async resetPassword(email) {
@@ -233,52 +231,19 @@ class SupabaseClient {
     // Navigation helpers
     redirectToDashboardIfNeeded() {
         // Prevent multiple rapid redirects
-        if (this._isRedirecting) {
-            console.log('Redirect already in progress, skipping');
-            return;
-        }
+        if (this._isRedirecting) return;
 
         const currentPath = window.location.pathname;
         const userType = this.user?.user_metadata?.account_type || 'renter';
         
-        console.log('Redirect check:', {
-            currentPath,
-            userType,
-            isRedirecting: this._isRedirecting,
-            isInitializing: this._isInitializing
-        });
-        
         // Check if already on correct dashboard
-        if (userType === 'owner' && currentPath.includes('owner-dashboard')) {
-            console.log('Already on owner dashboard, no redirect needed');
-            return;
-        }
+        if (userType === 'owner' && currentPath.includes('owner-dashboard')) return;
+        if (userType === 'renter' && currentPath.includes('renter-dashboard')) return;
         
-        if (userType === 'renter' && currentPath.includes('renter-dashboard')) {
-            console.log('Already on renter dashboard, no redirect needed');
-            return;
-        }
-        
-        // Only redirect from auth pages or home page
+        // Only redirect from auth pages (not home) to avoid jarring jumps
         const shouldRedirect = currentPath.includes('login.html') || 
-                              currentPath.includes('register.html') || 
-                              currentPath === '/' || 
-                              currentPath.includes('index.html');
-        
-        console.log('Should redirect check:', {
-            shouldRedirect,
-            includesLogin: currentPath.includes('login.html'),
-            includesRegister: currentPath.includes('register.html'),
-            isRoot: currentPath === '/',
-            includesIndex: currentPath.includes('index.html')
-        });
-        
-        if (!shouldRedirect) {
-            console.log('Not on auth page, no redirect needed');
-            return;
-        }
-
-        console.log(`Redirecting ${userType} to dashboard`);
+                              currentPath.includes('register.html');
+        if (!shouldRedirect) return;
         this._isRedirecting = true;
         
         // Add small delay to prevent rapid redirects
@@ -293,12 +258,6 @@ class SupabaseClient {
         const currentPath = window.location.pathname;
         const isInPagesFolder = currentPath.includes('/pages/');
         const userType = this.user?.user_metadata?.account_type || 'renter';
-        
-        console.log('Executing redirect:', {
-            currentPath,
-            isInPagesFolder,
-            userType
-        });
         
         let targetUrl;
         
@@ -316,47 +275,32 @@ class SupabaseClient {
             }
         }
         
-        console.log('Redirecting to:', targetUrl);
-        
         // Handle file:// protocol by using absolute path
         if (window.location.protocol === 'file:') {
             const currentDir = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
-            const absoluteUrl = currentDir + '/' + targetUrl;
-            console.log('File protocol detected, using absolute path:', absoluteUrl);
-            window.location.href = absoluteUrl;
+            window.location.href = currentDir + '/' + targetUrl;
         } else {
             window.location.href = targetUrl;
         }
     }
 
     redirectToHome() {
-        console.log('Redirecting to home...');
-        
         const currentPath = window.location.pathname;
-        console.log('Current path:', currentPath);
-        
         if (window.location.protocol === 'file:') {
             // For file protocol, we need to construct the exact path to index.html
             if (currentPath.includes('/pages/')) {
                 // We're in the pages folder, go back to parent and find index.html
                 const projectRoot = currentPath.substring(0, currentPath.indexOf('/pages/'));
-                const homeUrl = projectRoot + '/index.html';
-                console.log('File protocol detected, redirecting to:', homeUrl);
-                window.location.href = homeUrl;
+                window.location.href = projectRoot + '/index.html';
             } else {
                 // We might already be in root, just go to index.html
                 const currentDir = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
-                const homeUrl = currentDir + '/index.html';
-                console.log('File protocol detected, redirecting to:', homeUrl);
-                window.location.href = homeUrl;
+                window.location.href = currentDir + '/index.html';
             }
         } else {
             // For web servers
             if (currentPath !== '/' && !currentPath.includes('index.html')) {
-                console.log('Redirecting to root');
                 window.location.href = '/';
-            } else {
-                console.log('Already on home page');
             }
         }
     }
@@ -364,7 +308,13 @@ class SupabaseClient {
     // Security helpers
     requireAuth() {
         if (!this.isAuthenticated()) {
-            window.location.href = '/pages/login.html';
+            // Use relative path to work on file:// and various hosts
+            const base = 'pages/login.html';
+            if (window.location.pathname.includes('/pages/')) {
+                window.location.href = 'login.html';
+            } else {
+                window.location.href = base;
+            }
             return false;
         }
         return true;
@@ -372,7 +322,8 @@ class SupabaseClient {
 
     requireOwner() {
         if (!this.isAuthenticated() || this.user?.user_metadata?.account_type !== 'owner') {
-            window.location.href = '/pages/login.html';
+            const base = 'pages/login.html';
+            window.location.href = window.location.pathname.includes('/pages/') ? 'login.html' : base;
             return false;
         }
         return true;
@@ -380,7 +331,8 @@ class SupabaseClient {
 
     requireRenter() {
         if (!this.isAuthenticated() || this.user?.user_metadata?.account_type !== 'renter') {
-            window.location.href = '/pages/login.html';
+            const base = 'pages/login.html';
+            window.location.href = window.location.pathname.includes('/pages/') ? 'login.html' : base;
             return false;
         }
         return true;

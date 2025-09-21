@@ -163,7 +163,16 @@
         </div>
     </footer>
 
+    <script src="assets/js/env.js"></script>
+    <script src="assets/js/supabase-client.js"></script>
+    <script>
+      // Wait for supabase init then sync nav
+      (async function(){
+        try { await window.supabaseClient?.waitForInit(); } catch {}
+      })();
+    </script>
     <script src="assets/js/main.js"></script>
+    <script src="assets/js/ui.js"></script>
     <script src="assets/js/home.js"></script>
 </body>
 </html>

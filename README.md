@@ -83,11 +83,26 @@ For local development, you can:
 - Open `http://localhost:8000` in your browser
 
 ### 4. Environment Configuration
-Set your Supabase credentials in localStorage for development:
+
+Pick ONE of the following:
+
+- Quick dev (local only):
 ```javascript
-localStorage.setItem('SUPABASE_URL', 'your-project-url');
-localStorage.setItem('SUPABASE_ANON_KEY', 'your-anon-key');
+localStorage.setItem('SUPABASE_URL', 'https://YOUR-PROJECT-ref.supabase.co');
+localStorage.setItem('SUPABASE_ANON_KEY', 'YOUR_PUBLIC_ANON_KEY');
 ```
+
+- For all users (recommended for deploy):
+1) Copy `assets/js/env.example.js` to `assets/js/env.js`
+2) Fill in your Supabase URL and anon key
+3) Ensure `env.js` is loaded before `supabase-client.js` in all HTML pages:
+```html
+<script src="assets/js/env.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+```
+Notes:
+- Only the public ANON key should be used on the client.
+- Add your site domain to Supabase Auth → URL Config → Redirect URLs if you use OAuth.
 
 ## 🗄️ Database Schema
 

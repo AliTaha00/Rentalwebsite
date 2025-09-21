@@ -19,7 +19,6 @@ class LoginManager {
             this.setupSocialLogin();
             this.handleRememberMe();
         } catch (error) {
-            console.error('Login initialization error:', error);
             this.authManager.showError('Failed to initialize login. Please refresh the page.');
         }
     }
@@ -72,11 +71,9 @@ class LoginManager {
                 }
 
                 // Success - Supabase client will handle redirect
-                console.log('Login successful');
             }
 
         } catch (error) {
-            console.error('Login error:', error);
             this.authManager.handleAuthError(error);
         } finally {
             this.authManager.setFormLoading(false, form);
@@ -243,7 +240,6 @@ class LoginManager {
             }, 2000);
 
         } catch (error) {
-            console.error('Password reset error:', error);
             this.authManager.handleAuthError(error);
         } finally {
             this.authManager.setFormLoading(false, form);
@@ -275,7 +271,6 @@ class LoginManager {
             //     }
             // });
         } catch (error) {
-            console.error('Social login error:', error);
             this.authManager.handleAuthError(error);
         }
     }

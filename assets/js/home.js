@@ -1,5 +1,5 @@
-// Home Page JavaScript
-// Handles homepage-specific functionality and interactions
+// Home Page JavaScript (lean)
+// Essentials only: hero button micro-interaction, CTA tracking hook, search redirect, signup redirect
 
 class HomePage {
     constructor() {
@@ -8,7 +8,6 @@ class HomePage {
 
     init() {
         this.setupHeroInteractions();
-        this.setupFeatureAnimations();
         this.setupCallToActionButtons();
         this.initializeSearchPreview();
         this.handleAccountTypeRedirection();
@@ -32,60 +31,12 @@ class HomePage {
         this.addScrollIndicator();
     }
 
-    // Add scroll indicator to hero section
-    addScrollIndicator() {
-        const hero = document.querySelector('.hero');
-        if (!hero || window.innerHeight >= hero.offsetHeight) return;
+    // Add scroll indicator to hero section (removed for simplicity/bloat)
+    addScrollIndicator() {}
 
-        const scrollIndicator = document.createElement('div');
-        scrollIndicator.className = 'scroll-indicator';
-        scrollIndicator.innerHTML = `
-            <div class="scroll-arrow">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-            <p>Scroll to explore</p>
-        `;
-
-        hero.appendChild(scrollIndicator);
-
-        // Hide indicator when user scrolls
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 100) {
-                scrollIndicator.style.opacity = '0';
-            } else {
-                scrollIndicator.style.opacity = '1';
-            }
-        }, { once: false });
-    }
-
-    // Setup feature card animations
-    setupFeatureAnimations() {
-        const featureCards = document.querySelectorAll('.feature-card');
-        
-        featureCards.forEach(card => {
-            card.addEventListener('mouseenter', () => {
-                this.animateFeatureCard(card, 'enter');
-            });
-            
-            card.addEventListener('mouseleave', () => {
-                this.animateFeatureCard(card, 'leave');
-            });
-        });
-    }
-
-    // Animate feature cards
-    animateFeatureCard(card, action) {
-        const icon = card.querySelector('.feature-icon');
-        
-        if (action === 'enter') {
-            icon.style.transform = 'scale(1.1) rotate(5deg)';
-            icon.style.transition = 'transform 0.3s ease';
-        } else {
-            icon.style.transform = 'scale(1) rotate(0deg)';
-        }
-    }
+    // Feature card animations removed to reduce JS bloat
+    setupFeatureAnimations() {}
+    animateFeatureCard() {}
 
     // Setup call-to-action buttons
     setupCallToActionButtons() {
@@ -113,17 +64,14 @@ class HomePage {
         });
     }
 
-    // Track button clicks (placeholder for analytics)
+    // Track button clicks (hook for analytics; no console noise)
     trackButtonClick(action, section) {
-        console.log(`Button clicked: ${action} in ${section}`);
-        
-        // TODO: Implement actual analytics tracking
-        // if (window.gtag) {
-        //     gtag('event', 'click', {
-        //         event_category: 'cta_button',
-        //         event_label: `${section}_${action}`
-        //     });
-        // }
+        if (window.gtag) {
+            window.gtag('event', 'click', {
+                event_category: 'cta_button',
+                event_label: `${section}_${action}`
+            });
+        }
     }
 
     // Initialize search preview (for future search functionality)
@@ -186,175 +134,31 @@ class HomePage {
         }
     }
 
-    // Initialize hero image carousel (if multiple images are added later)
-    initializeHeroCarousel() {
-        const heroImages = document.querySelectorAll('.hero-image img');
-        if (heroImages.length <= 1) return;
+    // Optional hero carousel removed
+    initializeHeroCarousel() {}
 
-        let currentImage = 0;
-        const totalImages = heroImages.length;
-
-        // Hide all images except first
-        heroImages.forEach((img, index) => {
-            if (index !== 0) {
-                img.style.opacity = '0';
-            }
-        });
-
-        // Auto-rotate images
-        setInterval(() => {
-            heroImages[currentImage].style.opacity = '0';
-            currentImage = (currentImage + 1) % totalImages;
-            heroImages[currentImage].style.opacity = '1';
-        }, 5000);
-    }
-
-    // Add property showcase preview
-    addPropertyShowcase() {
-        const showcase = document.createElement('section');
-        showcase.className = 'property-showcase';
-        showcase.innerHTML = `
-            <div class="container">
-                <h2>Featured Properties</h2>
-                <p>Discover some of our most popular properties with stunning views</p>
-                <div class="properties-grid">
-                    ${this.generatePreviewProperties()}
-                </div>
-                <div class="showcase-cta">
-                    <a href="/pages/properties.html" class="btn btn-primary">View All Properties</a>
-                </div>
-            </div>
-        `;
-
-        // Insert before footer
-        const footer = document.querySelector('.footer');
-        if (footer) {
-            footer.parentNode.insertBefore(showcase, footer);
-        }
-    }
+    // Static showcase removed (keeps HTML light and static)
+    addPropertyShowcase() {}
 
     // Generate preview property cards
-    generatePreviewProperties() {
-        const properties = [
-            {
-                title: 'Mountain Vista Cabin',
-                location: 'Colorado Rockies',
-                price: '$150',
-                image: 'placeholder-mountain.jpg',
-                rating: 4.9
-            },
-            {
-                title: 'Ocean View Apartment', 
-                location: 'Malibu, California',
-                price: '$250',
-                image: 'placeholder-ocean.jpg',
-                rating: 4.8
-            },
-            {
-                title: 'City Skyline Loft',
-                location: 'New York, NY',
-                price: '$300',
-                image: 'placeholder-city.jpg',
-                rating: 4.7
-            }
-        ];
+    generatePreviewProperties() { return ''; }
 
-        return properties.map(property => `
-            <div class="property-preview-card">
-                <div class="property-image">
-                    <div class="image-placeholder">${property.title}</div>
-                </div>
-                <div class="property-info">
-                    <h4>${property.title}</h4>
-                    <p class="location">${property.location}</p>
-                    <div class="property-rating">
-                        <span class="stars">${'★'.repeat(Math.floor(property.rating))}</span>
-                        <span class="rating-number">${property.rating}</span>
-                    </div>
-                    <div class="property-price">
-                        <span class="price">${property.price}</span>
-                        <span class="period">/night</span>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    }
+    // Testimonials removed
+    initializeTestimonials() {}
 
-    // Initialize testimonials carousel
-    initializeTestimonials() {
-        const testimonials = [
-            {
-                text: "ViewVista helped us find the perfect mountain retreat. The views were absolutely breathtaking!",
-                author: "Sarah Johnson",
-                role: "Travel Enthusiast"
-            },
-            {
-                text: "As a property owner, I love how easy it is to manage my listings and connect with guests.",
-                author: "Michael Chen",
-                role: "Property Owner"
-            },
-            {
-                text: "The booking process was seamless and the customer service was exceptional.",
-                author: "Emily Rodriguez",
-                role: "Frequent Traveler"
-            }
-        ];
+    // Scroll counters removed
+    addScrollCounters() {}
 
-        // Add testimonials section if desired
-        // Implementation would go here
-    }
+    // Newsletter signup removed
+    setupNewsletterSignup() {}
 
-    // Add scroll-triggered counters for statistics
-    addScrollCounters() {
-        const stats = [
-            { label: 'Properties Listed', target: 1250, suffix: '+' },
-            { label: 'Happy Guests', target: 5000, suffix: '+' },
-            { label: 'Cities Covered', target: 150, suffix: '+' },
-            { label: 'Average Rating', target: 4.8, suffix: '/5' }
-        ];
-
-        // Implementation would animate numbers when section comes into view
-    }
-
-    // Handle newsletter signup (if added)
-    setupNewsletterSignup() {
-        const newsletterForm = document.querySelector('.newsletter-form');
-        if (!newsletterForm) return;
-
-        newsletterForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.handleNewsletterSignup(newsletterForm);
-        });
-    }
-
-    // Handle newsletter signup
-    async handleNewsletterSignup(form) {
-        const email = form.querySelector('input[type="email"]').value;
-        
-        if (!email || !window.viewVistaApp.isValidEmail(email)) {
-            this.showNewsletterError('Please enter a valid email address');
-            return;
-        }
-
-        try {
-            // TODO: Implement newsletter signup
-            console.log('Newsletter signup:', email);
-            this.showNewsletterSuccess('Thank you for subscribing!');
-            form.reset();
-        } catch (error) {
-            this.showNewsletterError('Something went wrong. Please try again.');
-        }
-    }
+    async handleNewsletterSignup() {}
 
     // Show newsletter success message
-    showNewsletterSuccess(message) {
-        // Implementation for showing success message
-    }
+    showNewsletterSuccess() {}
 
     // Show newsletter error message
-    showNewsletterError(message) {
-        // Implementation for showing error message
-    }
+    showNewsletterError() {}
 }
 
 // Initialize home page when DOM is loaded

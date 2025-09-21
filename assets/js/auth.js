@@ -151,56 +151,36 @@ class AuthManager {
 
     // Show general error message
     showError(message, container = null) {
-        const targetContainer = container || document.querySelector('.auth-form') || document.querySelector('.auth-card');
-        
-        if (!targetContainer) {
-            alert(message);
+        if (window.UI && window.UI.showToast) {
+            window.UI.showToast(message, 'error');
             return;
         }
-
-        // Remove existing alerts
+        const targetContainer = container || document.querySelector('.auth-form') || document.querySelector('.auth-card');
+        if (!targetContainer) { alert(message); return; }
         const existingAlerts = targetContainer.querySelectorAll('.alert');
         existingAlerts.forEach(alert => alert.remove());
-
-        // Create error alert
         const alertElement = document.createElement('div');
         alertElement.className = 'alert alert-error';
         alertElement.textContent = message;
-
-        // Insert at the beginning of the container
         targetContainer.insertBefore(alertElement, targetContainer.firstChild);
-
-        // Auto-hide after 5 seconds
-        setTimeout(() => {
-            alertElement.remove();
-        }, 5000);
+        setTimeout(() => { alertElement.remove(); }, 5000);
     }
 
     // Show success message
     showSuccess(message, container = null) {
-        const targetContainer = container || document.querySelector('.auth-form') || document.querySelector('.auth-card');
-        
-        if (!targetContainer) {
-            alert(message);
+        if (window.UI && window.UI.showToast) {
+            window.UI.showToast(message, 'success');
             return;
         }
-
-        // Remove existing alerts
+        const targetContainer = container || document.querySelector('.auth-form') || document.querySelector('.auth-card');
+        if (!targetContainer) { alert(message); return; }
         const existingAlerts = targetContainer.querySelectorAll('.alert');
         existingAlerts.forEach(alert => alert.remove());
-
-        // Create success alert
         const alertElement = document.createElement('div');
         alertElement.className = 'alert alert-success';
         alertElement.textContent = message;
-
-        // Insert at the beginning of the container
         targetContainer.insertBefore(alertElement, targetContainer.firstChild);
-
-        // Auto-hide after 3 seconds
-        setTimeout(() => {
-            alertElement.remove();
-        }, 3000);
+        setTimeout(() => { alertElement.remove(); }, 3000);
     }
 
     // Set form loading state

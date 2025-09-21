@@ -303,13 +303,13 @@ class PropertyFormManager {
     }
 
     showBanner(message, type) {
+        if (window.UI && window.UI.showToast) {
+            window.UI.showToast(message, type);
+            return;
+        }
         const alert = document.createElement('div');
         alert.className = `alert alert-${type}`;
         alert.textContent = message;
-        alert.style.position = 'fixed';
-        alert.style.top = '20px';
-        alert.style.right = '20px';
-        alert.style.zIndex = '10000';
         document.body.appendChild(alert);
         setTimeout(() => alert.remove(), 3000);
     }
