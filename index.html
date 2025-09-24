@@ -3,22 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ViewVista - Premium Property Rentals with Stunning Views</title>
+    <title>Browse Properties - ViewVista</title>
     <link rel="stylesheet" href="assets/css/main.css">
-    <link rel="stylesheet" href="assets/css/home.css">
+    <link rel="stylesheet" href="assets/css/properties.css">
 </head>
 <body>
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-logo">
-                <h2>ViewVista</h2>
+                <a href="index.html"><h2>ViewVista</h2></a>
             </div>
             <div class="nav-menu">
-                <a href="#features" class="nav-link">Features</a>
-                <a href="#how-it-works" class="nav-link">How It Works</a>
-                <a href="pages/properties.html" class="nav-link">Browse Properties</a>
-                <a href="pages/login.html" class="nav-link login-btn">Login</a>
-                <a href="pages/register.html" class="nav-link register-btn">Get Started</a>
+                <a href="index.html" class="nav-link active">Browse Properties</a>
+                <a href="pages/about.html" class="nav-link">About</a>
+                <a href="pages/login.html" class="nav-link" id="auth-link">Login</a>
+                <a href="pages/register.html" class="nav-link register-btn" id="register-link">Get Started</a>
             </div>
             <div class="nav-toggle">
                 <span></span>
@@ -28,107 +27,178 @@
         </div>
     </nav>
 
-    <main>
-        <!-- Hero Section -->
-        <section class="hero">
-            <div class="hero-content">
-                <h1>Discover Properties with Breathtaking Views</h1>
-                <p>Connect property owners with stunning locations to travelers seeking unforgettable experiences</p>
-                <div class="hero-buttons">
-                    <a href="pages/register.html?type=renter" class="btn btn-primary">Find Your Perfect View</a>
-                    <a href="pages/register.html?type=owner" class="btn btn-secondary">List Your Property</a>
+    <main class="properties-main">
+        <!-- Hero Section with Search -->
+        <section class="hero-search">
+            <div class="container">
+                <div class="hero-content">
+                    <h1>Discover Properties with Breathtaking Views</h1>
+                    <p>Find unique places to stay with incredible views around the world</p>
                 </div>
-            </div>
-            <div class="hero-image">
-                <div class="hero-placeholder">
-                    <!-- Hero image will go here -->
-                    <p>Beautiful property views showcase</p>
+                
+                <!-- Airbnb-style Search Bar -->
+                <form class="main-search-bar" id="propertySearchForm">
+                    <div class="search-container">
+                        <div class="search-field where-field">
+                            <label for="location">Where</label>
+                            <input type="text" id="location" name="location" placeholder="Search destinations">
+                        </div>
+                        
+                        <div class="search-divider"></div>
+                        
+                        <div class="search-field date-field">
+                            <label for="checkIn">Check in</label>
+                            <input type="date" id="checkIn" name="checkIn" placeholder="Add dates">
+                        </div>
+                        
+                        <div class="search-divider"></div>
+                        
+                        <div class="search-field date-field">
+                            <label for="checkOut">Check out</label>
+                            <input type="date" id="checkOut" name="checkOut" placeholder="Add dates">
+                        </div>
+                        
+                        <div class="search-divider"></div>
+                        
+                        <div class="search-field guests-field">
+                            <label for="guests">Who</label>
+                            <select id="guests" name="guests">
+                                <option value="">Add guests</option>
+                                <option value="1">1 guest</option>
+                                <option value="2">2 guests</option>
+                                <option value="3">3 guests</option>
+                                <option value="4">4 guests</option>
+                                <option value="5">5+ guests</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="search-button">
+                            <svg viewBox="0 0 32 32" style="display:block;fill:none;height:16px;width:16px;stroke:currentColor;stroke-width:4;overflow:visible" aria-hidden="true" role="presentation" focusable="false">
+                                <path d="M13 24a11 11 0 1 0 0-22 11 11 0 0 0 0 22zm8-3 9 9"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- Filters Toggle -->
+                <div class="filters-toggle">
+                    <button type="button" class="filters-btn" id="filtersToggle">
+                        <svg viewBox="0 0 16 16" style="display:block;height:14px;width:14px;fill:currentColor" aria-hidden="true" role="presentation" focusable="false">
+                            <path d="M5 8c1.306 0 2.418.835 2.83 2H14v2H7.83A3.001 3.001 0 0 1 5 14a3.001 3.001 0 0 1-2.83-2H0V10h2.17A3.001 3.001 0 0 1 5 8zM5 10a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm6-8a3.001 3.001 0 0 1 2.83 2H16v2h-2.17A3.001 3.001 0 0 1 11 6a3.001 3.001 0 0 1-2.83-2H0V2h8.17A3.001 3.001 0 0 1 11 2zm0 2a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"></path>
+                        </svg>
+                        Filters
+                    </button>
+                    
+                    <!-- Compact Filters Dropdown -->
+                    <div class="filters-dropdown" id="filtersPanel" style="display: none;">
+                        <div class="filters-dropdown-content">
+                            <div class="filter-group-inline">
+                                <label>Price range</label>
+                                <div class="price-inputs-compact">
+                                    <input type="number" id="minPrice" name="minPrice" placeholder="Min">
+                                    <span>–</span>
+                                    <input type="number" id="maxPrice" name="maxPrice" placeholder="Max">
+                                </div>
+                            </div>
+                            
+                            <div class="filter-group-inline">
+                                <label>View type</label>
+                                <select id="viewType" name="viewType" class="filter-select-compact">
+                                    <option value="">Any view</option>
+                                    <option value="mountain">🏔️ Mountain</option>
+                                    <option value="ocean">🌊 Ocean</option>
+                                    <option value="city">🏙️ City</option>
+                                    <option value="forest">🌲 Forest</option>
+                                    <option value="lake">🏞️ Lake</option>
+                                    <option value="countryside">🌾 Countryside</option>
+                                </select>
+                            </div>
+                            
+                            <div class="filter-group-inline">
+                                <label>Property type</label>
+                                <select id="propertyType" name="propertyType" class="filter-select-compact">
+                                    <option value="">Any type</option>
+                                    <option value="house">House</option>
+                                    <option value="apartment">Apartment</option>
+                                    <option value="cabin">Cabin</option>
+                                    <option value="villa">Villa</option>
+                                    <option value="condo">Condo</option>
+                                </select>
+                            </div>
+                            
+                            <div class="filter-group-inline">
+                                <label>Amenities</label>
+                                <div class="amenities-compact">
+                                    <label><input type="checkbox" name="amenities" value="wifi"> WiFi</label>
+                                    <label><input type="checkbox" name="amenities" value="parking"> Parking</label>
+                                    <label><input type="checkbox" name="amenities" value="pool"> Pool</label>
+                                    <label><input type="checkbox" name="amenities" value="kitchen"> Kitchen</label>
+                                </div>
+                            </div>
+                            
+                            <div class="filters-actions-compact">
+                                <button type="button" class="clear-filters-compact">Clear</button>
+                                <button type="button" class="show-results-compact">Apply filters</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- Features Section -->
-        <section id="features" class="features">
+        <!-- Results Section -->
+        <section class="search-results">
             <div class="container">
-                <h2>Why Choose ViewVista?</h2>
-                <div class="features-grid">
-                    <div class="feature-card">
-                        <div class="feature-icon">🏔️</div>
-                        <h3>Stunning Views</h3>
-                        <p>Every property features exceptional views - mountains, oceans, cities, or countryside</p>
+                <div class="results-header">
+                    <div class="results-count">
+                        <span id="resultsCount">Loading...</span>
                     </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">🔒</div>
-                        <h3>Secure Booking</h3>
-                        <p>Safe and secure payment processing with full protection for both guests and hosts</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">⭐</div>
-                        <h3>Verified Reviews</h3>
-                        <p>Honest reviews from real guests help you make informed decisions</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">📱</div>
-                        <h3>Easy Management</h3>
-                        <p>Simple tools for property owners to manage listings and bookings</p>
+                    <div class="results-controls">
+                        <div class="sort-controls">
+                            <label for="sortBy">Sort by:</label>
+                            <select id="sortBy" name="sortBy">
+                                <option value="relevance">Relevance</option>
+                                <option value="price_low">Price: Low to High</option>
+                                <option value="price_high">Price: High to Low</option>
+                                <option value="rating">Guest Rating</option>
+                                <option value="newest">Newest First</option>
+                            </select>
+                        </div>
+                        <div class="view-controls">
+                            <button class="view-btn active" data-view="grid">
+                                <span class="view-icon">⊞</span>
+                            </button>
+                            <button class="view-btn" data-view="list">
+                                <span class="view-icon">☰</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </section>
 
-        <!-- How It Works Section -->
-        <section id="how-it-works" class="how-it-works">
-            <div class="container">
-                <h2>How It Works</h2>
-                <div class="steps-container">
-                    <div class="steps-column">
-                        <h3>For Property Owners</h3>
-                        <div class="step">
-                            <span class="step-number">1</span>
-                            <div class="step-content">
-                                <h4>Create Your Listing</h4>
-                                <p>Upload photos and describe your property's unique view</p>
-                            </div>
-                        </div>
-                        <div class="step">
-                            <span class="step-number">2</span>
-                            <div class="step-content">
-                                <h4>Set Your Rates</h4>
-                                <p>Choose pricing and availability that works for you</p>
-                            </div>
-                        </div>
-                        <div class="step">
-                            <span class="step-number">3</span>
-                            <div class="step-content">
-                                <h4>Welcome Guests</h4>
-                                <p>Receive bookings and earn from your beautiful space</p>
-                            </div>
-                        </div>
+                <!-- Properties Grid -->
+                <div class="properties-grid" id="propertiesGrid">
+                    <!-- Loading state -->
+                    <div class="loading-properties" id="loadingState">
+                        <div class="loading-spinner"></div>
+                        <p>Finding amazing properties for you...</p>
                     </div>
-                    <div class="steps-column">
-                        <h3>For Travelers</h3>
-                        <div class="step">
-                            <span class="step-number">1</span>
-                            <div class="step-content">
-                                <h4>Search & Filter</h4>
-                                <p>Find properties with the perfect view for your trip</p>
-                            </div>
-                        </div>
-                        <div class="step">
-                            <span class="step-number">2</span>
-                            <div class="step-content">
-                                <h4>Book Securely</h4>
-                                <p>Safe payment processing with instant confirmation</p>
-                            </div>
-                        </div>
-                        <div class="step">
-                            <span class="step-number">3</span>
-                            <div class="step-content">
-                                <h4>Enjoy Your Stay</h4>
-                                <p>Experience amazing views and leave a review</p>
-                            </div>
-                        </div>
-                    </div>
+
+                    <!-- Properties will be loaded here by JavaScript -->
+                </div>
+
+                <!-- No Results State -->
+                <div class="no-results" id="noResults" style="display: none;">
+                    <div class="no-results-icon">🏠</div>
+                    <h3>No properties found</h3>
+                    <p>Try adjusting your filters or search in a different location</p>
+                    <button class="btn btn-primary" onclick="clearFilters()">Clear Filters</button>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination" id="pagination" style="display: none;">
+                    <button class="pagination-btn" id="prevBtn" disabled>← Previous</button>
+                    <div class="pagination-numbers" id="paginationNumbers"></div>
+                    <button class="pagination-btn" id="nextBtn">Next →</button>
                 </div>
             </div>
         </section>
@@ -143,7 +213,7 @@
                 </div>
                 <div class="footer-section">
                     <h4>For Guests</h4>
-                    <a href="pages/properties.html">Browse Properties</a>
+                    <a href="index.html">Browse Properties</a>
                     <a href="pages/register.html?type=renter">Sign Up</a>
                 </div>
                 <div class="footer-section">
@@ -163,16 +233,23 @@
         </div>
     </footer>
 
+    <!-- Property Detail Modal (for quick view) -->
+    <div id="propertyModal" class="modal" style="display: none;">
+        <div class="modal-content property-modal">
+            <div class="modal-header">
+                <h2 id="modalTitle">Property Details</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Property details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
     <script src="assets/js/env.js"></script>
     <script src="assets/js/supabase-client.js"></script>
-    <script>
-      // Wait for supabase init then sync nav
-      (async function(){
-        try { await window.supabaseClient?.waitForInit(); } catch {}
-      })();
-    </script>
-    <script src="assets/js/main.js"></script>
     <script src="assets/js/ui.js"></script>
-    <script src="assets/js/home.js"></script>
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/properties.js"></script>
 </body>
 </html>

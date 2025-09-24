@@ -298,7 +298,7 @@ class SupabaseClient {
                 window.location.href = currentDir + '/index.html';
             }
         } else {
-            // For web servers
+            // For web servers - redirect to index.html (properties page)
             if (currentPath !== '/' && !currentPath.includes('index.html')) {
                 window.location.href = '/';
             }

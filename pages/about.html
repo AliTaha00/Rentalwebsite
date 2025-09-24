@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About ViewVista - Premium Property Rentals</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/home.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="../index.html"><h2>ViewVista</h2></a>
+            </div>
+            <div class="nav-menu">
+                <a href="../index.html" class="nav-link">Browse Properties</a>
+                <a href="about.html" class="nav-link active">About</a>
+                <a href="login.html" class="nav-link login-btn">Login</a>
+                <a href="register.html" class="nav-link register-btn">Get Started</a>
+            </div>
+            <div class="nav-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-content">
+                <h1>Discover Properties with Breathtaking Views</h1>
+                <p>Connect property owners with stunning locations to travelers seeking unforgettable experiences</p>
+                <div class="hero-buttons">
+                    <a href="register.html?type=renter" class="btn btn-primary">Find Your Perfect View</a>
+                    <a href="register.html?type=owner" class="btn btn-secondary">List Your Property</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div class="hero-placeholder">
+                    <!-- Hero image will go here -->
+                    <p>Beautiful property views showcase</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="features">
+            <div class="container">
+                <h2>Why Choose ViewVista?</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🏔️</div>
+                        <h3>Stunning Views</h3>
+                        <p>Every property features exceptional views - mountains, oceans, cities, or countryside</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔒</div>
+                        <h3>Secure Booking</h3>
+                        <p>Safe and secure payment processing with full protection for both guests and hosts</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">⭐</div>
+                        <h3>Verified Reviews</h3>
+                        <p>Honest reviews from real guests help you make informed decisions</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📱</div>
+                        <h3>Easy Management</h3>
+                        <p>Simple tools for property owners to manage listings and bookings</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works Section -->
+        <section id="how-it-works" class="how-it-works">
+            <div class="container">
+                <h2>How It Works</h2>
+                <div class="steps-container">
+                    <div class="steps-column">
+                        <h3>For Property Owners</h3>
+                        <div class="step">
+                            <span class="step-number">1</span>
+                            <div class="step-content">
+                                <h4>Create Your Listing</h4>
+                                <p>Upload photos and describe your property's unique view</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <span class="step-number">2</span>
+                            <div class="step-content">
+                                <h4>Set Your Rates</h4>
+                                <p>Choose pricing and availability that works for you</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <span class="step-number">3</span>
+                            <div class="step-content">
+                                <h4>Welcome Guests</h4>
+                                <p>Receive bookings and earn from your beautiful space</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="steps-column">
+                        <h3>For Travelers</h3>
+                        <div class="step">
+                            <span class="step-number">1</span>
+                            <div class="step-content">
+                                <h4>Search & Filter</h4>
+                                <p>Find properties with the perfect view for your trip</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <span class="step-number">2</span>
+                            <div class="step-content">
+                                <h4>Book Securely</h4>
+                                <p>Safe payment processing with instant confirmation</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <span class="step-number">3</span>
+                            <div class="step-content">
+                                <h4>Enjoy Your Stay</h4>
+                                <p>Experience amazing views and leave a review</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>ViewVista</h3>
+                    <p>Connecting travelers with properties that offer unforgettable views.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>For Guests</h4>
+                    <a href="../index.html">Browse Properties</a>
+                    <a href="register.html?type=renter">Sign Up</a>
+                </div>
+                <div class="footer-section">
+                    <h4>For Hosts</h4>
+                    <a href="register.html?type=owner">List Property</a>
+                    <a href="login.html">Host Login</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <a href="#contact">Contact Us</a>
+                    <a href="#help">Help Center</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 ViewVista. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../assets/js/env.js"></script>
+    <script src="../assets/js/supabase-client.js"></script>
+    <script>
+      // Wait for supabase init then sync nav
+      (async function(){
+        try { await window.supabaseClient?.waitForInit(); } catch {}
+      })();
+    </script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/ui.js"></script>
+    <script src="../assets/js/home.js"></script>
+</body>
+</html>

@@ -81,22 +81,46 @@ class PropertiesManager {
         });
     }
 
-    // Setup advanced filters toggle
+    // Setup filters functionality
     setupAdvancedFilters() {
-        const advancedToggle = document.getElementById('advancedToggle');
-        const advancedFilters = document.getElementById('advancedFilters');
+        const filtersToggle = document.getElementById('filtersToggle');
+        const filtersPanel = document.getElementById('filtersPanel');
+        const clearFilters = document.querySelector('.clear-filters-compact');
+        const showResults = document.querySelector('.show-results-compact');
         
-        if (advancedToggle && advancedFilters) {
-            advancedToggle.addEventListener('click', () => {
-                const isVisible = advancedFilters.style.display !== 'none';
-                
-                if (isVisible) {
-                    advancedFilters.style.display = 'none';
-                    advancedToggle.classList.remove('active');
-                } else {
-                    advancedFilters.style.display = 'block';
-                    advancedToggle.classList.add('active');
+        if (filtersToggle && filtersPanel) {
+            filtersToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isVisible = filtersPanel.style.display !== 'none';
+                filtersPanel.style.display = isVisible ? 'none' : 'block';
+            });
+            
+            // Close filters when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!filtersToggle.contains(e.target) && !filtersPanel.contains(e.target)) {
+                    filtersPanel.style.display = 'none';
                 }
+            });
+        }
+        
+        if (clearFilters) {
+            clearFilters.addEventListener('click', () => {
+                // Clear all filter inputs
+                document.querySelectorAll('#filtersPanel input, #filtersPanel select').forEach(input => {
+                    if (input.type === 'checkbox' || input.type === 'radio') {
+                        input.checked = false;
+                    } else {
+                        input.value = '';
+                    }
+                });
+            });
+        }
+        
+        if (showResults) {
+            showResults.addEventListener('click', () => {
+                // Hide filters panel and trigger search
+                filtersPanel.style.display = 'none';
+                this.performSearch();
             });
         }
     }
@@ -1567,9 +1591,12 @@ window.clearFilters = function() {
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    // Only initialize if we're on the properties page
+    // Initialize if we're on the properties page or landing page (index.html)
     const isPropertiesPage = window.location.pathname.includes('properties.html') ||
-                            window.location.pathname.endsWith('properties');
+                            window.location.pathname.endsWith('properties') ||
+                            window.location.pathname.endsWith('/') ||
+                            window.location.pathname.endsWith('index.html') ||
+                            window.location.pathname === '/index.html';
     
     if (isPropertiesPage) {
         window.propertiesManager = new PropertiesManager();
