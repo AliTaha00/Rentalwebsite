@@ -85,13 +85,13 @@
 }
 
 .account-type-option:hover {
-    border-color: #2563eb;
+    border-color: #648e38;
     transform: translateY(-2px);
     box-shadow: 0 10px 20px rgba(37, 99, 235, 0.1);
 }
 
 .account-type-option.selected {
-    border-color: #2563eb;
+    border-color: #648e38;
     background-color: #eff6ff;
 }
 
@@ -131,7 +131,7 @@
     content: "✓";
     position: absolute;
     left: 0;
-    color: #10b981;
+    color: #648e38;
     font-weight: bold;
 }
 
@@ -157,7 +157,7 @@
 
 .auth-form input:focus {
     background-color: white;
-    border-color: #2563eb;
+    border-color: #648e38;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
@@ -171,7 +171,7 @@
 }
 
 .forgot-password-link {
-    color: #2563eb;
+    color: #648e38;
     font-weight: 500;
 }
 
@@ -251,7 +251,7 @@
 }
 
 .form-footer a {
-    color: #2563eb;
+    color: #648e38;
     font-weight: 500;
 }
 
@@ -283,7 +283,7 @@
 .success-icon {
     width: 80px;
     height: 80px;
-    background-color: #10b981;
+    background: linear-gradient(180deg, #89d957, #5d704a, #32491b);
     color: white;
     border-radius: 50%;
     display: flex;
@@ -418,14 +418,14 @@
     height: 18px;
     margin: 0;
     cursor: pointer;
-    accent-color: #2563eb;
+    accent-color: #648e38;
 }
 
 .checkbox-label a {
-    color: #2563eb;
+    color: #648e38;
     text-decoration: underline;
 }
 
 .checkbox-label a:hover {
-    color: #1d4ed8;
+    color: #5d704a;
 }

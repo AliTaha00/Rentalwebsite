@@ -7,7 +7,7 @@ class PropertiesManager {
         this.properties = [];
         this.filteredProperties = [];
         this.currentPage = 1;
-        this.propertiesPerPage = 12;
+        this.propertiesPerPage = 10;
         this.currentView = 'grid';
         this.currentFilters = {};
         this.isLoading = false;
@@ -504,55 +504,116 @@ class PropertiesManager {
     // Render individual property card
     renderPropertyCard(property) {
         const imageUrl = property.primaryImage || property.images?.[0];
-        const hasImage = imageUrl && imageUrl !== null;
+        const viewTypeEmojis = {
+            mountain: '🏔️',
+            ocean: '🌊', 
+            city: '🏙️',
+            forest: '🌲',
+            lake: '🏞️',
+            countryside: '🌾'
+        };
+        
+        // Make guest favorite consistent based on property ID
+        const isGuestFavorite = this.isPropertyGuestFavorite(property.id);
         
         return `
-            <div class="property-card" data-property-id="${property.id}" tabindex="0">
-                <div class="property-image">
-                    ${hasImage 
-                        ? `<img src="${window.viewVistaApp.sanitizeHTML(imageUrl)}" alt="${window.viewVistaApp.sanitizeHTML(property.title)}" loading="lazy">`
-                        : `<div class="image-placeholder">${window.viewVistaApp.sanitizeHTML(property.title)}</div>`
+            <div class="property-card" data-property-id="${property.id}">
+                <div class="property-image-container">
+                    ${imageUrl ? 
+                        `<img src="${imageUrl}" alt="${property.title}" class="property-image">` : 
+                        `<div class="image-placeholder">Beautiful ${property.view_type} views await</div>`
                     }
-                    ${property.featured ? '<div class="property-badge">Featured</div>' : ''}
-                    <button class="wishlist-btn" data-property-id="${property.id}" aria-label="Add to wishlist">
-                        <span>♡</span>
+                    
+                    ${isGuestFavorite ? 
+                        `<div class="property-badge">Guest favorite</div>` : ''
+                    }
+                    
+                    <button class="property-favorite" data-property-id="${property.id}">
+                        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                            <path d="m16 28c7-4.733 14-10 14-17 0-1.792-.683-3.583-2.05-4.95-1.367-1.366-3.158-2.05-4.95-2.05-1.791 0-3.583.684-4.949 2.05l-2.051 2.051-2.05-2.051c-1.367-1.366-3.158-2.05-4.95-2.05-1.791 0-3.583.684-4.949 2.05-1.367 1.367-2.051 3.158-2.051 4.95 0 7 7 12.267 14 17z"></path>
+                        </svg>
                     </button>
                 </div>
+                
                 <div class="property-info">
-                    <h3 class="property-title">${window.viewVistaApp.sanitizeHTML(property.title)}</h3>
-                    <p class="property-location">
-                        <span class="location-icon">📍</span>
-                        ${window.viewVistaApp.sanitizeHTML(property.city)}, ${window.viewVistaApp.sanitizeHTML(property.state)}
-                    </p>
-                    <div class="property-features">
-                        ${property.bedrooms ? `<span>${property.bedrooms} bed${property.bedrooms > 1 ? 's' : ''}</span>` : ''}
-                        ${property.bathrooms ? `<span>${property.bathrooms} bath${property.bathrooms > 1 ? 's' : ''}</span>` : ''}
-                        ${property.max_guests ? `<span>${property.max_guests} guest${property.max_guests > 1 ? 's' : ''}</span>` : ''}
-                    </div>
-                    ${property.averageRating > 0 ? `
+                    <div class="property-header">
+                        <div class="property-location">${property.city}, ${property.state}</div>
                         <div class="property-rating">
-                            <span class="stars">${'★'.repeat(Math.floor(property.averageRating))}${'☆'.repeat(5 - Math.floor(property.averageRating))}</span>
-                            <span class="rating-number">${property.averageRating.toFixed(1)}</span>
-                            <span class="rating-count">(${property.reviewCount} review${property.reviewCount !== 1 ? 's' : ''})</span>
+                            <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M15.094 1.346l-4.124 8.341-9.214 1.34 6.669 6.5-1.574 9.176L16 21.854l9.149 4.85-1.574-9.176 6.669-6.5-9.214-1.34z"></path>
+                            </svg>
+                            <span class="rating-number">${this.getPropertyRating(property.id)}</span>
                         </div>
-                    ` : ''}
+                    </div>
+                    
+                    <div class="property-title">${property.title}</div>
+                    
+                    <div class="property-details">
+                        ${property.bedrooms ? `${property.bedrooms} bed${property.bedrooms > 1 ? 's' : ''}` : ''}
+                        ${property.bedrooms && property.bathrooms ? ' · ' : ''}
+                        ${property.bathrooms ? `${property.bathrooms} bath${property.bathrooms > 1 ? 's' : ''}` : ''}
+                        ${(property.bedrooms || property.bathrooms) && property.max_guests ? ' · ' : ''}
+                        ${property.max_guests ? `${property.max_guests} guest${property.max_guests > 1 ? 's' : ''}` : ''}
+                    </div>
+                    
                     <div class="property-price">
-                        <span class="price">$${property.base_price}</span>
-                        <span class="period">/night</span>
+                        <span class="price-amount">$${property.base_price}</span>
+                        <span class="price-period"> night</span>
                     </div>
                 </div>
             </div>
         `;
     }
 
+    // Determine if property is guest favorite (consistent based on property ID)
+    isPropertyGuestFavorite(propertyId) {
+        // Create a simple hash from the property ID to ensure consistency
+        let hash = 0;
+        const str = propertyId.toString();
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32-bit integer
+        }
+        
+        // Use the hash to determine if it's a guest favorite (approximately 30% chance)
+        return Math.abs(hash) % 10 < 3;
+    }
+
+    // Get consistent rating for property based on ID
+    getPropertyRating(propertyId) {
+        // Create a different hash for rating
+        let hash = 0;
+        const str = propertyId.toString() + '_rating';
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32-bit integer
+        }
+        
+        // Generate rating between 4.0 and 5.0
+        const normalizedHash = Math.abs(hash) / 2147483647; // Normalize to 0-1
+        const rating = 4.0 + normalizedHash;
+        return rating.toFixed(1);
+    }
+
     // Setup property card event listeners
     setupPropertyCardListeners() {
         const propertyCards = document.querySelectorAll('.property-card');
-        const wishlistBtns = document.querySelectorAll('.wishlist-btn');
+        const favoriteBtns = document.querySelectorAll('.property-favorite');
+        
+        // Setup favorite button functionality
+        favoriteBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                this.toggleFavorite(btn);
+            });
+        });
         
         propertyCards.forEach(card => {
             card.addEventListener('click', (e) => {
-                if (!e.target.closest('.wishlist-btn')) {
+                if (!e.target.closest('.property-favorite')) {
                     const propertyId = card.getAttribute('data-property-id');
                     this.showPropertyModal(propertyId);
                 }
@@ -575,6 +636,21 @@ class PropertiesManager {
                 this.toggleWishlist(propertyId, btn);
             });
         });
+    }
+
+    // Toggle favorite status
+    toggleFavorite(btn) {
+        const isActive = btn.classList.contains('active');
+        btn.classList.toggle('active', !isActive);
+        
+        // Optional: Add animation feedback
+        btn.style.transform = 'scale(0.8)';
+        setTimeout(() => {
+            btn.style.transform = 'scale(1)';
+        }, 150);
+        
+        // Here you would normally save to database/localStorage
+        // For demo purposes, we'll just toggle the visual state
     }
 
     // Show property modal
@@ -1577,6 +1653,240 @@ class PropertiesManager {
                 primaryImage: null,
                 images: [],
                 created_at: '2024-01-20T00:00:00Z'
+            },
+            {
+                id: 'sample-7',
+                title: 'Lakefront Villa',
+                description: 'Luxurious villa with private lake access and stunning water views. Perfect for family gatherings.',
+                property_type: 'villa',
+                view_type: 'lake',
+                address: '321 Lakeside Drive',
+                city: 'Lake Tahoe',
+                state: 'Nevada',
+                country: 'United States',
+                bedrooms: 4,
+                bathrooms: 3,
+                max_guests: 8,
+                base_price: 350,
+                currency: 'USD',
+                cleaning_fee: 100,
+                min_stay: 3,
+                amenities: ['wifi', 'parking', 'pool', 'kitchen', 'dock'],
+                is_active: true,
+                featured: true,
+                averageRating: 4.9,
+                reviewCount: 31,
+                primaryImage: null,
+                images: [],
+                created_at: '2024-01-10T00:00:00Z'
+            },
+            {
+                id: 'sample-8',
+                title: 'Downtown Loft',
+                description: 'Modern loft in the heart of the city with stunning skyline views. Walking distance to restaurants and attractions.',
+                property_type: 'apartment',
+                view_type: 'city',
+                address: '789 Urban Street',
+                city: 'New York',
+                state: 'New York',
+                country: 'United States',
+                bedrooms: 1,
+                bathrooms: 1,
+                max_guests: 3,
+                base_price: 200,
+                currency: 'USD',
+                cleaning_fee: 75,
+                min_stay: 2,
+                amenities: ['wifi', 'kitchen', 'gym'],
+                is_active: true,
+                featured: false,
+                averageRating: 4.6,
+                reviewCount: 18,
+                primaryImage: null,
+                images: [],
+                created_at: '2024-01-05T00:00:00Z'
+            },
+            {
+                id: 'sample-9',
+                title: 'Forest Retreat',
+                description: 'Secluded cabin deep in the forest with incredible nature views. Ideal for digital detox and relaxation.',
+                property_type: 'cabin',
+                view_type: 'forest',
+                address: '456 Pine Grove',
+                city: 'Olympic National Park',
+                state: 'Washington',
+                country: 'United States',
+                bedrooms: 3,
+                bathrooms: 2,
+                max_guests: 6,
+                base_price: 175,
+                currency: 'USD',
+                cleaning_fee: 65,
+                min_stay: 2,
+                amenities: ['wifi', 'parking', 'kitchen', 'fireplace', 'hiking'],
+                is_active: true,
+                featured: true,
+                averageRating: 4.7,
+                reviewCount: 26,
+                primaryImage: null,
+                images: [],
+                created_at: '2024-01-12T00:00:00Z'
+            },
+            {
+                id: 'sample-10',
+                title: 'Cliffside House',
+                description: 'Dramatic house perched on ocean cliffs with unobstructed ocean views. Breathtaking sunsets guaranteed.',
+                property_type: 'house',
+                view_type: 'ocean',
+                address: '654 Cliff Road',
+                city: 'Big Sur',
+                state: 'California',
+                country: 'United States',
+                bedrooms: 3,
+                bathrooms: 2.5,
+                max_guests: 6,
+                base_price: 400,
+                currency: 'USD',
+                cleaning_fee: 120,
+                min_stay: 3,
+                amenities: ['wifi', 'parking', 'kitchen', 'deck', 'hot_tub'],
+                is_active: true,
+                featured: true,
+                averageRating: 5.0,
+                reviewCount: 8,
+                primaryImage: null,
+                images: [],
+                created_at: '2024-01-25T00:00:00Z'
+            },
+            {
+                id: 'sample-11',
+                title: 'Mountain Lodge',
+                description: 'Rustic lodge with panoramic mountain views. Great for ski trips and mountain adventures.',
+                property_type: 'lodge',
+                view_type: 'mountain',
+                address: '987 Alpine Way',
+                city: 'Jackson',
+                state: 'Wyoming',
+                country: 'United States',
+                bedrooms: 5,
+                bathrooms: 4,
+                max_guests: 10,
+                base_price: 300,
+                currency: 'USD',
+                cleaning_fee: 150,
+                min_stay: 4,
+                amenities: ['wifi', 'parking', 'kitchen', 'fireplace', 'ski_storage'],
+                is_active: true,
+                featured: false,
+                averageRating: 4.8,
+                reviewCount: 35,
+                primaryImage: null,
+                images: [],
+                created_at: '2024-01-02T00:00:00Z'
+            },
+            {
+                id: 'sample-12',
+                title: 'Urban Penthouse',
+                description: 'Luxury penthouse with 360-degree city views. Premium amenities and rooftop access included.',
+                property_type: 'penthouse',
+                view_type: 'city',
+                address: '123 Skyline Tower',
+                city: 'Miami',
+                state: 'Florida',
+                country: 'United States',
+                bedrooms: 2,
+                bathrooms: 2,
+                max_guests: 4,
+                base_price: 450,
+                currency: 'USD',
+                cleaning_fee: 125,
+                min_stay: 3,
+                amenities: ['wifi', 'pool', 'kitchen', 'rooftop', 'concierge'],
+                is_active: true,
+                featured: true,
+                averageRating: 4.9,
+                reviewCount: 42,
+                primaryImage: null,
+                images: [],
+                created_at: '2024-01-18T00:00:00Z'
+            },
+            {
+                id: 'sample-13',
+                title: 'Desert Oasis',
+                description: 'Unique desert property with stunning sunrise views. Pool and spa overlooking the vast landscape.',
+                property_type: 'villa',
+                view_type: 'desert',
+                address: '456 Cactus Valley',
+                city: 'Scottsdale',
+                state: 'Arizona',
+                country: 'United States',
+                bedrooms: 3,
+                bathrooms: 3,
+                max_guests: 6,
+                base_price: 275,
+                currency: 'USD',
+                cleaning_fee: 85,
+                min_stay: 2,
+                amenities: ['wifi', 'parking', 'pool', 'kitchen', 'spa'],
+                is_active: true,
+                featured: false,
+                averageRating: 4.4,
+                reviewCount: 19,
+                primaryImage: null,
+                images: [],
+                created_at: '2024-01-22T00:00:00Z'
+            },
+            {
+                id: 'sample-14',
+                title: 'River Cabin',
+                description: 'Cozy cabin right on the river with fishing access. Perfect for nature lovers and outdoor enthusiasts.',
+                property_type: 'cabin',
+                view_type: 'river',
+                address: '789 Riverside Trail',
+                city: 'Bend',
+                state: 'Oregon',
+                country: 'United States',
+                bedrooms: 2,
+                bathrooms: 1,
+                max_guests: 4,
+                base_price: 140,
+                currency: 'USD',
+                cleaning_fee: 50,
+                min_stay: 2,
+                amenities: ['wifi', 'parking', 'kitchen', 'fishing', 'kayak'],
+                is_active: true,
+                featured: false,
+                averageRating: 4.6,
+                reviewCount: 14,
+                primaryImage: null,
+                images: [],
+                created_at: '2024-01-14T00:00:00Z'
+            },
+            {
+                id: 'sample-15',
+                title: 'Vineyard Estate',
+                description: 'Elegant estate among rolling vineyards with wine tasting opportunities. Luxury meets countryside charm.',
+                property_type: 'estate',
+                view_type: 'countryside',
+                address: '321 Vineyard Lane',
+                city: 'Sonoma',
+                state: 'California',
+                country: 'United States',
+                bedrooms: 4,
+                bathrooms: 3.5,
+                max_guests: 8,
+                base_price: 500,
+                currency: 'USD',
+                cleaning_fee: 150,
+                min_stay: 3,
+                amenities: ['wifi', 'parking', 'pool', 'kitchen', 'wine_tasting'],
+                is_active: true,
+                featured: true,
+                averageRating: 4.8,
+                reviewCount: 27,
+                primaryImage: null,
+                images: [],
+                created_at: '2024-01-28T00:00:00Z'
             }
         ];
     }

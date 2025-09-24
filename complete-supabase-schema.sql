@@ -1,4 +1,4 @@
--- ViewVista Database Schema
+-- RentThatView Database Schema
 -- Supabase PostgreSQL Schema with Row Level Security
 
 -- Enable necessary extensions

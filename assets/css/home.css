@@ -131,7 +131,7 @@
     margin-bottom: 2rem;
     font-size: 1.75rem;
     padding-bottom: 0.75rem;
-    border-bottom: 3px solid #2563eb;
+    border-bottom: 3px solid #648e38;
 }
 
 .step {
@@ -152,7 +152,7 @@
 }
 
 .step-number {
-    background-color: #2563eb;
+    background: linear-gradient(180deg, #89d957, #5d704a, #32491b);
     color: white;
     width: 40px;
     height: 40px;

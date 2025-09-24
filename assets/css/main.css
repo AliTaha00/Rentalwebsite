@@ -48,13 +48,13 @@ p {
 }
 
 a {
-    color: #2563eb;
+    color: #648e38;
     text-decoration: none;
     transition: color 0.2s ease;
 }
 
 a:hover {
-    color: #1d4ed8;
+    color: #5d704a;
 }
 
 /* ===== LAYOUT UTILITIES ===== */
@@ -103,27 +103,27 @@ a:hover {
 }
 
 .btn-primary {
-    background-color: #2563eb;
+    background: linear-gradient(180deg, #89d957, #5d704a, #32491b);
     color: white;
-    border-color: #2563eb;
+    border-color: #648e38;
 }
 
 .btn-primary:hover {
-    background-color: #1d4ed8;
-    border-color: #1d4ed8;
+    background: linear-gradient(180deg, #7bc74a, #52643d, #2b3f18);
+    border-color: #5d704a;
     color: white;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    box-shadow: 0 4px 12px rgba(100, 142, 56, 0.3);
 }
 
 .btn-secondary {
     background-color: transparent;
-    color: #2563eb;
-    border-color: #2563eb;
+    color: #648e38;
+    border-color: #648e38;
 }
 
 .btn-secondary:hover {
-    background-color: #2563eb;
+    background-color: #648e38;
     color: white;
     transform: translateY(-1px);
 }
@@ -168,7 +168,7 @@ a:hover {
 }
 
 .nav-logo h2 {
-    color: #2563eb;
+    color: #648e38;
     margin: 0;
     font-size: 1.75rem;
 }
@@ -186,15 +186,15 @@ a:hover {
 }
 
 .nav-link:hover {
-    color: #2563eb;
+    color: #648e38;
 }
 
 .nav-link.login-btn {
-    color: #2563eb;
+    color: #648e38;
 }
 
 .nav-link.register-btn {
-    background-color: #2563eb;
+    background-color: #648e38;
     color: white;
     padding: 0.5rem 1rem;
     border-radius: 6px;
@@ -202,7 +202,7 @@ a:hover {
 }
 
 .nav-link.register-btn:hover {
-    background-color: #1d4ed8;
+    background-color: #5d704a;
     color: white;
 }
 
@@ -248,7 +248,7 @@ a:hover {
 .form-group textarea:focus,
 .form-group select:focus {
     outline: none;
-    border-color: #2563eb;
+    border-color: #648e38;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
@@ -345,7 +345,7 @@ a:hover {
     width: 40px;
     height: 40px;
     border: 4px solid #e5e7eb;
-    border-top: 4px solid #2563eb;
+    border-top: 4px solid #648e38;
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin: 0 auto 1rem;
@@ -384,7 +384,7 @@ a:hover {
 .alert-info {
     background-color: #eff6ff;
     border: 1px solid #bfdbfe;
-    color: #2563eb;
+    color: #648e38;
 }
 
 /* ===== TOASTS ===== */
@@ -413,7 +413,7 @@ a:hover {
 .toast-success { background-color: #f0fdf4; border-color: #bbf7d0; color: #166534; }
 .toast-error { background-color: #fef2f2; border-color: #fecaca; color: #dc2626; }
 .toast-warning { background-color: #fffbeb; border-color: #fed7aa; color: #d97706; }
-.toast-info { background-color: #eff6ff; border-color: #bfdbfe; color: #2563eb; }
+.toast-info { background-color: #f0f9ff; border-color: #bfdbfe; color: #648e38; }
 
 .toast-hide { opacity: 0; transform: translateY(-6px); }
 
@@ -537,6 +537,5 @@ a:hover {
 .text-gray-500 { color: #6b7280; }
 .text-gray-600 { color: #4b5563; }
 .text-gray-700 { color: #374151; }
-.text-blue-600 { color: #2563eb; }
+.text-green-600 { color: #648e38; }
 .text-red-600 { color: #dc2626; }
-.text-green-600 { color: #059669; }

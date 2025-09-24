@@ -117,14 +117,14 @@
 }
 
 .section-link {
-    color: #2563eb;
+    color: #648e38;
     font-weight: 500;
     text-decoration: none;
     transition: color 0.2s ease;
 }
 
 .section-link:hover {
-    color: #1d4ed8;
+    color: #5d704a;
     text-decoration: underline;
 }
 
@@ -170,7 +170,7 @@
 .message-card:hover,
 .review-card:hover,
 .activity-card:hover {
-    border-color: #2563eb;
+    border-color: #648e38;
     box-shadow: 0 2px 4px rgba(37, 99, 235, 0.1);
 }
 
@@ -511,7 +511,7 @@
 .stat-card:focus,
 .booking-card:focus,
 .property-card-dashboard:focus {
-    outline: 2px solid #2563eb;
+    outline: 2px solid #648e38;
     outline-offset: 2px;
 }
 

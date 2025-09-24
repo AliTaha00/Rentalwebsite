@@ -1,6 +1,6 @@
-# ViewVista - Premium Property Rentals with Stunning Views
+# RentThatView - Premium Property Rentals with Stunning Views
 
-ViewVista is a modern rental property platform that connects property owners with travelers seeking accommodations with beautiful views. Built with security, scalability, and user experience in mind.
+RentThatView is a modern rental property platform that connects property owners with travelers seeking accommodations with beautiful views. Built with security, scalability, and user experience in mind.
 
 ## 🌟 Features
 
@@ -281,4 +281,4 @@ For technical issues or questions:
 
 ---
 
-**ViewVista** - Connecting travelers with unforgettable views 🏔️🌊🏙️
+**RentThatView** - Connecting travelers with unforgettable views 🏔️🌊🏙️

@@ -4,7 +4,7 @@
 // - Navbar scrolled state
 // - HTML sanitization utility (used across pages)
 
-class ViewVistaApp {
+class RentThatViewApp {
     constructor() {
         this.setupNavigation();
         this.setupScrollHandler();
@@ -170,10 +170,10 @@ class ViewVistaApp {
 
 // Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
-    window.viewVistaApp = new ViewVistaApp();
+    window.viewVistaApp = new RentThatViewApp();
 });
 
 // CommonJS export (for tests/tooling)
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = ViewVistaApp;
+    module.exports = RentThatViewApp;
 }
