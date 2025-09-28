@@ -23,6 +23,7 @@ class PropertiesManager {
             this.setupEventListeners();
             this.setupAdvancedFilters();
             this.setupViewControls();
+            this.setupCategoryTabs();
             this.setupPagination();
             this.handleUrlParameters();
             this.loadProperties();
@@ -148,6 +149,45 @@ class PropertiesManager {
                 this.renderProperties();
             });
         });
+    }
+
+    // Setup category tabs
+    setupCategoryTabs() {
+        const categoryTabs = document.querySelectorAll('.category-tab');
+        
+        categoryTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const category = tab.getAttribute('data-category');
+                
+                // Update active tab
+                categoryTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Filter properties by category
+                this.filterByCategory(category);
+            });
+        });
+    }
+
+    // Filter properties by category
+    filterByCategory(category) {
+        if (category === 'all') {
+            // Show all properties
+            this.currentFilters.viewType = '';
+        } else {
+            // Map category to view type
+            const categoryMap = {
+                'mountain': 'mountain',
+                'ocean': 'ocean', 
+                'city': 'city',
+                'countryside': 'countryside'
+            };
+            this.currentFilters.viewType = categoryMap[category] || '';
+        }
+        
+        // Reset to first page and reload
+        this.currentPage = 1;
+        this.loadProperties();
     }
 
     // Setup pagination
@@ -504,37 +544,28 @@ class PropertiesManager {
     // Render individual property card
     renderPropertyCard(property) {
         const imageUrl = property.primaryImage || property.images?.[0];
-        const viewTypeEmojis = {
-            mountain: '🏔️',
-            ocean: '🌊', 
-            city: '🏙️',
-            forest: '🌲',
-            lake: '🏞️',
-            countryside: '🌾'
-        };
-        
-        // Make guest favorite consistent based on property ID
         const isGuestFavorite = this.isPropertyGuestFavorite(property.id);
-        
+
+        const features = [
+            property.bedrooms ? `${property.bedrooms} bed${property.bedrooms > 1 ? 's' : ''}` : null,
+            property.bathrooms ? `${property.bathrooms} bath${property.bathrooms > 1 ? 's' : ''}` : null,
+            property.max_guests ? `${property.max_guests} guest${property.max_guests > 1 ? 's' : ''}` : null
+        ].filter(Boolean).join(' · ');
+
         return `
             <div class="property-card" data-property-id="${property.id}">
                 <div class="property-image-container">
-                    ${imageUrl ? 
-                        `<img src="${imageUrl}" alt="${property.title}" class="property-image">` : 
+                    ${imageUrl ?
+                        `<img src="${imageUrl}" alt="${property.title}" class="property-image">` :
                         `<div class="image-placeholder">Beautiful ${property.view_type} views await</div>`
                     }
-                    
-                    ${isGuestFavorite ? 
-                        `<div class="property-badge">Guest favorite</div>` : ''
-                    }
-                    
+                    ${isGuestFavorite ? `<div class="property-badge">Guest favorite</div>` : ''}
                     <button class="property-favorite" data-property-id="${property.id}">
-                        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-                            <path d="m16 28c7-4.733 14-10 14-17 0-1.792-.683-3.583-2.05-4.95-1.367-1.366-3.158-2.05-4.95-2.05-1.791 0-3.583.684-4.949 2.05l-2.051 2.051-2.05-2.051c-1.367-1.366-3.158-2.05-4.95-2.05-1.791 0-3.583.684-4.949 2.05-1.367 1.367-2.051 3.158-2.051 4.95 0 7 7 12.267 14 17z"></path>
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 21s-7.5-4.8-9.6-9.6C1.5 8.6 3.1 6 6 6c1.8 0 3 .9 4 2 1-1.1 2.2-2 4-2 2.9 0 4.5 2.6 3.6 5.4C19.5 16.2 12 21 12 21z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
                         </svg>
                     </button>
                 </div>
-                
                 <div class="property-info">
                     <div class="property-header">
                         <div class="property-location">${property.city}, ${property.state}</div>
@@ -545,20 +576,11 @@ class PropertiesManager {
                             <span class="rating-number">${this.getPropertyRating(property.id)}</span>
                         </div>
                     </div>
-                    
                     <div class="property-title">${property.title}</div>
-                    
-                    <div class="property-details">
-                        ${property.bedrooms ? `${property.bedrooms} bed${property.bedrooms > 1 ? 's' : ''}` : ''}
-                        ${property.bedrooms && property.bathrooms ? ' · ' : ''}
-                        ${property.bathrooms ? `${property.bathrooms} bath${property.bathrooms > 1 ? 's' : ''}` : ''}
-                        ${(property.bedrooms || property.bathrooms) && property.max_guests ? ' · ' : ''}
-                        ${property.max_guests ? `${property.max_guests} guest${property.max_guests > 1 ? 's' : ''}` : ''}
-                    </div>
-                    
+                    <div class="property-details">${features}</div>
                     <div class="property-price">
                         <span class="price-amount">$${property.base_price}</span>
-                        <span class="price-period"> night</span>
+                        <span class="price-period"> per night</span>
                     </div>
                 </div>
             </div>
@@ -628,7 +650,8 @@ class PropertiesManager {
                 }
             });
         });
-        
+        // Guard: wishlist buttons may not exist on all cards
+        const wishlistBtns = document.querySelectorAll('.wishlist-btn');
         wishlistBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
