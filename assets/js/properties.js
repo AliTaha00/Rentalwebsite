@@ -24,6 +24,7 @@ class PropertiesManager {
             this.setupAdvancedFilters();
             this.setupViewControls();
             this.setupCategoryTabs();
+            this.setupCompactNavSearch();
             this.setupPagination();
             this.handleUrlParameters();
             this.loadProperties();
@@ -32,6 +33,64 @@ class PropertiesManager {
             console.error('Properties initialization error:', error);
             this.showError('Failed to initialize properties page. Please refresh.');
         }
+    }
+
+    // Compact search in navbar on scroll
+    setupCompactNavSearch() {
+        const navSearchWrap = document.getElementById('navSearchCompact');
+        const compactForm = document.getElementById('compactSearchForm');
+        const mainLocation = document.getElementById('location');
+        const mainCheckIn = document.getElementById('checkIn');
+        const mainCheckOut = document.getElementById('checkOut');
+        const mainGuests = document.getElementById('guests');
+
+        const navLocation = document.getElementById('navLocation');
+        const navCheckIn = document.getElementById('navCheckIn');
+        const navCheckOut = document.getElementById('navCheckOut');
+        const navGuests = document.getElementById('navGuests');
+        const heroSection = document.querySelector('.hero-search');
+        const navbar = document.querySelector('.navbar');
+
+        if (!navSearchWrap || !compactForm || !navbar) return;
+
+        const syncToMain = () => {
+            if (mainLocation && navLocation) mainLocation.value = navLocation.value;
+            if (mainCheckIn && navCheckIn) mainCheckIn.value = navCheckIn.value;
+            if (mainCheckOut && navCheckOut) mainCheckOut.value = navCheckOut.value;
+            if (mainGuests && navGuests) mainGuests.value = navGuests.value;
+            this.handleSearch();
+        };
+
+        const syncFromMain = () => {
+            if (mainLocation && navLocation) navLocation.value = mainLocation.value;
+            if (mainCheckIn && navCheckIn) navCheckIn.value = mainCheckIn.value;
+            if (mainCheckOut && navCheckOut) navCheckOut.value = mainCheckOut.value;
+            if (mainGuests && navGuests) navGuests.value = mainGuests.value;
+        };
+
+        // Keep values in sync when user types in the main field
+        [mainLocation, mainCheckIn, mainCheckOut, mainGuests].forEach(el => {
+            if (!el) return;
+            const evt = el.tagName === 'SELECT' ? 'change' : 'input';
+            el.addEventListener(evt, syncFromMain);
+        });
+
+        // Submit from compact form triggers main search
+        compactForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            syncToMain();
+        });
+
+        const showOrHide = () => {
+            // Show earlier while scrolling (appears after a small scroll)
+            const shouldShow = window.scrollY > 60;
+            navSearchWrap.classList.toggle('is-visible', shouldShow);
+            // ensure navbar gets scrolled class from global logic, just rely on it
+        };
+
+        showOrHide();
+        window.addEventListener('scroll', this.debounce(showOrHide, 50));
+        window.addEventListener('resize', this.debounce(showOrHide, 100));
     }
 
     // Setup event listeners

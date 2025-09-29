@@ -19,6 +19,35 @@
                 <a href="pages/login.html" class="nav-link" id="auth-link">Login</a>
                 <a href="pages/register.html" class="nav-link register-btn" id="register-link">Get Started</a>
             </div>
+            <!-- Compact search that appears on scroll -->
+            <div class="nav-search-compact" id="navSearchCompact" aria-hidden="true">
+                <form id="compactSearchForm" class="nav-search-form" role="search">
+                    <div class="nav-search-seg">
+                        <input type="text" id="navLocation" placeholder="Where to?" aria-label="Destination">
+                    </div>
+                    <span class="nav-search-divider"></span>
+                    <div class="nav-search-seg">
+                        <input type="date" id="navCheckIn" aria-label="Check in">
+                    </div>
+                    <span class="nav-search-divider"></span>
+                    <div class="nav-search-seg">
+                        <input type="date" id="navCheckOut" aria-label="Check out">
+                    </div>
+                    <span class="nav-search-divider"></span>
+                    <div class="nav-search-seg">
+                        <select id="navGuests" aria-label="Guests">
+                            <option value="1">1 guest</option>
+                            <option value="2" selected>2 guests</option>
+                            <option value="3">3 guests</option>
+                            <option value="4">4 guests</option>
+                            <option value="5">5+ guests</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="nav-search-btn" aria-label="Search">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    </button>
+                </form>
+            </div>
             <div class="nav-toggle">
                 <span></span>
                 <span></span>
