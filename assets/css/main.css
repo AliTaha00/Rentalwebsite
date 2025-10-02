@@ -169,46 +169,73 @@ a:hover {
     position: relative;
 }
 
+.nav-logo {
+    order: 1;
+}
+
+.nav-search-compact {
+    order: 2;
+}
+
+.nav-menu {
+    order: 3;
+}
+
+.nav-toggle {
+    order: 4;
+}
+
 /* Compact navbar search (appears on scroll) */
 .nav-search-compact {
     display: none;
     align-items: center;
-    position: absolute;
-    left: 200px;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 2;
+    justify-content: center;
+    margin-left: 2rem;
+    margin-right: auto;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
-.nav-search-compact.is-visible { display: flex; }
-.navbar.scrolled .nav-search-compact.is-visible { display: flex; }
+.nav-search-compact.is-visible { 
+    display: flex; 
+    opacity: 1;
+}
 
 .nav-search-form {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
     background: #fff;
     border: 1px solid #e5e7eb;
     border-radius: 999px;
-    padding: 4px 4px 4px 10px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    padding: 3px 3px 3px 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
 .nav-search-form input,
 .nav-search-form select {
     border: none;
     outline: none;
-    width: 120px;
-    font-size: 14px;
+    width: 90px;
+    font-size: 13px;
     background: transparent;
+    padding: 4px 6px;
 }
 
-.nav-search-seg { display: flex; align-items: center; }
-.nav-search-divider { width: 1px; height: 22px; background: #e5e7eb; }
+.nav-search-seg { 
+    display: flex; 
+    align-items: center; 
+}
+
+.nav-search-divider { 
+    width: 1px; 
+    height: 18px; 
+    background: #e5e7eb; 
+}
 
 .nav-search-btn {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     border: none;
     border-radius: 50%;
     display: inline-flex;
@@ -217,11 +244,21 @@ a:hover {
     color: white;
     background: linear-gradient(180deg, #89d957, #5d704a, #32491b);
     cursor: pointer;
+    flex-shrink: 0;
+}
+
+.nav-search-btn svg {
+    width: 14px;
+    height: 14px;
 }
 
 @media (max-width: 1024px) {
     .nav-search-form input,
-    .nav-search-form select { width: 100px; }
+    .nav-search-form select { width: 70px; }
+    
+    .nav-search-compact {
+        margin: 0 1rem;
+    }
 }
 
 @media (max-width: 768px) {

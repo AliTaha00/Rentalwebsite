@@ -82,10 +82,17 @@ class PropertiesManager {
         });
 
         const showOrHide = () => {
-            // Show earlier while scrolling (appears after a small scroll)
-            const shouldShow = window.scrollY > 60;
+            // Show compact search when main search bar is scrolled out of view
+            const mainSearchBar = document.querySelector('.main-search-bar');
+            if (!mainSearchBar) return;
+            
+            const searchBarBottom = mainSearchBar.getBoundingClientRect().bottom;
+            const navbarHeight = navbar.offsetHeight;
+            
+            // Show when main search bar is no longer visible below navbar
+            const shouldShow = searchBarBottom < navbarHeight;
+            
             navSearchWrap.classList.toggle('is-visible', shouldShow);
-            // ensure navbar gets scrolled class from global logic, just rely on it
         };
 
         showOrHide();
