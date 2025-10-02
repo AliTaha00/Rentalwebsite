@@ -25,7 +25,10 @@
             <div class="nav-search-compact" id="navSearchCompact" aria-hidden="true">
                 <form id="compactSearchForm" class="nav-search-form" role="search">
                     <div class="nav-search-seg">
-                        <input type="text" id="navLocation" placeholder="Where to?" aria-label="Destination">
+                        <div class="autocomplete-wrapper">
+                            <input type="text" id="navLocation" placeholder="Where to?" aria-label="Destination" autocomplete="off">
+                            <div class="autocomplete-dropdown" id="navLocationAutocomplete"></div>
+                        </div>
                     </div>
                     <span class="nav-search-divider"></span>
                     <div class="nav-search-seg">
@@ -70,7 +73,10 @@
                     <div class="search-container">
                         <div class="search-field where-field">
                             <label for="location">Where</label>
-                            <input type="text" id="location" name="location" placeholder="Search destinations">
+                            <div class="autocomplete-wrapper">
+                                <input type="text" id="location" name="location" placeholder="Search destinations" autocomplete="off">
+                                <div class="autocomplete-dropdown" id="locationAutocomplete"></div>
+                            </div>
                         </div>
                         
                         <div class="search-divider"></div>

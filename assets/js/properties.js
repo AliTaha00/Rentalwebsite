@@ -20,6 +20,7 @@ class PropertiesManager {
             // Wait for Supabase to be initialized
             await this.supabaseClient.waitForInit();
             
+            this.setupLocationAutocomplete();
             this.setupDatePickers();
             this.setupEventListeners();
             this.setupAdvancedFilters();
@@ -34,6 +35,189 @@ class PropertiesManager {
             console.error('Properties initialization error:', error);
             this.showError('Failed to initialize properties page. Please refresh.');
         }
+    }
+
+    // Setup location autocomplete
+    setupLocationAutocomplete() {
+        const mainInput = document.getElementById('location');
+        const mainDropdown = document.getElementById('locationAutocomplete');
+        const navInput = document.getElementById('navLocation');
+        const navDropdown = document.getElementById('navLocationAutocomplete');
+
+        if (mainInput && mainDropdown) {
+            this.initAutocomplete(mainInput, mainDropdown, navInput);
+        }
+
+        if (navInput && navDropdown) {
+            this.initAutocomplete(navInput, navDropdown, mainInput);
+        }
+    }
+
+    initAutocomplete(input, dropdown, syncInput) {
+        let debounceTimer;
+        let selectedIndex = -1;
+
+        const hideDropdown = () => {
+            dropdown.classList.remove('active');
+            selectedIndex = -1;
+        };
+
+        const showDropdown = () => {
+            if (dropdown.children.length > 0) {
+                dropdown.classList.add('active');
+            }
+        };
+
+        const selectItem = (item) => {
+            input.value = item.place_name || item.full_name;
+            if (syncInput) syncInput.value = input.value;
+            hideDropdown();
+        };
+
+        // Handle input
+        input.addEventListener('input', (e) => {
+            const query = e.target.value.trim();
+
+            clearTimeout(debounceTimer);
+
+            if (query.length < 2) {
+                hideDropdown();
+                return;
+            }
+
+            dropdown.innerHTML = '<div class="autocomplete-loading">Searching...</div>';
+            showDropdown();
+
+            debounceTimer = setTimeout(async () => {
+                try {
+                    const results = await this.searchLocations(query);
+                    this.renderAutocompleteResults(dropdown, results, selectItem);
+                    showDropdown();
+                } catch (error) {
+                    console.error('Autocomplete error:', error);
+                    dropdown.innerHTML = '<div class="autocomplete-no-results">Error loading results</div>';
+                }
+            }, 300);
+        });
+
+        // Handle keyboard navigation
+        input.addEventListener('keydown', (e) => {
+            const items = dropdown.querySelectorAll('.autocomplete-item');
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+                this.updateSelectedItem(items, selectedIndex);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedIndex = Math.max(selectedIndex - 1, 0);
+                this.updateSelectedItem(items, selectedIndex);
+            } else if (e.key === 'Enter' && selectedIndex >= 0) {
+                e.preventDefault();
+                items[selectedIndex]?.click();
+            } else if (e.key === 'Escape') {
+                hideDropdown();
+            }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                hideDropdown();
+            }
+        });
+
+        // Show dropdown when focusing if there are results
+        input.addEventListener('focus', () => {
+            if (dropdown.children.length > 0 && input.value.trim().length >= 2) {
+                showDropdown();
+            }
+        });
+    }
+
+    async searchLocations(query) {
+        // Using Nominatim (OpenStreetMap) - free, no API key required
+        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&addressdetails=1`;
+        
+        const response = await fetch(url, {
+            headers: {
+                'User-Agent': 'RentThatView/1.0'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch locations');
+        }
+
+        const data = await response.json();
+        
+        // Transform to consistent format
+        return data.map(item => ({
+            place_name: item.display_name,
+            full_name: item.display_name,
+            name: item.name || item.display_name.split(',')[0],
+            region: this.getRegion(item),
+            type: item.type,
+            lat: item.lat,
+            lon: item.lon
+        }));
+    }
+
+    getRegion(item) {
+        const address = item.address || {};
+        const parts = [];
+        
+        if (address.city || address.town || address.village) {
+            parts.push(address.city || address.town || address.village);
+        }
+        if (address.state) parts.push(address.state);
+        if (address.country) parts.push(address.country);
+        
+        return parts.join(', ') || item.display_name;
+    }
+
+    renderAutocompleteResults(dropdown, results, onSelect) {
+        if (results.length === 0) {
+            dropdown.innerHTML = '<div class="autocomplete-no-results">No locations found</div>';
+            return;
+        }
+
+        dropdown.innerHTML = results.map(result => `
+            <div class="autocomplete-item" data-value="${this.escapeHtml(result.full_name)}">
+                <div class="autocomplete-item-icon">📍</div>
+                <div class="autocomplete-item-text">
+                    <div class="autocomplete-item-name">${this.escapeHtml(result.name)}</div>
+                    <div class="autocomplete-item-location">${this.escapeHtml(result.region)}</div>
+                </div>
+            </div>
+        `).join('');
+
+        // Add click handlers
+        dropdown.querySelectorAll('.autocomplete-item').forEach(item => {
+            item.addEventListener('click', () => {
+                onSelect({
+                    place_name: item.dataset.value,
+                    full_name: item.dataset.value
+                });
+            });
+        });
+    }
+
+    updateSelectedItem(items, selectedIndex) {
+        items.forEach((item, index) => {
+            if (index === selectedIndex) {
+                item.classList.add('selected');
+                item.scrollIntoView({ block: 'nearest' });
+            } else {
+                item.classList.remove('selected');
+            }
+        });
+    }
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     // Setup modern date pickers with Flatpickr
