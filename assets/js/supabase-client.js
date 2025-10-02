@@ -91,6 +91,8 @@ class SupabaseClient {
 
     // Handle authentication state changes
     handleAuthStateChange(event, session) {
+        console.log('Auth state change:', event, session ? 'with session' : 'no session');
+        
         if (event === 'SIGNED_IN') {
             // Only redirect if not initializing and not already on a dashboard page
             if (!this._isInitializing) {
@@ -103,6 +105,7 @@ class SupabaseClient {
                 }, 1000);
             }
         } else if (event === 'SIGNED_OUT') {
+            console.log('User signed out, redirecting to home...');
             this.redirectToHome();
         }
 
@@ -156,6 +159,20 @@ class SupabaseClient {
         if (!this.supabase) {
             throw new Error('Supabase not initialized');
         }
+        
+        // Check if there's an active session
+        const { data: { session } } = await this.supabase.auth.getSession();
+        
+        if (!session) {
+            // No session to sign out from, just clear local state
+            console.log('No active session, clearing local state');
+            this.session = null;
+            this.user = null;
+            // Manually trigger the signed out event
+            this.handleAuthStateChange('SIGNED_OUT', null);
+            return;
+        }
+        
         const { error } = await this.supabase.auth.signOut();
         
         if (error) {
@@ -286,6 +303,8 @@ class SupabaseClient {
 
     redirectToHome() {
         const currentPath = window.location.pathname;
+        console.log('Redirecting to home from:', currentPath);
+        
         if (window.location.protocol === 'file:') {
             // For file protocol, we need to construct the exact path to index.html
             if (currentPath.includes('/pages/')) {
@@ -293,14 +312,16 @@ class SupabaseClient {
                 const projectRoot = currentPath.substring(0, currentPath.indexOf('/pages/'));
                 window.location.href = projectRoot + '/index.html';
             } else {
-                // We might already be in root, just go to index.html
-                const currentDir = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
-                window.location.href = currentDir + '/index.html';
+                // Already in root, reload to clear state
+                window.location.reload();
             }
         } else {
             // For web servers - redirect to index.html (properties page)
             if (currentPath !== '/' && !currentPath.includes('index.html')) {
                 window.location.href = '/';
+            } else {
+                // Already on home page, just reload to update UI
+                window.location.reload();
             }
         }
     }

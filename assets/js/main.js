@@ -115,48 +115,63 @@ class RentThatViewApp {
         const registerLink = navMenu.querySelector('a[href*="register.html"], .register-btn');
 
         if (user) {
+            // Convert Login to Dashboard
             if (loginLink) {
                 const userType = user.user_metadata?.account_type === 'owner' ? 'owner' : 'renter';
                 const dashboardPath = this.makePath(`pages/${userType}-dashboard.html`);
                 loginLink.textContent = 'Dashboard';
                 loginLink.classList.remove('login-btn');
+                loginLink.classList.add('nav-link');
                 loginLink.href = dashboardPath;
                 loginLink.onclick = (e) => {
                     e.preventDefault();
                     auth.redirectToDashboard();
                 };
-                // Mark as the canonical dashboard link
-                loginLink.setAttribute('data-dashboard-link', 'true');
-                // Hide any other dashboard-like links in the nav to avoid duplicates
-                navMenu.querySelectorAll('a').forEach(a => {
-                    if (a === loginLink) return;
-                    const href = a.getAttribute('href') || '';
-                    const txt = (a.textContent || '').toLowerCase();
-                    if (/owner-dashboard\.html|renter-dashboard\.html/.test(href) || txt.includes('dashboard')) {
-                        a.style.display = 'none';
-                    }
-                });
             }
+            
+            // Convert Get Started to Logout
             if (registerLink) {
                 registerLink.textContent = 'Logout';
                 registerLink.classList.remove('register-btn');
-                registerLink.href = this.makePath('pages/login.html');
+                registerLink.classList.add('nav-link', 'logout-btn');
+                registerLink.href = '#';
                 registerLink.onclick = async (e) => {
                     e.preventDefault();
-                    try { await auth.signOut(); } catch {}
+                    e.stopPropagation();
+                    try { 
+                        console.log('Logging out...');
+                        await auth.waitForInit(); // Ensure Supabase is initialized
+                        await auth.signOut();
+                        console.log('Logout successful');
+                        // signOut will trigger auth state change and redirect to home
+                    } catch (error) {
+                        console.error('Logout error:', error);
+                        // Don't show error for session missing - just proceed
+                        if (!error.message.includes('session')) {
+                            alert('Failed to logout: ' + error.message);
+                        } else {
+                            // Session already cleared, just reload
+                            window.location.reload();
+                        }
+                    }
                 };
             }
         } else {
+            // Restore original Login link
             if (loginLink) {
                 loginLink.textContent = 'Login';
                 loginLink.href = this.makePath('pages/login.html');
                 loginLink.onclick = null;
+                loginLink.classList.remove('nav-link');
                 loginLink.classList.add('login-btn');
             }
+            
+            // Restore original Get Started button
             if (registerLink) {
                 registerLink.textContent = 'Get Started';
                 registerLink.href = this.makePath('pages/register.html');
                 registerLink.onclick = null;
+                registerLink.classList.remove('logout-btn');
                 registerLink.classList.add('register-btn');
             }
         }

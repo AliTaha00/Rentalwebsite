@@ -468,10 +468,20 @@ class DashboardManager {
     // Handle logout
     async handleLogout() {
         try {
+            console.log('Dashboard logout initiated...');
+            await this.supabaseClient.waitForInit(); // Ensure Supabase is initialized
             await this.supabaseClient.signOut();
-            // Redirect will be handled by supabaseClient
+            console.log('Dashboard logout successful');
+            // Redirect will be handled by supabaseClient auth state change
         } catch (error) {
-            this.showError('Failed to logout. Please try again.');
+            console.error('Dashboard logout error:', error);
+            // Don't show error for session missing - just proceed with redirect
+            if (!error.message.includes('session')) {
+                this.showError('Failed to logout: ' + error.message);
+            } else {
+                // Session already cleared, redirect manually
+                this.supabaseClient.redirectToHome();
+            }
         }
     }
 

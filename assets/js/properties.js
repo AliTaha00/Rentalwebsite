@@ -1136,27 +1136,8 @@ class PropertiesManager {
 
     // Update authentication UI
     updateAuthUI() {
-        const authLink = document.getElementById('auth-link');
-        const registerLink = document.getElementById('register-link');
-        
-        if (this.supabaseClient.isAuthenticated()) {
-            if (authLink) {
-                authLink.textContent = 'Dashboard';
-                authLink.href = '#dashboard';
-                authLink.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    this.supabaseClient.redirectToDashboardIfNeeded();
-                });
-            }
-            
-            if (registerLink) {
-                registerLink.textContent = 'Logout';
-                registerLink.addEventListener('click', async (e) => {
-                    e.preventDefault();
-                    await this.supabaseClient.signOut();
-                });
-            }
-        }
+        // Auth UI is now handled globally by main.js syncAuthNav()
+        // This method kept for backwards compatibility but does nothing
     }
 
     // Log search for analytics

@@ -291,6 +291,15 @@ a:hover {
     color: #648e38;
 }
 
+.nav-link.logout-btn {
+    color: #dc2626;
+    font-weight: 500;
+}
+
+.nav-link.logout-btn:hover {
+    color: #b91c1c;
+}
+
 .nav-link.register-btn {
     background-color: #648e38;
     color: white;
