@@ -294,6 +294,12 @@ a:hover {
 .nav-link.logout-btn {
     color: #dc2626;
     font-weight: 500;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: inherit;
+    font-size: inherit;
+    cursor: pointer;
 }
 
 .nav-link.logout-btn:hover {

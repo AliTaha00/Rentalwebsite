@@ -6,6 +6,8 @@
     <title>Browse Properties - RentThatView</title>
     <link rel="stylesheet" href="assets/css/main.css">
     <link rel="stylesheet" href="assets/css/properties.css">
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body>
     <nav class="navbar">
@@ -27,11 +29,9 @@
                     </div>
                     <span class="nav-search-divider"></span>
                     <div class="nav-search-seg">
-                        <input type="date" id="navCheckIn" aria-label="Check in">
-                    </div>
-                    <span class="nav-search-divider"></span>
-                    <div class="nav-search-seg">
-                        <input type="date" id="navCheckOut" aria-label="Check out">
+                        <input type="text" id="navDates" placeholder="Dates" aria-label="Dates" readonly>
+                        <input type="hidden" id="navCheckIn">
+                        <input type="hidden" id="navCheckOut">
                     </div>
                     <span class="nav-search-divider"></span>
                     <div class="nav-search-seg">
@@ -75,16 +75,11 @@
                         
                         <div class="search-divider"></div>
                         
-                        <div class="search-field date-field">
-                            <label for="checkIn">Check in</label>
-                            <input type="date" id="checkIn" name="checkIn" placeholder="Add dates">
-                        </div>
-                        
-                        <div class="search-divider"></div>
-                        
-                        <div class="search-field date-field">
-                            <label for="checkOut">Check out</label>
-                            <input type="date" id="checkOut" name="checkOut" placeholder="Add dates">
+                        <div class="search-field dates-field">
+                            <label for="dates">Dates</label>
+                            <input type="text" id="dates" name="dates" placeholder="Add dates" readonly>
+                            <input type="hidden" id="checkIn" name="checkIn">
+                            <input type="hidden" id="checkOut" name="checkOut">
                         </div>
                         
                         <div class="search-divider"></div>
@@ -307,6 +302,8 @@
     <script src="assets/js/supabase-client.js"></script>
     <script src="assets/js/ui.js"></script>
     <script src="assets/js/main.js"></script>
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="assets/js/properties.js"></script>
 </body>
 </html>

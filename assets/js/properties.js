@@ -20,6 +20,7 @@ class PropertiesManager {
             // Wait for Supabase to be initialized
             await this.supabaseClient.waitForInit();
             
+            this.setupDatePickers();
             this.setupEventListeners();
             this.setupAdvancedFilters();
             this.setupViewControls();
@@ -35,41 +36,130 @@ class PropertiesManager {
         }
     }
 
+    // Setup modern date pickers with Flatpickr
+    setupDatePickers() {
+        if (typeof flatpickr === 'undefined') {
+            console.warn('Flatpickr not loaded');
+            return;
+        }
+
+        const today = new Date();
+        
+        // Main search date inputs
+        const datesInput = document.getElementById('dates');
+        const checkInInput = document.getElementById('checkIn');
+        const checkOutInput = document.getElementById('checkOut');
+        
+        // Nav compact search date inputs
+        const navDatesInput = document.getElementById('navDates');
+        const navCheckInInput = document.getElementById('navCheckIn');
+        const navCheckOutInput = document.getElementById('navCheckOut');
+        
+        // Common Flatpickr config
+        const commonConfig = {
+            minDate: today,
+            dateFormat: "M j",
+            mode: "range",
+            showMonths: 2,
+            disableMobile: true,
+            static: false,
+            onReady: function(selectedDates, dateStr, instance) {
+                instance.calendarContainer.classList.add('rent-that-view-calendar');
+            }
+        };
+        
+        // Initialize main dates picker
+        if (datesInput) {
+            flatpickr(datesInput, {
+                ...commonConfig,
+                onChange: (selectedDates, dateStr) => {
+                    if (selectedDates.length === 2) {
+                        // Update the visible dates field with formatted range
+                        const start = flatpickr.formatDate(selectedDates[0], 'M j');
+                        const end = flatpickr.formatDate(selectedDates[1], 'M j');
+                        datesInput.value = `${start} - ${end}`;
+                        
+                        // Update hidden fields with full dates
+                        if (checkInInput) checkInInput.value = flatpickr.formatDate(selectedDates[0], 'Y-m-d');
+                        if (checkOutInput) checkOutInput.value = flatpickr.formatDate(selectedDates[1], 'Y-m-d');
+                        
+                        // Sync to nav inputs
+                        if (navDatesInput) navDatesInput.value = datesInput.value;
+                        if (navCheckInInput) navCheckInInput.value = checkInInput.value;
+                        if (navCheckOutInput) navCheckOutInput.value = checkOutInput.value;
+                    } else if (selectedDates.length === 0) {
+                        // Clear all fields
+                        datesInput.value = '';
+                        if (checkInInput) checkInInput.value = '';
+                        if (checkOutInput) checkOutInput.value = '';
+                        if (navDatesInput) navDatesInput.value = '';
+                        if (navCheckInInput) navCheckInInput.value = '';
+                        if (navCheckOutInput) navCheckOutInput.value = '';
+                    }
+                }
+            });
+        }
+        
+        // Initialize nav dates picker
+        if (navDatesInput) {
+            flatpickr(navDatesInput, {
+                ...commonConfig,
+                onChange: (selectedDates, dateStr) => {
+                    if (selectedDates.length === 2) {
+                        // Update the visible dates field with formatted range
+                        const start = flatpickr.formatDate(selectedDates[0], 'M j');
+                        const end = flatpickr.formatDate(selectedDates[1], 'M j');
+                        navDatesInput.value = `${start} - ${end}`;
+                        
+                        // Update hidden fields
+                        if (navCheckInInput) navCheckInInput.value = flatpickr.formatDate(selectedDates[0], 'Y-m-d');
+                        if (navCheckOutInput) navCheckOutInput.value = flatpickr.formatDate(selectedDates[1], 'Y-m-d');
+                        
+                        // Sync to main inputs
+                        if (datesInput) datesInput.value = navDatesInput.value;
+                        if (checkInInput) checkInInput.value = navCheckInInput.value;
+                        if (checkOutInput) checkOutInput.value = navCheckOutInput.value;
+                    } else if (selectedDates.length === 0) {
+                        navDatesInput.value = '';
+                        if (navCheckInInput) navCheckInInput.value = '';
+                        if (navCheckOutInput) navCheckOutInput.value = '';
+                        if (datesInput) datesInput.value = '';
+                        if (checkInInput) checkInInput.value = '';
+                        if (checkOutInput) checkOutInput.value = '';
+                    }
+                }
+            });
+        }
+    }
+
     // Compact search in navbar on scroll
     setupCompactNavSearch() {
         const navSearchWrap = document.getElementById('navSearchCompact');
         const compactForm = document.getElementById('compactSearchForm');
         const mainLocation = document.getElementById('location');
-        const mainCheckIn = document.getElementById('checkIn');
-        const mainCheckOut = document.getElementById('checkOut');
         const mainGuests = document.getElementById('guests');
 
         const navLocation = document.getElementById('navLocation');
-        const navCheckIn = document.getElementById('navCheckIn');
-        const navCheckOut = document.getElementById('navCheckOut');
         const navGuests = document.getElementById('navGuests');
-        const heroSection = document.querySelector('.hero-search');
         const navbar = document.querySelector('.navbar');
 
         if (!navSearchWrap || !compactForm || !navbar) return;
 
         const syncToMain = () => {
             if (mainLocation && navLocation) mainLocation.value = navLocation.value;
-            if (mainCheckIn && navCheckIn) mainCheckIn.value = navCheckIn.value;
-            if (mainCheckOut && navCheckOut) mainCheckOut.value = navCheckOut.value;
             if (mainGuests && navGuests) mainGuests.value = navGuests.value;
+            // Dates are synced via Flatpickr onChange handlers
             this.handleSearch();
         };
 
         const syncFromMain = () => {
             if (mainLocation && navLocation) navLocation.value = mainLocation.value;
-            if (mainCheckIn && navCheckIn) navCheckIn.value = mainCheckIn.value;
-            if (mainCheckOut && navCheckOut) navCheckOut.value = mainCheckOut.value;
             if (mainGuests && navGuests) navGuests.value = mainGuests.value;
+            // Dates are synced via Flatpickr onChange handlers
         };
 
         // Keep values in sync when user types in the main field
-        [mainLocation, mainCheckIn, mainCheckOut, mainGuests].forEach(el => {
+        [mainLocation, mainGuests].forEach(el => {
             if (!el) return;
             const evt = el.tagName === 'SELECT' ? 'change' : 'input';
             el.addEventListener(evt, syncFromMain);
