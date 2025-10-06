@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results - RentThatView</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/search-results.css">
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+</head>
+<body>
+    <nav class="navbar navbar-fixed">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="../index.html"><h2>RentThatView</h2></a>
+            </div>
+            
+            <!-- Search bar always visible on this page -->
+            <div class="nav-search-results">
+                <form id="searchResultsForm" class="nav-search-form" role="search">
+                    <div class="nav-search-seg">
+                        <div class="autocomplete-wrapper">
+                            <input type="text" id="searchLocation" placeholder="Where to?" aria-label="Destination" autocomplete="off">
+                            <div class="autocomplete-dropdown" id="searchLocationAutocomplete"></div>
+                        </div>
+                    </div>
+                    <span class="nav-search-divider"></span>
+                    <div class="nav-search-seg">
+                        <input type="text" id="searchDates" placeholder="Dates" aria-label="Dates" readonly>
+                        <input type="hidden" id="searchCheckIn">
+                        <input type="hidden" id="searchCheckOut">
+                    </div>
+                    <span class="nav-search-divider"></span>
+                    <div class="nav-search-seg">
+                        <div class="guests-wrapper">
+                            <input type="text" id="searchGuests" placeholder="Guests" aria-label="Guests" readonly>
+                            <input type="hidden" id="searchAdultsCount" value="0">
+                            <input type="hidden" id="searchChildrenCount" value="0">
+                            <div class="guests-dropdown" id="searchGuestsDropdown">
+                                <div class="guest-counter-row">
+                                    <div class="guest-counter-info">
+                                        <div class="guest-counter-title">Adults</div>
+                                    </div>
+                                    <div class="guest-counter-controls">
+                                        <button type="button" class="counter-btn counter-minus" data-target="search-adults">
+                                            <svg viewBox="0 0 24 24" width="14" height="14"><path d="M19 13H5v-2h14v2z" fill="currentColor"/></svg>
+                                        </button>
+                                        <span class="counter-value" id="searchAdultsDisplay">0</span>
+                                        <button type="button" class="counter-btn counter-plus" data-target="search-adults">
+                                            <svg viewBox="0 0 24 24" width="14" height="14"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="guest-counter-row">
+                                    <div class="guest-counter-info">
+                                        <div class="guest-counter-title">Children</div>
+                                        <div class="guest-counter-subtitle">Ages 0 to 17</div>
+                                    </div>
+                                    <div class="guest-counter-controls">
+                                        <button type="button" class="counter-btn counter-minus" data-target="search-children">
+                                            <svg viewBox="0 0 24 24" width="14" height="14"><path d="M19 13H5v-2h14v2z" fill="currentColor"/></svg>
+                                        </button>
+                                        <span class="counter-value" id="searchChildrenDisplay">0</span>
+                                        <button type="button" class="counter-btn counter-plus" data-target="search-children">
+                                            <svg viewBox="0 0 24 24" width="14" height="14"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="nav-search-btn" aria-label="Search">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    </button>
+                </form>
+            </div>
+
+            <div class="nav-menu">
+                <a href="../index.html" class="nav-link">Home</a>
+                <a href="about.html" class="nav-link">About</a>
+                <a href="login.html" class="nav-link" id="auth-link">Login</a>
+                <a href="register.html" class="nav-link register-btn" id="register-link">Get Started</a>
+            </div>
+            <div class="nav-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="search-results-main">
+        <!-- Filters Bar -->
+        <div class="filters-bar">
+            <div class="filters-container">
+                <button class="filter-btn" id="filtersToggle">
+                    <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+                        <path d="M5 8a1 1 0 0 1 1-1h4a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1zm-2 3a1 1 0 0 1 1-1h8a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1zm5-9a1 1 0 0 0 0 2h5a1 1 0 1 0 0-2H8z"></path>
+                    </svg>
+                    Filters
+                </button>
+                
+                <div class="results-info">
+                    <span id="resultsCount">Loading...</span>
+                </div>
+                
+                <button class="map-toggle" id="mapToggle">
+                    <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+                        <path d="M15.817.113A.5.5 0 0 1 16 .5v14a.5.5 0 0 1-.402.49l-5 1a.502.502 0 0 1-.196 0L5.5 15.01l-4.902.98A.5.5 0 0 1 0 15.5v-14a.5.5 0 0 1 .402-.49l5-1a.5.5 0 0 1 .196 0L10.5.99l4.902-.98a.5.5 0 0 1 .415.103zM10 1.91l-4-.8v12.98l4 .8V1.91zm1 12.98 4-.8V1.11l-4 .8v12.98zm-6-.8V1.11l-4 .8v12.98l4-.8z"></path>
+                    </svg>
+                    Show map
+                </button>
+            </div>
+        </div>
+
+        <!-- Filters Panel (Hidden by default) -->
+        <div class="filters-panel" id="filtersPanel">
+            <div class="filters-panel-header">
+                <h3>Filters</h3>
+                <button class="filters-close" id="filtersClose">
+                    <svg viewBox="0 0 32 32" width="16" height="16" fill="currentColor">
+                        <path d="m6 6 20 20M26 6 6 26"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="filters-panel-content">
+                <div class="filter-section">
+                    <h4>Price range</h4>
+                    <div class="price-inputs">
+                        <input type="number" id="minPrice" placeholder="Min price" min="0">
+                        <span>-</span>
+                        <input type="number" id="maxPrice" placeholder="Max price" min="0">
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h4>Property type</h4>
+                    <select id="propertyType" class="filter-select">
+                        <option value="">Any type</option>
+                        <option value="apartment">🏢 Apartment</option>
+                        <option value="house">🏠 House</option>
+                        <option value="villa">🏡 Villa</option>
+                        <option value="cabin">🛖 Cabin</option>
+                        <option value="cottage">🏘️ Cottage</option>
+                    </select>
+                </div>
+
+                <div class="filter-section">
+                    <h4>View type</h4>
+                    <select id="viewType" class="filter-select">
+                        <option value="">Any view</option>
+                        <option value="Mountain View">🏔️ Mountain</option>
+                        <option value="Ocean View">🌊 Ocean</option>
+                        <option value="City Skyline View">🏙️ City</option>
+                        <option value="Forest View">🌲 Forest</option>
+                        <option value="Lake View">🏞️ Lake</option>
+                        <option value="Countryside View">🌾 Countryside</option>
+                    </select>
+                </div>
+
+                <div class="filter-section">
+                    <h4>Rooms and beds</h4>
+                    <div class="filter-group">
+                        <label>Bedrooms</label>
+                        <select id="bedrooms" class="filter-select">
+                            <option value="">Any</option>
+                            <option value="1">1+</option>
+                            <option value="2">2+</option>
+                            <option value="3">3+</option>
+                            <option value="4">4+</option>
+                            <option value="5">5+</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Bathrooms</label>
+                        <select id="bathrooms" class="filter-select">
+                            <option value="">Any</option>
+                            <option value="1">1+</option>
+                            <option value="2">2+</option>
+                            <option value="3">3+</option>
+                            <option value="4">4+</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h4>Amenities</h4>
+                    <div class="amenities-grid">
+                        <label class="amenity-checkbox">
+                            <input type="checkbox" value="WiFi">
+                            <span>WiFi</span>
+                        </label>
+                        <label class="amenity-checkbox">
+                            <input type="checkbox" value="Kitchen">
+                            <span>Kitchen</span>
+                        </label>
+                        <label class="amenity-checkbox">
+                            <input type="checkbox" value="Pool">
+                            <span>Pool</span>
+                        </label>
+                        <label class="amenity-checkbox">
+                            <input type="checkbox" value="Parking">
+                            <span>Parking</span>
+                        </label>
+                        <label class="amenity-checkbox">
+                            <input type="checkbox" value="Air Conditioning">
+                            <span>AC</span>
+                        </label>
+                        <label class="amenity-checkbox">
+                            <input type="checkbox" value="Washer/Dryer">
+                            <span>Washer</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="filters-panel-footer">
+                <button class="btn-clear" id="clearFilters">Clear all</button>
+                <button class="btn-apply" id="applyFilters">Show results</button>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="content-wrapper">
+            <!-- Properties Grid -->
+            <div class="properties-section" id="propertiesSection">
+                <div class="properties-grid" id="propertiesGrid">
+                    <!-- Properties will be loaded here -->
+                </div>
+                
+                <!-- Loading State -->
+                <div class="loading-state" id="loadingState">
+                    <div class="spinner"></div>
+                    <p>Loading properties...</p>
+                </div>
+                
+                <!-- Empty State -->
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="32" cy="32" r="28"/>
+                        <path d="M20 32h24M32 20v24"/>
+                    </svg>
+                    <h3>No properties found</h3>
+                    <p>Try adjusting your search or filters to find what you're looking for.</p>
+                </div>
+            </div>
+
+            <!-- Map Section -->
+            <div class="map-section" id="mapSection">
+                <div id="map"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- Config (API keys) -->
+    <script src="../config.js"></script>
+    <!-- Google Maps JS (loaded dynamically with API key from config) -->
+    <script>
+        (function() {
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${APP_CONFIG.googleMaps.apiKey}&libraries=places`;
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+        })();
+    </script>
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../assets/js/env.js"></script>
+    <script src="../assets/js/supabase-client.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/search-results.js"></script>
+</body>
+</html>
+

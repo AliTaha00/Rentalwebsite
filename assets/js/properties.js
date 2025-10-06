@@ -673,10 +673,27 @@ class PropertiesManager {
             el.addEventListener(evt, syncFromMain);
         });
 
-        // Submit from compact form triggers main search
+        // Submit from compact form redirects to search results
         compactForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            syncToMain();
+            
+            // Get values from compact form
+            const location = document.getElementById('navLocation')?.value || '';
+            const checkIn = document.getElementById('navCheckIn')?.value || '';
+            const checkOut = document.getElementById('navCheckOut')?.value || '';
+            const adultsCount = document.getElementById('navAdultsCount')?.value || '0';
+            const childrenCount = document.getElementById('navChildrenCount')?.value || '0';
+            
+            // Build URL for search results page
+            const params = new URLSearchParams();
+            if (location) params.set('location', location);
+            if (checkIn) params.set('checkIn', checkIn);
+            if (checkOut) params.set('checkOut', checkOut);
+            if (adultsCount !== '0') params.set('adults', adultsCount);
+            if (childrenCount !== '0') params.set('children', childrenCount);
+            
+            // Redirect to search results page
+            window.location.href = `pages/search-results.html?${params.toString()}`;
         });
 
         const showOrHide = () => {
@@ -995,18 +1012,23 @@ class PropertiesManager {
     async handleSearch() {
         if (this.isLoading) return;
         
-        this.currentPage = 1;
-        const formData = this.getFormData();
-        this.currentFilters = formData;
+        // Get form data
+        const location = document.getElementById('location')?.value || '';
+        const checkIn = document.getElementById('checkIn')?.value || '';
+        const checkOut = document.getElementById('checkOut')?.value || '';
+        const adultsCount = document.getElementById('adultsCount')?.value || '0';
+        const childrenCount = document.getElementById('childrenCount')?.value || '0';
         
-        // Update URL
-        this.updateUrl();
+        // Build URL for search results page
+        const params = new URLSearchParams();
+        if (location) params.set('location', location);
+        if (checkIn) params.set('checkIn', checkIn);
+        if (checkOut) params.set('checkOut', checkOut);
+        if (adultsCount !== '0') params.set('adults', adultsCount);
+        if (childrenCount !== '0') params.set('children', childrenCount);
         
-        // Apply filters to properties
-        this.applyFilters();
-        
-        // Log search for analytics
-        this.logSearch(formData);
+        // Redirect to search results page
+        window.location.href = `pages/search-results.html?${params.toString()}`;
     }
 
     // Handle sorting
