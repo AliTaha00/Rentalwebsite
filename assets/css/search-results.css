@@ -371,6 +371,9 @@
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 1.5rem;
     max-width: 1600px;
+    /* Prevent layout shift during loading */
+    min-height: 400px;
+    transform: translateZ(0);
 }
 
 /* Property Card */
@@ -381,29 +384,51 @@
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    will-change: transform;
+    contain: layout style paint;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-font-smoothing: antialiased;
+    animation: fadeInCard 0.3s ease-in forwards;
+    opacity: 0;
+}
+
+@keyframes fadeInCard {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 .property-card:hover {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-    transform: translateY(-4px);
+    transform: translateY(-4px) translateZ(0);
 }
 
 .property-image {
     width: 100%;
     height: 240px;
-    object-fit: cover;
     background: linear-gradient(135deg, #e5e7eb 0%, #f3f4f6 100%);
+    display: block;
+    min-height: 240px;
 }
 
 .property-content {
     padding: 1rem;
+    display: flex;
+    flex-direction: column;
 }
 
 .property-header {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+    justify-content: flex-start;
+    align-items: center;
     margin-bottom: 0.5rem;
+    height: 24px;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 .property-location {
@@ -411,38 +436,52 @@
     font-weight: 600;
     color: #1f2937;
     margin: 0;
+    line-height: 24px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
 }
 
-.property-rating {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-size: 14px;
-    font-weight: 500;
-}
+/* rating removed */
 
 .property-type {
     font-size: 14px;
     color: #6b7280;
     margin-bottom: 0.25rem;
+    height: 20px;
+    line-height: 20px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
 }
 
 .property-details {
     font-size: 14px;
     color: #6b7280;
     margin-bottom: 0.75rem;
+    height: 20px;
+    line-height: 20px;
+    overflow: hidden;
 }
 
 .property-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    height: 32px;
+    margin-top: auto;
 }
 
 .property-price {
     font-size: 16px;
     font-weight: 600;
     color: #1f2937;
+    line-height: 1.4;
 }
 
 .property-price span {
@@ -458,6 +497,8 @@
     border-radius: 12px;
     font-size: 12px;
     font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 /* Loading State */
@@ -468,10 +509,13 @@
     justify-content: center;
     padding: 4rem 2rem;
     gap: 1rem;
+    opacity: 1;
+    transition: opacity 0.2s ease-in-out;
 }
 
 .loading-state.hidden {
     display: none;
+    opacity: 0;
 }
 
 .spinner {
@@ -495,6 +539,8 @@
     justify-content: center;
     padding: 4rem 2rem;
     text-align: center;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
 }
 
 .empty-state svg {

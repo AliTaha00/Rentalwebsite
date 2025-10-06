@@ -7,6 +7,7 @@ class SearchResultsManager {
         this.currentFilters = {};
         this.map = null;
         this.markers = [];
+        this.isRendering = false;
         
         // Popular destinations for autocomplete
         this.popularDestinations = [
@@ -33,10 +34,35 @@ class SearchResultsManager {
         // Setup UI components
         this.setupSearchBar();
         this.setupFilters();
+        
+        // Wait for Google Maps to load before setting up map
+        await this.waitForGoogleMaps();
         this.setupMap();
         
         // Load properties
         await this.loadProperties();
+    }
+    
+    waitForGoogleMaps() {
+        return new Promise((resolve) => {
+            if (typeof google !== 'undefined' && google.maps) {
+                resolve();
+            } else {
+                const checkInterval = setInterval(() => {
+                    if (typeof google !== 'undefined' && google.maps) {
+                        clearInterval(checkInterval);
+                        resolve();
+                    }
+                }, 100);
+                
+                // Timeout after 10 seconds
+                setTimeout(() => {
+                    clearInterval(checkInterval);
+                    console.warn('Google Maps failed to load');
+                    resolve();
+                }, 10000);
+            }
+        });
     }
     
     parseURLParams() {
@@ -672,11 +698,19 @@ class SearchResultsManager {
         const emptyState = document.getElementById('emptyState');
         const propertiesGrid = document.getElementById('propertiesGrid');
         
-        if (loadingState) loadingState.classList.remove('hidden');
+        // Show loading state
+        if (loadingState) {
+            loadingState.style.display = 'flex';
+            loadingState.classList.remove('hidden');
+        }
         if (emptyState) emptyState.style.display = 'none';
         if (propertiesGrid) propertiesGrid.innerHTML = '';
         
         try {
+            if (!this.supabaseClient || !this.supabaseClient.supabase) {
+                throw new Error('Database connection not initialized');
+            }
+            
             let query = this.supabaseClient.supabase
                 .from('properties')
                 .select('*')
@@ -691,7 +725,10 @@ class SearchResultsManager {
             
         } catch (error) {
             console.error('Error loading properties:', error);
-            if (loadingState) loadingState.classList.add('hidden');
+            if (loadingState) {
+                loadingState.style.display = 'none';
+                loadingState.classList.add('hidden');
+            }
             if (emptyState) {
                 emptyState.style.display = 'flex';
                 emptyState.querySelector('h3').textContent = 'Error loading properties';
@@ -701,96 +738,111 @@ class SearchResultsManager {
     }
     
     filterProperties() {
-        let filtered = [...this.properties];
-        const filters = this.currentFilters;
+        // Prevent concurrent filter operations
+        if (this.isRendering) {
+            return;
+        }
         
-        // Location filter
-        if (filters.location) {
-            const location = filters.location.toLowerCase();
-            const locationParts = location.split(',').map(part => part.trim()).filter(part => part);
+        this.isRendering = true;
+        
+        // Use requestAnimationFrame for smoother updates
+        requestAnimationFrame(() => {
+            let filtered = [...this.properties];
+            const filters = this.currentFilters;
             
-            filtered = filtered.filter(property => {
-                const city = property.city?.toLowerCase() || '';
-                const state = property.state?.toLowerCase() || '';
-                const country = property.country?.toLowerCase() || '';
-                const address = property.address?.toLowerCase() || '';
-                const title = property.title?.toLowerCase() || '';
+            // Location filter
+            if (filters.location) {
+                const location = filters.location.toLowerCase();
+                const locationParts = location.split(',').map(part => part.trim()).filter(part => part);
                 
-                if (locationParts.length === 1) {
-                    const searchTerm = locationParts[0];
-                    return city.includes(searchTerm) || 
-                           state.includes(searchTerm) || 
-                           country.includes(searchTerm) ||
-                           address.includes(searchTerm) ||
-                           title.includes(searchTerm);
-                } else {
-                    return locationParts.every((part, index) => {
-                        if (index === 0) {
-                            return city.includes(part) || address.includes(part) || title.includes(part);
-                        } else if (index === 1) {
-                            return state.includes(part) || city.includes(part);
-                        } else {
-                            return country.includes(part);
-                        }
-                    });
-                }
-            });
-        }
-        
-        // Guest count filter
-        const totalGuests = filters.adults + filters.children;
-        if (totalGuests > 0) {
-            filtered = filtered.filter(property => property.max_guests >= totalGuests);
-        }
-        
-        // View type filter
-        if (filters.viewType) {
-            filtered = filtered.filter(property => property.view_type === filters.viewType);
-        }
-        
-        // Property type filter
-        if (filters.propertyType) {
-            filtered = filtered.filter(property => 
-                property.property_type?.toLowerCase() === filters.propertyType.toLowerCase()
-            );
-        }
-        
-        // Price filter
-        if (filters.minPrice) {
-            const minPrice = parseFloat(filters.minPrice);
-            filtered = filtered.filter(property => property.base_price >= minPrice);
-        }
-        
-        if (filters.maxPrice) {
-            const maxPrice = parseFloat(filters.maxPrice);
-            filtered = filtered.filter(property => property.base_price <= maxPrice);
-        }
-        
-        // Bedrooms filter
-        if (filters.bedrooms) {
-            const minBedrooms = parseInt(filters.bedrooms);
-            filtered = filtered.filter(property => property.bedrooms >= minBedrooms);
-        }
-        
-        // Bathrooms filter
-        if (filters.bathrooms) {
-            const minBathrooms = parseInt(filters.bathrooms);
-            filtered = filtered.filter(property => property.bathrooms >= minBathrooms);
-        }
-        
-        // Amenities filter
-        if (filters.amenities && filters.amenities.length > 0) {
-            filtered = filtered.filter(property => {
-                const propertyAmenities = property.amenities || [];
-                return filters.amenities.every(amenity => 
-                    propertyAmenities.includes(amenity)
+                filtered = filtered.filter(property => {
+                    const city = property.city?.toLowerCase() || '';
+                    const state = property.state?.toLowerCase() || '';
+                    const country = property.country?.toLowerCase() || '';
+                    const address = property.address?.toLowerCase() || '';
+                    const title = property.title?.toLowerCase() || '';
+                    
+                    if (locationParts.length === 1) {
+                        const searchTerm = locationParts[0];
+                        return city.includes(searchTerm) || 
+                               state.includes(searchTerm) || 
+                               country.includes(searchTerm) ||
+                               address.includes(searchTerm) ||
+                               title.includes(searchTerm);
+                    } else {
+                        return locationParts.every((part, index) => {
+                            if (index === 0) {
+                                return city.includes(part) || address.includes(part) || title.includes(part);
+                            } else if (index === 1) {
+                                return state.includes(part) || city.includes(part);
+                            } else {
+                                return country.includes(part);
+                            }
+                        });
+                    }
+                });
+            }
+            
+            // Guest count filter
+            const totalGuests = filters.adults + filters.children;
+            if (totalGuests > 0) {
+                filtered = filtered.filter(property => property.max_guests >= totalGuests);
+            }
+            
+            // View type filter
+            if (filters.viewType) {
+                filtered = filtered.filter(property => property.view_type === filters.viewType);
+            }
+            
+            // Property type filter
+            if (filters.propertyType) {
+                filtered = filtered.filter(property => 
+                    property.property_type?.toLowerCase() === filters.propertyType.toLowerCase()
                 );
-            });
-        }
-        
-        this.filteredProperties = filtered;
-        this.renderProperties();
-        this.updateMapMarkers();
+            }
+            
+            // Price filter
+            if (filters.minPrice) {
+                const minPrice = parseFloat(filters.minPrice);
+                filtered = filtered.filter(property => property.base_price >= minPrice);
+            }
+            
+            if (filters.maxPrice) {
+                const maxPrice = parseFloat(filters.maxPrice);
+                filtered = filtered.filter(property => property.base_price <= maxPrice);
+            }
+            
+            // Bedrooms filter
+            if (filters.bedrooms) {
+                const minBedrooms = parseInt(filters.bedrooms);
+                filtered = filtered.filter(property => property.bedrooms >= minBedrooms);
+            }
+            
+            // Bathrooms filter
+            if (filters.bathrooms) {
+                const minBathrooms = parseInt(filters.bathrooms);
+                filtered = filtered.filter(property => property.bathrooms >= minBathrooms);
+            }
+            
+            // Amenities filter
+            if (filters.amenities && filters.amenities.length > 0) {
+                filtered = filtered.filter(property => {
+                    const propertyAmenities = property.amenities || [];
+                    return filters.amenities.every(amenity => 
+                        propertyAmenities.includes(amenity)
+                    );
+                });
+            }
+            
+            this.filteredProperties = filtered;
+            this.renderProperties();
+            
+            // Update map markers after a short delay to prevent interference
+            setTimeout(() => {
+                this.updateMapMarkers();
+                this.isRendering = false;
+            }, 100);
+        });
     }
     
     renderProperties() {
@@ -799,49 +851,61 @@ class SearchResultsManager {
         const emptyState = document.getElementById('emptyState');
         const resultsCount = document.getElementById('resultsCount');
         
-        if (loadingState) loadingState.classList.add('hidden');
+        // Hide loading state immediately
+        if (loadingState) {
+            loadingState.style.display = 'none';
+            loadingState.classList.add('hidden');
+        }
         
         if (this.filteredProperties.length === 0) {
             if (propertiesGrid) propertiesGrid.innerHTML = '';
-            if (emptyState) emptyState.style.display = 'flex';
+            if (emptyState) {
+                emptyState.style.display = 'flex';
+                emptyState.style.opacity = '1';
+            }
             if (resultsCount) resultsCount.textContent = 'No properties found';
             return;
         }
         
-        if (emptyState) emptyState.style.display = 'none';
+        if (emptyState) {
+            emptyState.style.display = 'none';
+        }
+        
         if (resultsCount) {
             const count = this.filteredProperties.length;
             resultsCount.textContent = `${count} propert${count === 1 ? 'y' : 'ies'} found`;
         }
         
         if (propertiesGrid) {
-            propertiesGrid.innerHTML = this.filteredProperties.map(property => 
+            // Create HTML string with all properties
+            const html = this.filteredProperties.map(property => 
                 this.createPropertyCard(property)
             ).join('');
             
-            // Add click handlers
-            propertiesGrid.querySelectorAll('.property-card').forEach((card, index) => {
-                card.addEventListener('click', () => {
-                    this.viewPropertyDetails(this.filteredProperties[index]);
+            // Update DOM in one operation
+            propertiesGrid.innerHTML = html;
+            
+            // Force a reflow to ensure all elements are fully rendered
+            void propertiesGrid.offsetHeight;
+            
+            // Add click handlers after a brief delay to ensure rendering is complete
+            requestAnimationFrame(() => {
+                propertiesGrid.querySelectorAll('.property-card').forEach((card, index) => {
+                    card.addEventListener('click', () => {
+                        this.viewPropertyDetails(this.filteredProperties[index]);
+                    });
                 });
             });
         }
     }
     
     createPropertyCard(property) {
-        const imageUrl = property.images && property.images.length > 0 
-            ? property.images[0] 
-            : 'https://via.placeholder.com/400x300?text=No+Image';
-        
         return `
             <div class="property-card" data-id="${property.property_id}">
-                <img src="${imageUrl}" alt="${this.escapeHtml(property.title)}" class="property-image" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+                <div class="property-image" aria-hidden="true"></div>
                 <div class="property-content">
                     <div class="property-header">
                         <p class="property-location">${this.escapeHtml(property.city)}, ${this.escapeHtml(property.country)}</p>
-                        <div class="property-rating">
-                            ⭐ ${property.average_rating ? property.average_rating.toFixed(1) : 'New'}
-                        </div>
                     </div>
                     <div class="property-type">${this.escapeHtml(property.property_type || 'Property')}</div>
                     <div class="property-details">
@@ -860,10 +924,14 @@ class SearchResultsManager {
     
     updateMapMarkers() {
         // Clear existing markers
-        this.markers.forEach(marker => marker.setMap(null));
+        this.markers.forEach(marker => {
+            if (marker.setMap) {
+                marker.setMap(null);
+            }
+        });
         this.markers = [];
         
-        if (!this.map) return;
+        if (!this.map || typeof google === 'undefined' || !google.maps) return;
         
         const validProperties = this.filteredProperties.filter(p => p.latitude && p.longitude);
         
@@ -878,37 +946,27 @@ class SearchResultsManager {
                 lng: parseFloat(property.longitude) 
             };
             
-            // Create custom marker with price
-            const markerDiv = document.createElement('div');
-            markerDiv.className = 'custom-marker';
-            markerDiv.textContent = `$${property.base_price}`;
-            
-            const marker = new google.maps.marker.AdvancedMarkerElement({
+            // Always use regular Marker (simpler and more compatible)
+            const marker = new google.maps.Marker({
                 map: this.map,
                 position: position,
-                content: markerDiv,
-                title: property.title
+                title: property.title,
+                label: {
+                    text: `$${property.base_price}`,
+                    color: '#1f2937',
+                    fontWeight: 'bold',
+                    fontSize: '14px'
+                },
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 0,
+                    fillColor: 'transparent',
+                    strokeWeight: 0
+                }
             });
             
-            // If AdvancedMarkerElement is not available, fall back to regular marker
-            if (!google.maps.marker || !google.maps.marker.AdvancedMarkerElement) {
-                const fallbackMarker = new google.maps.Marker({
-                    map: this.map,
-                    position: position,
-                    title: property.title,
-                    label: {
-                        text: `$${property.base_price}`,
-                        color: '#1f2937',
-                        fontWeight: 'bold'
-                    }
-                });
-                
-                this.addMarkerListener(fallbackMarker, property);
-                this.markers.push(fallbackMarker);
-            } else {
-                this.addMarkerListener(marker, property);
-                this.markers.push(marker);
-            }
+            this.addMarkerListener(marker, property);
+            this.markers.push(marker);
             
             bounds.extend(position);
         });
