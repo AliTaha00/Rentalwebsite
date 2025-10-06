@@ -190,10 +190,12 @@ a:hover {
     display: none;
     align-items: center;
     justify-content: center;
-    margin-left: 2rem;
-    margin-right: auto;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
     opacity: 0;
     transition: opacity 0.3s ease;
+    margin-left: -80px;
 }
 
 .nav-search-compact.is-visible { 
@@ -204,38 +206,66 @@ a:hover {
 .nav-search-form {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 0;
     background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 999px;
-    padding: 3px 3px 3px 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border: 1px solid #ddd;
+    border-radius: 40px;
+    padding: 5px 5px 5px 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
+    width: 400px;
+    transition: box-shadow 0.2s ease;
 }
 
-.nav-search-form input,
-.nav-search-form select {
+.nav-search-form:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12), 0 6px 20px rgba(0,0,0,0.08);
+}
+
+.nav-search-form input {
     border: none;
     outline: none;
-    width: 90px;
+    width: 95px;
     font-size: 13px;
     background: transparent;
-    padding: 4px 6px;
+    padding: 7px 8px;
+    border-radius: 18px;
+    transition: background-color 0.15s ease;
+    cursor: pointer;
+    font-weight: 400;
+    color: #222;
+    text-align: center;
+}
+
+.nav-search-form input::placeholder {
+    color: #717171;
+    font-weight: 400;
+}
+
+.nav-search-form input:hover {
+    background-color: #f7f7f7;
+}
+
+.nav-search-form input:focus {
+    background-color: #fff;
+    text-align: left;
 }
 
 .nav-search-seg { 
     display: flex; 
-    align-items: center; 
+    align-items: center;
+    position: relative;
 }
 
 .nav-search-divider { 
     width: 1px; 
-    height: 18px; 
-    background: #e5e7eb; 
+    height: 24px; 
+    background: #dddddd;
+    margin: 0 6px;
+    flex-shrink: 0;
 }
 
 .nav-search-btn {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     border: none;
     border-radius: 50%;
     display: inline-flex;
@@ -245,19 +275,52 @@ a:hover {
     background: linear-gradient(180deg, #89d957, #5d704a, #32491b);
     cursor: pointer;
     flex-shrink: 0;
+    transition: transform 0.1s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
+}
+
+.nav-search-btn:hover {
+    transform: scale(1.04);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+}
+
+.nav-search-btn:active {
+    transform: scale(0.96);
 }
 
 .nav-search-btn svg {
-    width: 14px;
-    height: 14px;
+    width: 15px;
+    height: 15px;
 }
 
 @media (max-width: 1024px) {
-    .nav-search-form input,
-    .nav-search-form select { width: 70px; }
-    
     .nav-search-compact {
-        margin: 0 1rem;
+        margin-left: -60px;
+    }
+    
+    .nav-search-form {
+        width: 350px;
+        padding: 5px 4px 5px 14px;
+    }
+    
+    .nav-search-form input { 
+        width: 80px;
+        padding: 6px 6px;
+        font-size: 12px;
+    }
+    
+    .nav-search-divider {
+        margin: 0 5px;
+    }
+    
+    .nav-search-btn {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .nav-search-btn svg {
+        width: 13px;
+        height: 13px;
     }
 }
 
@@ -532,7 +595,7 @@ a:hover {
 
 /* ===== FOOTER ===== */
 .footer {
-    background-color: #1f2937;
+    background-color: #648e38;
     color: white;
     padding: 3rem 0 1rem;
     margin-top: 4rem;
@@ -551,22 +614,31 @@ a:hover {
     color: white;
 }
 
-.footer-section a {
-    display: block;
-    color: #d1d5db;
-    margin-bottom: 0.5rem;
-    transition: color 0.2s ease;
-}
-
-.footer-section a:hover {
+.footer-section p {
     color: white;
 }
 
+.footer-section a {
+    display: block;
+    color: white;
+    margin-bottom: 0.5rem;
+    transition: opacity 0.2s ease;
+    opacity: 0.9;
+}
+
+.footer-section a:hover {
+    opacity: 1;
+}
+
 .footer-bottom {
-    border-top: 1px solid #374151;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
     padding-top: 1rem;
     text-align: center;
-    color: #9ca3af;
+    color: white !important;
+}
+
+.footer-bottom p {
+    color: white !important;
 }
 
 /* ===== RESPONSIVE DESIGN ===== */

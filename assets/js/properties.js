@@ -22,6 +22,7 @@ class PropertiesManager {
             
             this.setupLocationAutocomplete();
             this.setupDatePickers();
+            this.setupGuestsDropdown();
             this.setupEventListeners();
             this.setupAdvancedFilters();
             this.setupViewControls();
@@ -43,6 +44,18 @@ class PropertiesManager {
         const mainDropdown = document.getElementById('locationAutocomplete');
         const navInput = document.getElementById('navLocation');
         const navDropdown = document.getElementById('navLocationAutocomplete');
+
+        // Popular destinations
+        this.popularDestinations = [
+            { name: 'New York', region: 'New York, United States', full: 'New York, New York, United States' },
+            { name: 'Paris', region: 'France', full: 'Paris, France' },
+            { name: 'London', region: 'United Kingdom', full: 'London, United Kingdom' },
+            { name: 'Tokyo', region: 'Japan', full: 'Tokyo, Japan' },
+            { name: 'Dubai', region: 'United Arab Emirates', full: 'Dubai, United Arab Emirates' },
+            { name: 'Los Angeles', region: 'California, United States', full: 'Los Angeles, California, United States' },
+            { name: 'Barcelona', region: 'Spain', full: 'Barcelona, Spain' },
+            { name: 'Rome', region: 'Italy', full: 'Rome, Italy' }
+        ];
 
         if (mainInput && mainDropdown) {
             this.initAutocomplete(mainInput, mainDropdown, navInput);
@@ -127,9 +140,13 @@ class PropertiesManager {
             }
         });
 
-        // Show dropdown when focusing if there are results
+        // Show popular destinations when focusing on empty field
         input.addEventListener('focus', () => {
-            if (dropdown.children.length > 0 && input.value.trim().length >= 2) {
+            const value = input.value.trim();
+            if (value.length === 0) {
+                this.showPopularDestinations(dropdown, selectItem);
+                showDropdown();
+            } else if (dropdown.children.length > 0 && value.length >= 2) {
                 showDropdown();
             }
         });
@@ -137,7 +154,8 @@ class PropertiesManager {
 
     async searchLocations(query) {
         // Using Nominatim (OpenStreetMap) - free, no API key required
-        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&addressdetails=1`;
+        // Increased limit to get more results for filtering
+        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=15&addressdetails=1&featuretype=city`;
         
         const response = await fetch(url, {
             headers: {
@@ -151,29 +169,190 @@ class PropertiesManager {
 
         const data = await response.json();
         
-        // Transform to consistent format
-        return data.map(item => ({
-            place_name: item.display_name,
-            full_name: item.display_name,
-            name: item.name || item.display_name.split(',')[0],
-            region: this.getRegion(item),
-            type: item.type,
-            lat: item.lat,
-            lon: item.lon
-        }));
+        // Transform and filter results
+        const transformed = data.map(item => {
+            const address = item.address || {};
+            return {
+                place_name: this.formatPlaceName(item),
+                full_name: this.formatPlaceName(item),
+                name: this.getLocationName(item),
+                region: this.getRegion(item),
+                type: item.type,
+                class: item.class,
+                importance: item.importance || 0,
+                lat: item.lat,
+                lon: item.lon,
+                raw: item
+            };
+        });
+
+        // Filter and deduplicate
+        return this.filterAndDeduplicateResults(transformed);
+    }
+
+    getLocationName(item) {
+        const address = item.address || {};
+        
+        // Prioritize city, town, village names
+        if (address.city) return address.city;
+        if (address.town) return address.town;
+        if (address.village) return address.village;
+        if (address.state) return address.state;
+        if (address.country) return address.country;
+        
+        // Fallback to name or first part of display name
+        return item.name || item.display_name.split(',')[0].trim();
+    }
+
+    formatPlaceName(item) {
+        const address = item.address || {};
+        const parts = [];
+        
+        // Get main location name
+        const mainName = this.getLocationName(item);
+        parts.push(mainName);
+        
+        // Add state if it's different from city
+        if (address.state && address.state !== mainName) {
+            parts.push(address.state);
+        }
+        
+        // Always add country
+        if (address.country) {
+            parts.push(address.country);
+        }
+        
+        return parts.join(', ');
     }
 
     getRegion(item) {
         const address = item.address || {};
         const parts = [];
         
-        if (address.city || address.town || address.village) {
-            parts.push(address.city || address.town || address.village);
-        }
-        if (address.state) parts.push(address.state);
-        if (address.country) parts.push(address.country);
+        // Don't repeat the main city name
+        const mainName = this.getLocationName(item);
         
-        return parts.join(', ') || item.display_name;
+        if (address.state && address.state !== mainName) {
+            parts.push(address.state);
+        }
+        if (address.country) {
+            parts.push(address.country);
+        }
+        
+        return parts.join(', ') || 'Location';
+    }
+
+    filterAndDeduplicateResults(results) {
+        // Prioritize certain location types - cities and towns over governorates
+        const priorityTypes = ['city', 'town', 'village'];
+        const avoidTypes = ['suburb', 'quarter', 'neighbourhood', 'administrative'];
+        
+        // Filter out less relevant results
+        let filtered = results.filter(item => {
+            // Remove very low importance results
+            if (item.importance < 0.3) return false;
+            
+            // Remove if it's a building or very specific place
+            if (item.class === 'building' || item.class === 'amenity') return false;
+            
+            // Remove governorates, districts, and administrative divisions
+            if (item.type === 'administrative' && item.name.toLowerCase().includes('governorate')) return false;
+            if (item.name.toLowerCase().includes('governorate')) return false;
+            if (item.name.toLowerCase().includes('district')) return false;
+            if (item.name.toLowerCase().includes('province')) return false;
+            
+            return true;
+        });
+
+        // Sort by importance and type priority
+        filtered.sort((a, b) => {
+            // Strongly prioritize cities/towns
+            const aIsPriority = priorityTypes.includes(a.type);
+            const bIsPriority = priorityTypes.includes(b.type);
+            const aIsAvoid = avoidTypes.includes(a.type);
+            const bIsAvoid = avoidTypes.includes(b.type);
+            
+            if (aIsPriority && !bIsPriority) return -1;
+            if (!aIsPriority && bIsPriority) return 1;
+            if (aIsAvoid && !bIsAvoid) return 1;
+            if (!aIsAvoid && bIsAvoid) return -1;
+            
+            // Then by importance
+            return b.importance - a.importance;
+        });
+
+        // Smart deduplication - remove similar locations
+        const deduplicated = [];
+        const seenNames = new Set();
+
+        for (const item of filtered) {
+            const nameLower = item.name.toLowerCase().trim();
+            const country = item.raw?.address?.country?.toLowerCase() || '';
+            
+            // Create a normalized key
+            const normalizedName = nameLower
+                .replace(/\s+governorate/gi, '')
+                .replace(/\s+district/gi, '')
+                .replace(/\s+province/gi, '');
+            
+            const uniqueKey = `${normalizedName}-${country}`;
+            
+            // Check if we already have this location or a very similar one
+            let isDuplicate = false;
+            
+            for (const seenName of seenNames) {
+                // Check if names are too similar
+                if (seenName === uniqueKey) {
+                    isDuplicate = true;
+                    break;
+                }
+                
+                // Check if one name contains the other (e.g., "Beirut" and "Beirut Governorate")
+                const [seenBase] = seenName.split('-');
+                if (normalizedName.includes(seenBase) || seenBase.includes(normalizedName)) {
+                    isDuplicate = true;
+                    break;
+                }
+            }
+            
+            if (!isDuplicate) {
+                seenNames.add(uniqueKey);
+                deduplicated.push(item);
+            }
+        }
+
+        // Return top 5 results
+        return deduplicated.slice(0, 5);
+    }
+
+    showPopularDestinations(dropdown, onSelect) {
+        dropdown.innerHTML = `
+            <div class="autocomplete-header">Popular destinations</div>
+            ${this.popularDestinations.map(dest => `
+                <div class="autocomplete-item" data-value="${this.escapeHtml(dest.full)}">
+                    <div class="autocomplete-item-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                    </div>
+                    <div class="autocomplete-item-text">
+                        <div class="autocomplete-item-name">${this.escapeHtml(dest.name)}</div>
+                        <div class="autocomplete-item-location">${this.escapeHtml(dest.region)}</div>
+                    </div>
+                </div>
+            `).join('')}
+        `;
+
+        // Add click handlers
+        dropdown.querySelectorAll('.autocomplete-item').forEach(item => {
+            item.addEventListener('click', () => {
+                onSelect({
+                    place_name: item.dataset.value,
+                    full_name: item.dataset.value
+                });
+            });
+        });
     }
 
     renderAutocompleteResults(dropdown, results, onSelect) {
@@ -184,7 +363,12 @@ class PropertiesManager {
 
         dropdown.innerHTML = results.map(result => `
             <div class="autocomplete-item" data-value="${this.escapeHtml(result.full_name)}">
-                <div class="autocomplete-item-icon">📍</div>
+                <div class="autocomplete-item-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                </div>
                 <div class="autocomplete-item-text">
                     <div class="autocomplete-item-name">${this.escapeHtml(result.name)}</div>
                     <div class="autocomplete-item-location">${this.escapeHtml(result.region)}</div>
@@ -218,6 +402,146 @@ class PropertiesManager {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    // Setup guests dropdown with counters
+    setupGuestsDropdown() {
+        // Main search counters
+        this.initGuestsCounter({
+            input: document.getElementById('guests'),
+            dropdown: document.getElementById('guestsDropdown'),
+            adultsDisplay: document.getElementById('adultsDisplay'),
+            childrenDisplay: document.getElementById('childrenDisplay'),
+            adultsCount: document.getElementById('adultsCount'),
+            childrenCount: document.getElementById('childrenCount'),
+            targetPrefix: ''
+        });
+
+        // Nav search counters
+        this.initGuestsCounter({
+            input: document.getElementById('navGuests'),
+            dropdown: document.getElementById('navGuestsDropdown'),
+            adultsDisplay: document.getElementById('navAdultsDisplay'),
+            childrenDisplay: document.getElementById('navChildrenDisplay'),
+            adultsCount: document.getElementById('navAdultsCount'),
+            childrenCount: document.getElementById('navChildrenCount'),
+            targetPrefix: 'nav-'
+        });
+    }
+
+    initGuestsCounter(config) {
+        const { input, dropdown, adultsDisplay, childrenDisplay, adultsCount, childrenCount, targetPrefix } = config;
+        
+        if (!input || !dropdown) return;
+
+        let adults = 0;
+        let children = 0;
+
+        const updateDisplay = () => {
+            if (adultsDisplay) adultsDisplay.textContent = adults;
+            if (childrenDisplay) childrenDisplay.textContent = children;
+            if (adultsCount) adultsCount.value = adults;
+            if (childrenCount) childrenCount.value = children;
+
+            const total = adults + children;
+            if (total === 0) {
+                input.value = '';
+                input.placeholder = input.id === 'navGuests' ? 'Guests' : 'Add guests';
+            } else {
+                const parts = [];
+                if (adults > 0) parts.push(`${adults} adult${adults !== 1 ? 's' : ''}`);
+                if (children > 0) parts.push(`${children} child${children !== 1 ? 'ren' : ''}`);
+                input.value = parts.join(', ');
+            }
+
+            // Update button states
+            updateButtonStates();
+            
+            // Sync with other search bar
+            syncWithOther();
+        };
+
+        const updateButtonStates = () => {
+            const minusAdults = dropdown.querySelector(`[data-target="${targetPrefix}adults"].counter-minus`);
+            const minusChildren = dropdown.querySelector(`[data-target="${targetPrefix}children"].counter-minus`);
+            
+            if (minusAdults) minusAdults.disabled = adults === 0;
+            if (minusChildren) minusChildren.disabled = children === 0;
+        };
+
+        const syncWithOther = () => {
+            // Sync main <-> nav
+            if (targetPrefix === '') {
+                // We're in main, update nav
+                const navInput = document.getElementById('navGuests');
+                const navAdultsDisplay = document.getElementById('navAdultsDisplay');
+                const navChildrenDisplay = document.getElementById('navChildrenDisplay');
+                const navAdultsCount = document.getElementById('navAdultsCount');
+                const navChildrenCount = document.getElementById('navChildrenCount');
+                
+                if (navInput) navInput.value = input.value;
+                if (navAdultsDisplay) navAdultsDisplay.textContent = adults;
+                if (navChildrenDisplay) navChildrenDisplay.textContent = children;
+                if (navAdultsCount) navAdultsCount.value = adults;
+                if (navChildrenCount) navChildrenCount.value = children;
+            } else {
+                // We're in nav, update main
+                const mainInput = document.getElementById('guests');
+                const mainAdultsDisplay = document.getElementById('adultsDisplay');
+                const mainChildrenDisplay = document.getElementById('childrenDisplay');
+                const mainAdultsCount = document.getElementById('adultsCount');
+                const mainChildrenCount = document.getElementById('childrenCount');
+                
+                if (mainInput) mainInput.value = input.value;
+                if (mainAdultsDisplay) mainAdultsDisplay.textContent = adults;
+                if (mainChildrenDisplay) mainChildrenDisplay.textContent = children;
+                if (mainAdultsCount) mainAdultsCount.value = adults;
+                if (mainChildrenCount) mainChildrenCount.value = children;
+            }
+        };
+
+        const hideDropdown = () => {
+            dropdown.classList.remove('active');
+        };
+
+        const showDropdown = () => {
+            dropdown.classList.add('active');
+        };
+
+        // Show dropdown on click
+        input.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showDropdown();
+        });
+
+        // Handle counter buttons
+        dropdown.addEventListener('click', (e) => {
+            const btn = e.target.closest('.counter-btn');
+            if (!btn) return;
+            
+            e.stopPropagation();
+            
+            const target = btn.dataset.target;
+            const isPlus = btn.classList.contains('counter-plus');
+            
+            if (target === `${targetPrefix}adults`) {
+                adults = isPlus ? Math.min(adults + 1, 20) : Math.max(adults - 1, 0);
+            } else if (target === `${targetPrefix}children`) {
+                children = isPlus ? Math.min(children + 1, 20) : Math.max(children - 1, 0);
+            }
+            
+            updateDisplay();
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                hideDropdown();
+            }
+        });
+
+        // Initial state
+        updateDisplay();
     }
 
     // Setup modern date pickers with Flatpickr
@@ -515,12 +839,12 @@ class PropertiesManager {
             // Show all properties
             this.currentFilters.viewType = '';
         } else {
-            // Map category to view type
+            // Map category to view type (matches database format)
             const categoryMap = {
-                'mountain': 'mountain',
-                'ocean': 'ocean', 
-                'city': 'city',
-                'countryside': 'countryside'
+                'mountain': 'Mountain View',
+                'ocean': 'Ocean View', 
+                'city': 'City Skyline View',
+                'countryside': 'Countryside View'
             };
             this.currentFilters.viewType = categoryMap[category] || '';
         }
@@ -766,12 +1090,42 @@ class PropertiesManager {
         // Location filter
         if (filters.location) {
             const location = filters.location.toLowerCase();
-            filtered = filtered.filter(property => 
-                property.city.toLowerCase().includes(location) ||
-                property.state.toLowerCase().includes(location) ||
-                property.country.toLowerCase().includes(location) ||
-                property.title.toLowerCase().includes(location)
-            );
+            // Split by comma to handle "City, State, Country" format
+            const locationParts = location.split(',').map(part => part.trim()).filter(part => part);
+            
+            filtered = filtered.filter(property => {
+                const city = property.city?.toLowerCase() || '';
+                const state = property.state?.toLowerCase() || '';
+                const country = property.country?.toLowerCase() || '';
+                const address = property.address?.toLowerCase() || '';
+                const title = property.title?.toLowerCase() || '';
+                
+                // All parts must match (AND logic)
+                // First part should match city, subsequent parts should match state/country
+                if (locationParts.length === 1) {
+                    // Single search term - check all fields
+                    const searchTerm = locationParts[0];
+                    return city.includes(searchTerm) || 
+                           state.includes(searchTerm) || 
+                           country.includes(searchTerm) ||
+                           address.includes(searchTerm) ||
+                           title.includes(searchTerm);
+                } else {
+                    // Multiple parts - prioritize matching in order (city, state, country)
+                    return locationParts.every((part, index) => {
+                        if (index === 0) {
+                            // First part should match city or address
+                            return city.includes(part) || address.includes(part) || title.includes(part);
+                        } else if (index === 1) {
+                            // Second part should match state
+                            return state.includes(part) || city.includes(part);
+                        } else {
+                            // Third+ part should match country
+                            return country.includes(part);
+                        }
+                    });
+                }
+            });
         }
         
         // Guest count filter

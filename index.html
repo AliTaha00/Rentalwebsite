@@ -38,13 +38,42 @@
                     </div>
                     <span class="nav-search-divider"></span>
                     <div class="nav-search-seg">
-                        <select id="navGuests" aria-label="Guests">
-                            <option value="1">1 guest</option>
-                            <option value="2" selected>2 guests</option>
-                            <option value="3">3 guests</option>
-                            <option value="4">4 guests</option>
-                            <option value="5">5+ guests</option>
-                        </select>
+                        <div class="guests-wrapper">
+                            <input type="text" id="navGuests" placeholder="Guests" aria-label="Guests" readonly>
+                            <input type="hidden" id="navAdultsCount" value="0">
+                            <input type="hidden" id="navChildrenCount" value="0">
+                            <div class="guests-dropdown" id="navGuestsDropdown">
+                                <div class="guest-counter-row">
+                                    <div class="guest-counter-info">
+                                        <div class="guest-counter-title">Adults</div>
+                                    </div>
+                                    <div class="guest-counter-controls">
+                                        <button type="button" class="counter-btn counter-minus" data-target="nav-adults">
+                                            <svg viewBox="0 0 24 24" width="14" height="14"><path d="M19 13H5v-2h14v2z" fill="currentColor"/></svg>
+                                        </button>
+                                        <span class="counter-value" id="navAdultsDisplay">0</span>
+                                        <button type="button" class="counter-btn counter-plus" data-target="nav-adults">
+                                            <svg viewBox="0 0 24 24" width="14" height="14"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="guest-counter-row">
+                                    <div class="guest-counter-info">
+                                        <div class="guest-counter-title">Children</div>
+                                        <div class="guest-counter-subtitle">Ages 0 to 17</div>
+                                    </div>
+                                    <div class="guest-counter-controls">
+                                        <button type="button" class="counter-btn counter-minus" data-target="nav-children">
+                                            <svg viewBox="0 0 24 24" width="14" height="14"><path d="M19 13H5v-2h14v2z" fill="currentColor"/></svg>
+                                        </button>
+                                        <span class="counter-value" id="navChildrenDisplay">0</span>
+                                        <button type="button" class="counter-btn counter-plus" data-target="nav-children">
+                                            <svg viewBox="0 0 24 24" width="14" height="14"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <button type="submit" class="nav-search-btn" aria-label="Search">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -92,14 +121,42 @@
                         
                         <div class="search-field guests-field">
                             <label for="guests">Who</label>
-                            <select id="guests" name="guests">
-                                <option value="">Add guests</option>
-                                <option value="1">1 guest</option>
-                                <option value="2">2 guests</option>
-                                <option value="3">3 guests</option>
-                                <option value="4">4 guests</option>
-                                <option value="5">5+ guests</option>
-                            </select>
+                            <div class="guests-wrapper">
+                                <input type="text" id="guests" name="guests" placeholder="Add guests" readonly>
+                                <input type="hidden" id="adultsCount" value="0">
+                                <input type="hidden" id="childrenCount" value="0">
+                                <div class="guests-dropdown" id="guestsDropdown">
+                                    <div class="guest-counter-row">
+                                        <div class="guest-counter-info">
+                                            <div class="guest-counter-title">Adults</div>
+                                        </div>
+                                        <div class="guest-counter-controls">
+                                            <button type="button" class="counter-btn counter-minus" data-target="adults">
+                                                <svg viewBox="0 0 24 24" width="16" height="16"><path d="M19 13H5v-2h14v2z" fill="currentColor"/></svg>
+                                            </button>
+                                            <span class="counter-value" id="adultsDisplay">0</span>
+                                            <button type="button" class="counter-btn counter-plus" data-target="adults">
+                                                <svg viewBox="0 0 24 24" width="16" height="16"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="guest-counter-row">
+                                        <div class="guest-counter-info">
+                                            <div class="guest-counter-title">Children</div>
+                                            <div class="guest-counter-subtitle">Ages 0 to 17</div>
+                                        </div>
+                                        <div class="guest-counter-controls">
+                                            <button type="button" class="counter-btn counter-minus" data-target="children">
+                                                <svg viewBox="0 0 24 24" width="16" height="16"><path d="M19 13H5v-2h14v2z" fill="currentColor"/></svg>
+                                            </button>
+                                            <span class="counter-value" id="childrenDisplay">0</span>
+                                            <button type="button" class="counter-btn counter-plus" data-target="children">
+                                                <svg viewBox="0 0 24 24" width="16" height="16"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor"/></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
                         <button type="submit" class="search-button">
@@ -135,12 +192,12 @@
                                 <label>View type</label>
                                 <select id="viewType" name="viewType" class="filter-select-compact">
                                     <option value="">Any view</option>
-                                    <option value="mountain">🏔️ Mountain</option>
-                                    <option value="ocean">🌊 Ocean</option>
-                                    <option value="city">🏙️ City</option>
-                                    <option value="forest">🌲 Forest</option>
-                                    <option value="lake">🏞️ Lake</option>
-                                    <option value="countryside">🌾 Countryside</option>
+                                    <option value="Mountain View">🏔️ Mountain</option>
+                                    <option value="Ocean View">🌊 Ocean</option>
+                                    <option value="City Skyline View">🏙️ City</option>
+                                    <option value="Forest View">🌲 Forest</option>
+                                    <option value="Lake View">🏞️ Lake</option>
+                                    <option value="Countryside View">🌾 Countryside</option>
                                 </select>
                             </div>
                             
