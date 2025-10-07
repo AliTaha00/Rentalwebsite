@@ -69,6 +69,25 @@ class PropertiesManager {
     initAutocomplete(input, dropdown, syncInput) {
         let debounceTimer;
         let selectedIndex = -1;
+        
+        // Setup clear button
+        const clearBtn = input.parentElement.querySelector('.clear-location-btn');
+        
+        const updateClearButton = () => {
+            if (clearBtn) {
+                clearBtn.style.display = input.value.trim() ? 'flex' : 'none';
+            }
+        };
+        
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                input.value = '';
+                if (syncInput) syncInput.value = '';
+                updateClearButton();
+                hideDropdown();
+                input.focus();
+            });
+        }
 
         const hideDropdown = () => {
             dropdown.classList.remove('active');
@@ -84,12 +103,14 @@ class PropertiesManager {
         const selectItem = (item) => {
             input.value = item.place_name || item.full_name;
             if (syncInput) syncInput.value = input.value;
+            updateClearButton();
             hideDropdown();
         };
 
         // Handle input
         input.addEventListener('input', (e) => {
             const query = e.target.value.trim();
+            updateClearButton();
 
             clearTimeout(debounceTimer);
 

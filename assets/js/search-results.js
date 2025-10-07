@@ -207,6 +207,28 @@ class SearchResultsManager {
         let debounceTimer;
         let selectedIndex = -1;
         
+        // Setup clear button
+        const clearBtn = document.getElementById('clearSearchLocation');
+        
+        const updateClearButton = () => {
+            if (clearBtn) {
+                clearBtn.style.display = input.value.trim() ? 'flex' : 'none';
+            }
+        };
+        
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                input.value = '';
+                this.currentFilters.location = '';
+                updateClearButton();
+                hideDropdown();
+                input.focus();
+            });
+        }
+        
+        // Initialize clear button state
+        updateClearButton();
+        
         const hideDropdown = () => {
             dropdown.classList.remove('active');
             selectedIndex = -1;
@@ -219,6 +241,7 @@ class SearchResultsManager {
         const onSelect = (item) => {
             input.value = item.place_name || item.full_name;
             this.currentFilters.location = input.value;
+            updateClearButton();
             hideDropdown();
         };
         
@@ -233,6 +256,7 @@ class SearchResultsManager {
         // Handle input
         input.addEventListener('input', (e) => {
             const query = e.target.value.trim();
+            updateClearButton();
             
             clearTimeout(debounceTimer);
             

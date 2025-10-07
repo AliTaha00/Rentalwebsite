@@ -244,6 +244,33 @@
     flex: 1;
 }
 
+.clear-location-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s ease;
+    z-index: 10;
+    color: #6b7280;
+}
+
+.clear-location-btn:hover {
+    background: #f3f4f6;
+    color: #1f2937;
+}
+
+.clear-location-btn svg {
+    display: block;
+}
+
 .autocomplete-dropdown {
     position: absolute;
     top: calc(100% + 8px);
