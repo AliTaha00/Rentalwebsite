@@ -114,26 +114,99 @@
             </div>
         </div>
 
+        <!-- Filters Backdrop -->
+        <div class="filters-backdrop" id="filtersBackdrop"></div>
+
         <!-- Filters Panel (Hidden by default) -->
         <div class="filters-panel" id="filtersPanel">
             <div class="filters-panel-header">
                 <h3>Filters</h3>
                 <button class="filters-close" id="filtersClose">
-                    <svg viewBox="0 0 32 32" width="16" height="16" fill="currentColor">
+                    <svg viewBox="0 0 32 32" width="16" height="16" stroke="currentColor" stroke-width="3" fill="none">
                         <path d="m6 6 20 20M26 6 6 26"></path>
                     </svg>
                 </button>
             </div>
             <div class="filters-panel-content">
+                <!-- Amenities Quick Filters -->
                 <div class="filter-section">
-                    <h4>Price range</h4>
-                    <div class="price-inputs">
-                        <input type="number" id="minPrice" placeholder="Min price" min="0">
-                        <span>-</span>
-                        <input type="number" id="maxPrice" placeholder="Max price" min="0">
+                    <div class="amenities-scroll-container">
+                        <button class="amenity-icon-btn" data-amenity="Parking">
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="5" y="2" width="14" height="20" rx="2"/>
+                                <path d="M9 10h3a2 2 0 1 0 0-4H9v8"/>
+                            </svg>
+                            <span>Free parking</span>
+                        </button>
+                        <button class="amenity-icon-btn" data-amenity="Pool">
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M2 15c.6.5 1.2 1 2.5 1 1.3 0 1.9-.5 2.5-1 .6-.5 1.2-1 2.5-1s1.9.5 2.5 1c.6.5 1.2 1 2.5 1 1.3 0 1.9-.5 2.5-1 .6-.5 1.3-1 2.5-1 1.2 0 1.9.5 2.5 1"/>
+                                <path d="M2 19c.6.5 1.2 1 2.5 1 1.3 0 1.9-.5 2.5-1 .6-.5 1.2-1 2.5-1s1.9.5 2.5 1c.6.5 1.2 1 2.5 1 1.3 0 1.9-.5 2.5-1 .6-.5 1.3-1 2.5-1 1.2 0 1.9.5 2.5 1"/>
+                            </svg>
+                            <span>Pool</span>
+                        </button>
+                        <button class="amenity-icon-btn" data-amenity="WiFi">
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+                                <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+                                <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+                                <path d="M12 20h.01"/>
+                            </svg>
+                            <span>WiFi</span>
+                        </button>
+                        <button class="amenity-icon-btn" data-amenity="Kitchen">
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/>
+                                <path d="M7 2v20"/>
+                                <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>
+                            </svg>
+                            <span>Kitchen</span>
+                        </button>
+                        <button class="amenity-icon-btn" data-amenity="Air Conditioning">
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2v20M17 7l-5 5-5-5M17 17l-5-5-5 5"/>
+                            </svg>
+                            <span>AC</span>
+                        </button>
+                        <button class="amenity-icon-btn" data-amenity="Washer/Dryer">
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="2" width="18" height="20" rx="2"/>
+                                <circle cx="12" cy="13" r="5"/>
+                                <path d="M12 18a5 5 0 0 1-5-5 5 5 0 0 0 5 5 5 5 0 0 0 5-5 5 5 0 0 1-5 5z"/>
+                            </svg>
+                            <span>Washer</span>
+                        </button>
                     </div>
                 </div>
 
+                <!-- Type of Place -->
+                <div class="filter-section">
+                    <h4>Type of place</h4>
+                    <div class="toggle-buttons">
+                        <button class="toggle-btn active" data-type="">Any type</button>
+                        <button class="toggle-btn" data-type="room">Room</button>
+                        <button class="toggle-btn" data-type="entire">Entire home</button>
+                    </div>
+                </div>
+
+                <!-- Price Range -->
+                <div class="filter-section">
+                    <h4>Price range</h4>
+                    <div class="price-range-display">
+                        <span>$<span id="minPriceDisplay">0</span></span>
+                        <span>$<span id="maxPriceDisplay">1000</span></span>
+                    </div>
+                    <div class="price-slider-container">
+                        <input type="range" id="minPriceSlider" min="0" max="1000" value="0" step="10" class="price-slider">
+                        <input type="range" id="maxPriceSlider" min="0" max="1000" value="1000" step="10" class="price-slider">
+                    </div>
+                    <div class="price-labels">
+                        <span>$0</span>
+                        <span>$1000+</span>
+                    </div>
+                </div>
+
+                <!-- Property Details (Collapsible) -->
                 <div class="filter-section">
                     <h4>Property type</h4>
                     <select id="propertyType" class="filter-select">
@@ -183,40 +256,10 @@
                         </select>
                     </div>
                 </div>
-
-                <div class="filter-section">
-                    <h4>Amenities</h4>
-                    <div class="amenities-grid">
-                        <label class="amenity-checkbox">
-                            <input type="checkbox" value="WiFi">
-                            <span>WiFi</span>
-                        </label>
-                        <label class="amenity-checkbox">
-                            <input type="checkbox" value="Kitchen">
-                            <span>Kitchen</span>
-                        </label>
-                        <label class="amenity-checkbox">
-                            <input type="checkbox" value="Pool">
-                            <span>Pool</span>
-                        </label>
-                        <label class="amenity-checkbox">
-                            <input type="checkbox" value="Parking">
-                            <span>Parking</span>
-                        </label>
-                        <label class="amenity-checkbox">
-                            <input type="checkbox" value="Air Conditioning">
-                            <span>AC</span>
-                        </label>
-                        <label class="amenity-checkbox">
-                            <input type="checkbox" value="Washer/Dryer">
-                            <span>Washer</span>
-                        </label>
-                    </div>
-                </div>
             </div>
             <div class="filters-panel-footer">
                 <button class="btn-clear" id="clearFilters">Clear all</button>
-                <button class="btn-apply" id="applyFilters">Show results</button>
+                <button class="btn-apply" id="applyFilters">Show places</button>
             </div>
         </div>
 

@@ -76,6 +76,7 @@ class SearchResultsManager {
             children: parseInt(params.get('children')) || 0,
             viewType: params.get('viewType') || '',
             propertyType: params.get('propertyType') || '',
+            placeType: params.get('placeType') || '',
             minPrice: params.get('minPrice') || '',
             maxPrice: params.get('maxPrice') || '',
             bedrooms: params.get('bedrooms') || '',
@@ -504,25 +505,56 @@ class SearchResultsManager {
         const filtersToggle = document.getElementById('filtersToggle');
         const filtersPanel = document.getElementById('filtersPanel');
         const filtersClose = document.getElementById('filtersClose');
+        const filtersBackdrop = document.getElementById('filtersBackdrop');
+        
+        const openFilters = () => {
+            filtersPanel.classList.add('active');
+            filtersBackdrop.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        };
+        
+        const closeFilters = () => {
+            filtersPanel.classList.remove('active');
+            filtersBackdrop.classList.remove('active');
+            document.body.style.overflow = '';
+        };
         
         if (filtersToggle) {
-            filtersToggle.addEventListener('click', () => {
-                filtersPanel.classList.add('active');
-            });
+            filtersToggle.addEventListener('click', openFilters);
         }
         
         if (filtersClose) {
-            filtersClose.addEventListener('click', () => {
-                filtersPanel.classList.remove('active');
-            });
+            filtersClose.addEventListener('click', closeFilters);
         }
+        
+        if (filtersBackdrop) {
+            filtersBackdrop.addEventListener('click', closeFilters);
+        }
+        
+        // Amenity icon buttons
+        document.querySelectorAll('.amenity-icon-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.classList.toggle('active');
+            });
+        });
+        
+        // Type of place toggle buttons
+        document.querySelectorAll('.toggle-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+        
+        // Price range sliders
+        this.setupPriceSliders();
         
         // Apply filters
         const applyFilters = document.getElementById('applyFilters');
         if (applyFilters) {
             applyFilters.addEventListener('click', () => {
                 this.applyFiltersFromPanel();
-                filtersPanel.classList.remove('active');
+                closeFilters();
             });
         }
         
@@ -580,8 +612,58 @@ class SearchResultsManager {
         this.populateFiltersFromParams();
     }
     
+    setupPriceSliders() {
+        const minSlider = document.getElementById('minPriceSlider');
+        const maxSlider = document.getElementById('maxPriceSlider');
+        const minDisplay = document.getElementById('minPriceDisplay');
+        const maxDisplay = document.getElementById('maxPriceDisplay');
+        
+        if (!minSlider || !maxSlider) return;
+        
+        const updateSliders = () => {
+            let minVal = parseInt(minSlider.value);
+            let maxVal = parseInt(maxSlider.value);
+            
+            // Ensure min doesn't exceed max
+            if (minVal > maxVal - 50) {
+                minVal = maxVal - 50;
+                minSlider.value = minVal;
+            }
+            
+            // Ensure max doesn't go below min
+            if (maxVal < minVal + 50) {
+                maxVal = minVal + 50;
+                maxSlider.value = maxVal;
+            }
+            
+            if (minDisplay) minDisplay.textContent = minVal;
+            if (maxDisplay) maxDisplay.textContent = maxVal >= 1000 ? '1000+' : maxVal;
+        };
+        
+        minSlider.addEventListener('input', updateSliders);
+        maxSlider.addEventListener('input', updateSliders);
+        
+        // Initialize displays
+        updateSliders();
+    }
+    
     populateFiltersFromParams() {
-        const fields = ['minPrice', 'maxPrice', 'propertyType', 'viewType', 'bedrooms', 'bathrooms'];
+        // Set price sliders
+        if (this.currentFilters.minPrice) {
+            const minSlider = document.getElementById('minPriceSlider');
+            const minDisplay = document.getElementById('minPriceDisplay');
+            if (minSlider) minSlider.value = this.currentFilters.minPrice;
+            if (minDisplay) minDisplay.textContent = this.currentFilters.minPrice;
+        }
+        
+        if (this.currentFilters.maxPrice) {
+            const maxSlider = document.getElementById('maxPriceSlider');
+            const maxDisplay = document.getElementById('maxPriceDisplay');
+            if (maxSlider) maxSlider.value = this.currentFilters.maxPrice;
+            if (maxDisplay) maxDisplay.textContent = this.currentFilters.maxPrice;
+        }
+        
+        const fields = ['propertyType', 'viewType', 'bedrooms', 'bathrooms'];
         
         fields.forEach(field => {
             const element = document.getElementById(field);
@@ -590,30 +672,45 @@ class SearchResultsManager {
             }
         });
         
-        // Amenities checkboxes
+        // Amenity icon buttons
         if (this.currentFilters.amenities && this.currentFilters.amenities.length > 0) {
             this.currentFilters.amenities.forEach(amenity => {
-                const checkbox = document.querySelector(`input[type="checkbox"][value="${amenity}"]`);
-                if (checkbox) checkbox.checked = true;
+                const btn = document.querySelector(`.amenity-icon-btn[data-amenity="${amenity}"]`);
+                if (btn) btn.classList.add('active');
             });
+        }
+        
+        // Place type toggle
+        if (this.currentFilters.placeType) {
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            const typeBtn = document.querySelector(`.toggle-btn[data-type="${this.currentFilters.placeType}"]`);
+            if (typeBtn) typeBtn.classList.add('active');
         }
     }
     
     applyFiltersFromPanel() {
-        const minPrice = document.getElementById('minPrice').value;
-        const maxPrice = document.getElementById('maxPrice').value;
+        // Get price from sliders
+        const minPrice = document.getElementById('minPriceSlider').value;
+        const maxPrice = document.getElementById('maxPriceSlider').value;
+        
+        // Get place type from toggle buttons
+        const activeTypeBtn = document.querySelector('.toggle-btn.active');
+        const placeType = activeTypeBtn ? activeTypeBtn.dataset.type : '';
+        
         const propertyType = document.getElementById('propertyType').value;
         const viewType = document.getElementById('viewType').value;
         const bedrooms = document.getElementById('bedrooms').value;
         const bathrooms = document.getElementById('bathrooms').value;
         
-        const amenities = Array.from(document.querySelectorAll('.amenity-checkbox input:checked'))
-            .map(cb => cb.value);
+        // Get amenities from icon buttons
+        const amenities = Array.from(document.querySelectorAll('.amenity-icon-btn.active'))
+            .map(btn => btn.dataset.amenity);
         
         this.currentFilters = {
             ...this.currentFilters,
-            minPrice,
-            maxPrice,
+            minPrice: minPrice > 0 ? minPrice : '',
+            maxPrice: maxPrice < 1000 ? maxPrice : '',
+            placeType,
             propertyType,
             viewType,
             bedrooms,
@@ -625,15 +722,29 @@ class SearchResultsManager {
     }
     
     clearAllFilters() {
+        // Clear price sliders
+        const minSlider = document.getElementById('minPriceSlider');
+        const maxSlider = document.getElementById('maxPriceSlider');
+        const minDisplay = document.getElementById('minPriceDisplay');
+        const maxDisplay = document.getElementById('maxPriceDisplay');
+        
+        if (minSlider) minSlider.value = 0;
+        if (maxSlider) maxSlider.value = 1000;
+        if (minDisplay) minDisplay.textContent = '0';
+        if (maxDisplay) maxDisplay.textContent = '1000';
+        
+        // Clear toggle buttons
+        document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelector('.toggle-btn[data-type=""]')?.classList.add('active');
+        
+        // Clear amenity icon buttons
+        document.querySelectorAll('.amenity-icon-btn').forEach(btn => btn.classList.remove('active'));
+        
         // Clear form inputs
-        document.getElementById('minPrice').value = '';
-        document.getElementById('maxPrice').value = '';
         document.getElementById('propertyType').value = '';
         document.getElementById('viewType').value = '';
         document.getElementById('bedrooms').value = '';
         document.getElementById('bathrooms').value = '';
-        
-        document.querySelectorAll('.amenity-checkbox input').forEach(cb => cb.checked = false);
         
         // Reset filters but keep search params
         this.currentFilters = {
@@ -644,6 +755,7 @@ class SearchResultsManager {
             children: this.currentFilters.children,
             minPrice: '',
             maxPrice: '',
+            placeType: '',
             propertyType: '',
             viewType: '',
             bedrooms: '',
