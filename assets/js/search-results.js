@@ -1027,21 +1027,148 @@ class SearchResultsManager {
             // Add click handlers after a brief delay to ensure rendering is complete
             requestAnimationFrame(() => {
                 propertiesGrid.querySelectorAll('.property-card').forEach((card, index) => {
-                    card.addEventListener('click', () => {
-                        this.viewPropertyDetails(this.filteredProperties[index]);
-                    });
+                    this.setupPropertyCardInteractions(card, this.filteredProperties[index]);
                 });
             });
         }
     }
     
+    setupPropertyCardInteractions(card, property) {
+        const images = JSON.parse(card.dataset.images || '[]');
+        let currentImageIndex = 0;
+        
+        // Wishlist button
+        const wishlistBtn = card.querySelector('.property-card-wishlist');
+        if (wishlistBtn) {
+            wishlistBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                wishlistBtn.classList.toggle('active');
+                // TODO: Add wishlist functionality
+                console.log('Wishlist toggled for property:', property.property_id);
+            });
+        }
+        
+        // Image navigation
+        const updateImage = (newIndex) => {
+            const allImages = card.querySelectorAll('.property-card-image');
+            const allDots = card.querySelectorAll('.property-card-dot');
+            
+            allImages.forEach((img, i) => {
+                img.classList.toggle('active', i === newIndex);
+            });
+            
+            allDots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === newIndex);
+            });
+            
+            currentImageIndex = newIndex;
+        };
+        
+        // Arrow buttons
+        const leftArrow = card.querySelector('.property-card-arrow-left');
+        const rightArrow = card.querySelector('.property-card-arrow-right');
+        
+        if (leftArrow) {
+            leftArrow.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const newIndex = currentImageIndex === 0 ? images.length - 1 : currentImageIndex - 1;
+                updateImage(newIndex);
+            });
+        }
+        
+        if (rightArrow) {
+            rightArrow.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const newIndex = currentImageIndex === images.length - 1 ? 0 : currentImageIndex + 1;
+                updateImage(newIndex);
+            });
+        }
+        
+        // Dot indicators
+        card.querySelectorAll('.property-card-dot').forEach((dot, index) => {
+            dot.addEventListener('click', (e) => {
+                e.stopPropagation();
+                updateImage(index);
+            });
+        });
+        
+        // Show/hide arrows on hover (only if multiple images)
+        if (images.length > 1) {
+            const imageContainer = card.querySelector('.property-card-image-container');
+            imageContainer.addEventListener('mouseenter', () => {
+                if (leftArrow) leftArrow.style.opacity = '1';
+                if (rightArrow) rightArrow.style.opacity = '1';
+            });
+            
+            imageContainer.addEventListener('mouseleave', () => {
+                if (leftArrow) leftArrow.style.opacity = '0';
+                if (rightArrow) rightArrow.style.opacity = '0';
+            });
+        }
+        
+        // Click on card to view details (but not on interactive elements)
+        card.addEventListener('click', (e) => {
+            if (e.target.closest('.property-card-arrow') || 
+                e.target.closest('.property-card-dot') ||
+                e.target.closest('.property-card-wishlist')) {
+                return;
+            }
+            this.viewPropertyDetails(property);
+        });
+    }
+    
     createPropertyCard(property) {
+        // Prepare images array
+        const images = property.images && property.images.length > 0 
+            ? property.images 
+            : ['https://via.placeholder.com/350x240?text=No+Image'];
+        
+        const hasMultipleImages = images.length > 1;
+        
+        // Create image carousel HTML
+        const imagesHtml = images.map((img, index) => 
+            `<img src="${img}" alt="${this.escapeHtml(property.title)}" class="property-card-image ${index === 0 ? 'active' : ''}" loading="lazy" onerror="this.src='https://via.placeholder.com/350x240?text=No+Image'">`
+        ).join('');
+        
+        // Create dot indicators
+        const dotsHtml = hasMultipleImages ? `
+            <div class="property-card-dots">
+                ${images.map((_, index) => 
+                    `<span class="property-card-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>`
+                ).join('')}
+            </div>
+        ` : '';
+        
         return `
-            <div class="property-card" data-id="${property.property_id}">
-                <div class="property-image" aria-hidden="true"></div>
+            <div class="property-card" data-id="${property.property_id}" data-images='${JSON.stringify(images)}'>
+                <div class="property-card-image-container">
+                    ${imagesHtml}
+                    
+                    <!-- Wishlist heart -->
+                    <button class="property-card-wishlist" aria-label="Save to wishlist" title="Save">
+                        <svg viewBox="0 0 32 32" width="24" height="24" fill="rgba(0,0,0,0.5)" stroke="white" stroke-width="2">
+                            <path d="M16 28c7-4.733 14-10 14-17a6.98 6.98 0 0 0-7-7c-1.8 0-3.5.973-4.977 2.227L16 8.25l-2.023-2.023C12.5 4.973 10.8 4 9 4a6.98 6.98 0 0 0-7 7c0 7 7 12.267 14 17z"></path>
+                        </svg>
+                    </button>
+                    
+                    ${hasMultipleImages ? `
+                        <button class="property-card-arrow property-card-arrow-left" aria-label="Previous image">
+                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                        </button>
+                        <button class="property-card-arrow property-card-arrow-right" aria-label="Next image">
+                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </button>
+                        ${dotsHtml}
+                    ` : ''}
+                </div>
                 <div class="property-content">
                     <div class="property-header">
                         <p class="property-location">${this.escapeHtml(property.city)}, ${this.escapeHtml(property.country)}</p>
+                        ${property.view_type ? `<div class="property-rating">★ ${this.escapeHtml(property.view_type)}</div>` : ''}
                     </div>
                     <div class="property-type">${this.escapeHtml(property.property_type || 'Property')}</div>
                     <div class="property-details">
@@ -1051,7 +1178,6 @@ class SearchResultsManager {
                         <div class="property-price">
                             $${property.base_price} <span>/ night</span>
                         </div>
-                        ${property.view_type ? `<div class="property-view-badge">${this.escapeHtml(property.view_type)}</div>` : ''}
                     </div>
                 </div>
             </div>
