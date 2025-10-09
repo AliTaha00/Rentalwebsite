@@ -1058,6 +1058,47 @@ class SearchResultsManager {
         `;
     }
     
+    createCustomMarkerIcon(price) {
+        // Create modern pill-style marker similar to Airbnb
+        const priceText = `$${price}`;
+        const textWidth = priceText.length * 8 + 20; // Dynamic width based on price length
+        
+        const svg = `
+            <svg width="${textWidth + 10}" height="40" viewBox="0 0 ${textWidth + 10} 40" xmlns="http://www.w3.org/2000/svg">
+                <!-- Shadow -->
+                <ellipse cx="${textWidth / 2 + 5}" cy="36" rx="${textWidth / 3}" ry="3" fill="rgba(0,0,0,0.15)"/>
+                
+                <!-- Main pill container with subtle gradient -->
+                <g filter="url(#shadow)">
+                    <rect x="5" y="8" width="${textWidth}" height="24" rx="12" 
+                          fill="white" stroke="#222" stroke-width="1.5"/>
+                    
+                    <!-- Price text -->
+                    <text x="${textWidth / 2 + 5}" y="21" 
+                          font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
+                          font-size="14" 
+                          font-weight="600" 
+                          fill="#222" 
+                          text-anchor="middle" 
+                          dominant-baseline="middle">${priceText}</text>
+                </g>
+                
+                <!-- Definitions -->
+                <defs>
+                    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+                        <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.25"/>
+                    </filter>
+                </defs>
+            </svg>
+        `;
+        
+        return {
+            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
+            scaledSize: new google.maps.Size(textWidth + 10, 40),
+            anchor: new google.maps.Point((textWidth + 10) / 2, 40)
+        };
+    }
+    
     updateMapMarkers() {
         // Clear existing markers
         this.markers.forEach(marker => {
@@ -1082,23 +1123,15 @@ class SearchResultsManager {
                 lng: parseFloat(property.longitude) 
             };
             
-            // Always use regular Marker (simpler and more compatible)
+            // Create custom pin marker with price
+            const markerIcon = this.createCustomMarkerIcon(property.base_price);
+            
             const marker = new google.maps.Marker({
                 map: this.map,
                 position: position,
                 title: property.title,
-                label: {
-                    text: `$${property.base_price}`,
-                    color: '#1f2937',
-                    fontWeight: 'bold',
-                    fontSize: '14px'
-                },
-                icon: {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    scale: 0,
-                    fillColor: 'transparent',
-                    strokeWeight: 0
-                }
+                icon: markerIcon,
+                optimized: false
             });
             
             this.addMarkerListener(marker, property);
@@ -1120,16 +1153,67 @@ class SearchResultsManager {
     
     addMarkerListener(marker, property) {
         marker.addListener('click', () => {
-            const imageUrl = property.images && property.images.length > 0 
-                ? property.images[0] 
-                : 'https://via.placeholder.com/250x120?text=No+Image';
+            // Prepare images array
+            const images = property.images && property.images.length > 0 
+                ? property.images 
+                : ['https://via.placeholder.com/320x240?text=No+Image'];
+            
+            const hasMultipleImages = images.length > 1;
+            
+            // Create image carousel HTML
+            const imagesHtml = images.map((img, index) => 
+                `<img src="${img}" alt="${this.escapeHtml(property.title)}" class="map-popup-image ${index === 0 ? 'active' : ''}" data-index="${index}" onerror="this.src='https://via.placeholder.com/320x240?text=No+Image'">`
+            ).join('');
+            
+            // Create dot indicators
+            const dotsHtml = hasMultipleImages ? images.map((_, index) => 
+                `<span class="map-popup-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>`
+            ).join('') : '';
             
             const contentString = `
-                <div class="map-popup">
-                    <img src="${imageUrl}" alt="${this.escapeHtml(property.title)}" class="map-popup-image" onerror="this.src='https://via.placeholder.com/250x120?text=No+Image'">
+                <div class="map-popup" data-property-id="${property.property_id}">
+                    <div class="map-popup-image-container">
+                        ${imagesHtml}
+                        
+                        <!-- Top Right Icons -->
+                        <div class="map-popup-top-icons">
+                            <button class="map-popup-icon-btn map-popup-close" aria-label="Close" title="Close">
+                                <svg viewBox="0 0 32 32" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3">
+                                    <path d="m6 6 20 20M26 6 6 26"></path>
+                                </svg>
+                            </button>
+                            <button class="map-popup-icon-btn map-popup-wishlist" aria-label="Save to wishlist" title="Save">
+                                <svg viewBox="0 0 32 32" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M16 28c7-4.733 14-10 14-17a6.98 6.98 0 0 0-7-7c-1.8 0-3.5.973-4.977 2.227L16 8.25l-2.023-2.023C12.5 4.973 10.8 4 9 4a6.98 6.98 0 0 0-7 7c0 7 7 12.267 14 17z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        ${hasMultipleImages ? `
+                            <button class="map-popup-arrow map-popup-arrow-left" aria-label="Previous image">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="15 18 9 12 15 6"></polyline>
+                                </svg>
+                            </button>
+                            <button class="map-popup-arrow map-popup-arrow-right" aria-label="Next image">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
+                            </button>
+                            <div class="map-popup-dots">${dotsHtml}</div>
+                        ` : ''}
+                    </div>
                     <div class="map-popup-content">
+                        <div class="map-popup-header">
+                            <div class="map-popup-location">${this.escapeHtml(property.property_type || 'Property')} in ${this.escapeHtml(property.city)}</div>
+                            ${property.view_type ? `<div class="map-popup-badge">★ ${this.escapeHtml(property.view_type)}</div>` : ''}
+                        </div>
                         <div class="map-popup-title">${this.escapeHtml(property.title)}</div>
-                        <div class="map-popup-price">$${property.base_price} / night</div>
+                        <div class="map-popup-details">${property.bedrooms} bed · ${property.bathrooms} bath · ${property.max_guests} guests</div>
+                        <div class="map-popup-price-container">
+                            <span class="map-popup-price">$${property.base_price}</span>
+                            <span class="map-popup-price-period">for ${property.booking_days || 5} nights · ${this.formatDateRange()}</span>
+                        </div>
                     </div>
                 </div>
             `;
@@ -1137,17 +1221,114 @@ class SearchResultsManager {
             this.infoWindow.setContent(contentString);
             this.infoWindow.open(this.map, marker);
             
-            // Add click listener to popup to view property details
+            // Setup carousel and interactions after popup is ready
             google.maps.event.addListenerOnce(this.infoWindow, 'domready', () => {
-                const popup = document.querySelector('.map-popup');
-                if (popup) {
-                    popup.style.cursor = 'pointer';
-                    popup.addEventListener('click', () => {
-                        this.viewPropertyDetails(property);
-                    });
-                }
+                this.setupMapPopupInteractions(property, images);
             });
         });
+    }
+    
+    setupMapPopupInteractions(property, images) {
+        const popup = document.querySelector('.map-popup');
+        if (!popup) return;
+        
+        let currentImageIndex = 0;
+        
+        // Close button
+        const closeBtn = popup.querySelector('.map-popup-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.infoWindow.close();
+            });
+        }
+        
+        // Wishlist button
+        const wishlistBtn = popup.querySelector('.map-popup-wishlist');
+        if (wishlistBtn) {
+            wishlistBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                wishlistBtn.classList.toggle('active');
+                // TODO: Add wishlist functionality
+                console.log('Wishlist toggled for property:', property.property_id);
+            });
+        }
+        
+        // Image navigation
+        const updateImage = (newIndex) => {
+            const allImages = popup.querySelectorAll('.map-popup-image');
+            const allDots = popup.querySelectorAll('.map-popup-dot');
+            
+            allImages.forEach((img, i) => {
+                img.classList.toggle('active', i === newIndex);
+            });
+            
+            allDots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === newIndex);
+            });
+            
+            currentImageIndex = newIndex;
+        };
+        
+        // Arrow buttons
+        const leftArrow = popup.querySelector('.map-popup-arrow-left');
+        const rightArrow = popup.querySelector('.map-popup-arrow-right');
+        
+        if (leftArrow) {
+            leftArrow.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const newIndex = currentImageIndex === 0 ? images.length - 1 : currentImageIndex - 1;
+                updateImage(newIndex);
+            });
+        }
+        
+        if (rightArrow) {
+            rightArrow.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const newIndex = currentImageIndex === images.length - 1 ? 0 : currentImageIndex + 1;
+                updateImage(newIndex);
+            });
+        }
+        
+        // Dot indicators
+        popup.querySelectorAll('.map-popup-dot').forEach((dot, index) => {
+            dot.addEventListener('click', (e) => {
+                e.stopPropagation();
+                updateImage(index);
+            });
+        });
+        
+        // Click on popup content to view details
+        const content = popup.querySelector('.map-popup-content');
+        if (content) {
+            content.style.cursor = 'pointer';
+            content.addEventListener('click', () => {
+                this.viewPropertyDetails(property);
+            });
+        }
+        
+        // Also make image clickable (but not arrows, dots, or top icons)
+        const imageContainer = popup.querySelector('.map-popup-image-container');
+        if (imageContainer) {
+            imageContainer.addEventListener('click', (e) => {
+                // Don't trigger if clicking interactive elements
+                if (e.target.closest('.map-popup-arrow') || 
+                    e.target.closest('.map-popup-dot') ||
+                    e.target.closest('.map-popup-icon-btn')) {
+                    return;
+                }
+                this.viewPropertyDetails(property);
+            });
+        }
+    }
+    
+    formatDateRange() {
+        if (this.currentFilters.checkIn && this.currentFilters.checkOut) {
+            const checkIn = new Date(this.currentFilters.checkIn);
+            const checkOut = new Date(this.currentFilters.checkOut);
+            return `${this.formatDate(checkIn)} - ${this.formatDate(checkOut)}`;
+        }
+        return '';
     }
     
     viewPropertyDetails(property) {

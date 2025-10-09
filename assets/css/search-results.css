@@ -52,11 +52,11 @@
     background: #fff;
     border: 1px solid #ddd;
     border-radius: 40px;
-    padding: 5px 6px 5px 16px; /* minimal right padding */
+    padding: 5px 5px 5px 16px; /* minimal right padding */
     overflow: visible; /* allow dropdown to show */
     position: relative; /* allow absolute-positioned search button */
     box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
-    width: 500px;
+    width: 430px;
     max-width: 100%;
     transition: box-shadow 0.2s ease;
 }
@@ -1069,49 +1069,224 @@
 
 /* Google Maps custom styling */
 .gm-style .gm-style-iw-c {
-    border-radius: 12px;
-    padding: 0;
-    overflow: hidden;
-    max-width: 250px !important;
+    border-radius: 16px;
+    padding: 0 !important;
+    overflow: visible !important;
+    max-width: 320px !important;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28) !important;
 }
 
 .gm-style .gm-style-iw-d {
-    overflow: hidden !important;
+    overflow: visible !important;
     padding: 0 !important;
 }
 
 .gm-style-iw button {
-    top: 8px !important;
-    right: 8px !important;
+    display: none !important;
 }
 
+/* Map Popup Card */
 .map-popup {
-    min-width: 200px;
-    max-width: 250px;
+    width: 320px;
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.map-popup-image-container {
+    position: relative;
+    width: 100%;
+    height: 240px;
+    background: #f0f0f0;
+    overflow: hidden;
 }
 
 .map-popup-image {
     width: 100%;
-    height: 120px;
+    height: 100%;
     object-fit: cover;
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.map-popup-image.active {
     display: block;
 }
 
+/* Top Right Icons (Close & Wishlist) */
+.map-popup-top-icons {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    gap: 8px;
+    z-index: 20;
+}
+
+.map-popup-icon-btn {
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.map-popup-icon-btn:hover {
+    background: white;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.map-popup-icon-btn svg {
+    color: #222;
+}
+
+/* Wishlist heart fill on active */
+.map-popup-wishlist.active svg {
+    fill: #FF385C;
+    stroke: #FF385C;
+}
+
+.map-popup-wishlist:hover svg {
+    transform: scale(1.1);
+}
+
+/* Arrow Buttons */
+.map-popup-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.map-popup-arrow:hover {
+    background: white;
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.map-popup-arrow svg {
+    color: #222;
+}
+
+.map-popup-arrow-left {
+    left: 12px;
+}
+
+.map-popup-arrow-right {
+    right: 12px;
+}
+
+/* Dot Indicators */
+.map-popup-dots {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    z-index: 10;
+}
+
+.map-popup-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.map-popup-dot:hover {
+    background: rgba(255, 255, 255, 0.9);
+    transform: scale(1.2);
+}
+
+.map-popup-dot.active {
+    background: white;
+    width: 8px;
+    height: 8px;
+}
+
+/* Popup Content */
 .map-popup-content {
-    padding: 0.75rem;
+    padding: 14px 16px 16px 16px;
+}
+
+.map-popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.map-popup-location {
+    font-size: 14px;
+    font-weight: 600;
+    color: #222;
+}
+
+.map-popup-badge {
+    font-size: 12px;
+    font-weight: 600;
+    color: #222;
+    background: #f7f7f7;
+    padding: 2px 8px;
+    border-radius: 6px;
 }
 
 .map-popup-title {
-    font-weight: 600;
+    font-size: 15px;
+    font-weight: 400;
+    color: #717171;
+    margin-bottom: 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.map-popup-details {
     font-size: 14px;
-    margin-bottom: 0.25rem;
-    color: #1f2937;
+    color: #717171;
+    margin-bottom: 8px;
+}
+
+.map-popup-price-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
 .map-popup-price {
+    font-size: 16px;
     font-weight: 600;
-    color: #648e38;
-    font-size: 15px;
+    color: #222;
+}
+
+.map-popup-price-period {
+    font-size: 14px;
+    color: #717171;
+    font-weight: 400;
 }
 
 /* Custom map marker styling */
