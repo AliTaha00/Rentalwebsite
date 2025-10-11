@@ -386,6 +386,130 @@ a:hover {
     color: white;
 }
 
+/* Profile Icon & Dropdown */
+.nav-profile {
+    position: relative;
+    order: 3;
+    margin-left: 1rem;
+}
+
+.profile-icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid #ddd;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.profile-icon-btn:hover {
+    border-color: #648e38;
+    background-color: #f8f9fa;
+}
+
+.profile-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    min-width: 260px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    padding: 0.5rem 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+    z-index: 1001;
+}
+
+.profile-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.profile-dropdown-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 1rem;
+}
+
+.profile-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #648e38, #89d957);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1.125rem;
+    flex-shrink: 0;
+}
+
+.profile-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.profile-name {
+    font-weight: 600;
+    font-size: 0.938rem;
+    color: #333;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.profile-email {
+    font-size: 0.813rem;
+    color: #666;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.profile-dropdown-divider {
+    height: 1px;
+    background-color: #e5e5e5;
+    margin: 0.5rem 0;
+}
+
+.profile-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.75rem 1rem;
+    width: 100%;
+    border: none;
+    background: none;
+    color: #333;
+    font-size: 0.938rem;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    text-decoration: none;
+    font-family: inherit;
+}
+
+.profile-dropdown-item:hover {
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+.profile-dropdown-item svg {
+    flex-shrink: 0;
+}
+
 /* Mobile Menu Toggle */
 .nav-toggle {
     display: none;
@@ -653,6 +777,16 @@ a:hover {
     
     .nav-toggle {
         display: flex;
+    }
+    
+    .nav-profile {
+        order: 2;
+        margin-left: auto;
+        margin-right: 1rem;
+    }
+    
+    .profile-dropdown {
+        right: -10px;
     }
     
     .container {

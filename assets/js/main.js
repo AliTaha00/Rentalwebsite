@@ -8,6 +8,7 @@ class RentThatViewApp {
     constructor() {
         this.setupNavigation();
         this.setupScrollHandler();
+        this.setupProfileDropdown();
         this.syncAuthNav();
         window.addEventListener('auth:state', () => this.syncAuthNav());
         // Ensure nav syncs after Supabase finishes initializing
@@ -114,6 +115,17 @@ class RentThatViewApp {
         const loginLink = navMenu.querySelector('a[href*="login.html"], .login-btn');
         const registerLink = navMenu.querySelector('a[href*="register.html"], .register-btn');
 
+        // Show/hide profile icon
+        const navProfile = document.querySelector('.nav-profile');
+        if (navProfile) {
+            if (user) {
+                navProfile.style.display = 'block';
+                this.updateProfileInfo(user);
+            } else {
+                navProfile.style.display = 'none';
+            }
+        }
+
         if (user) {
             // Convert Login to Dashboard
             if (loginLink) {
@@ -180,6 +192,82 @@ class RentThatViewApp {
     // Build path that works on root or /pages/
     makePath(pagePath) {
         return window.location.pathname.includes('/pages/') ? pagePath.split('/').pop() : pagePath;
+    }
+
+    // Update profile info in dropdown
+    updateProfileInfo(user) {
+        const profileName = document.getElementById('profileName');
+        const profileEmail = document.getElementById('profileEmail');
+        const profileInitials = document.getElementById('profileInitials');
+        
+        if (profileEmail) profileEmail.textContent = user.email || '';
+        
+        const displayName = user.user_metadata?.full_name || user.user_metadata?.first_name || user.email?.split('@')[0] || 'User';
+        if (profileName) profileName.textContent = displayName;
+        
+        // Generate initials
+        const initials = displayName.split(' ')
+            .map(n => n[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
+        if (profileInitials) profileInitials.textContent = initials;
+    }
+
+    // Setup profile dropdown functionality
+    setupProfileDropdown() {
+        const profileBtn = document.getElementById('profileIconBtn');
+        const profileDropdown = document.getElementById('profileDropdown');
+        
+        if (profileBtn && profileDropdown) {
+            profileBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                profileDropdown.classList.toggle('show');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.nav-profile')) {
+                    profileDropdown.classList.remove('show');
+                }
+            });
+            
+            // Handle dropdown links
+            const dashboardLink = document.getElementById('profileDashboardLink');
+            if (dashboardLink) {
+                dashboardLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const auth = window.supabaseClient;
+                    if (auth) {
+                        auth.redirectToDashboard();
+                    }
+                });
+            }
+            
+            const logoutBtn = document.getElementById('profileLogoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    const auth = window.supabaseClient;
+                    if (auth) {
+                        try {
+                            await auth.waitForInit();
+                            await auth.signOut();
+                        } catch (error) {
+                            console.error('Logout error:', error);
+                        }
+                    }
+                });
+            }
+            
+            const settingsLink = document.getElementById('profileSettingsLink');
+            if (settingsLink) {
+                settingsLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    alert('Profile settings coming soon!');
+                });
+            }
+        }
     }
 }
 
