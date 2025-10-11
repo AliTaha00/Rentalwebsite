@@ -161,28 +161,27 @@ a:hover {
 .nav-container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 1rem;
+    padding: 0 3rem;
     display: flex;
-    justify-content: space-between;
     align-items: center;
     height: 70px;
     position: relative;
 }
 
 .nav-logo {
-    order: 1;
+    flex-shrink: 0;
 }
 
 .nav-search-compact {
-    order: 2;
+    /* Positioned absolutely, no order needed */
 }
 
 .nav-menu {
-    order: 3;
+    flex-shrink: 0;
 }
 
 .nav-toggle {
-    order: 4;
+    margin-left: auto;
 }
 
 /* Compact navbar search (appears on scroll) */
@@ -342,6 +341,14 @@ a:hover {
     display: flex;
     align-items: center;
     gap: 2rem;
+    margin-left: 38rem;
+}
+
+.nav-auth {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-left: 2rem;
 }
 
 .nav-link {
@@ -356,6 +363,7 @@ a:hover {
 
 .nav-link.login-btn {
     color: #648e38;
+    padding: 0.5rem 1rem;
 }
 
 .nav-link.logout-btn {
@@ -376,9 +384,11 @@ a:hover {
 .nav-link.register-btn {
     background-color: #648e38;
     color: white;
-    padding: 0.5rem 1rem;
+    padding: 0.4rem 0.85rem;
     border-radius: 6px;
     transition: background-color 0.2s ease;
+    font-size: 0.95rem;
+    white-space: nowrap;
 }
 
 .nav-link.register-btn:hover {
@@ -389,8 +399,8 @@ a:hover {
 /* Profile Icon & Dropdown */
 .nav-profile {
     position: relative;
-    order: 3;
-    margin-left: 1rem;
+    margin-left: auto;
+    padding-right: 2rem;
 }
 
 .profile-icon-btn {
@@ -775,12 +785,15 @@ a:hover {
         display: none;
     }
     
+    .nav-auth {
+        display: none;
+    }
+    
     .nav-toggle {
         display: flex;
     }
     
     .nav-profile {
-        order: 2;
         margin-left: auto;
         margin-right: 1rem;
     }

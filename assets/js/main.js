@@ -109,82 +109,21 @@ class RentThatViewApp {
         const auth = window.supabaseClient;
         if (!auth) return;
         const user = auth.getCurrentUser();
-        const navMenu = document.querySelector('.nav-menu');
-        if (!navMenu) return;
 
-        const loginLink = navMenu.querySelector('a[href*="login.html"], .login-btn');
-        const registerLink = navMenu.querySelector('a[href*="register.html"], .register-btn');
-
-        // Show/hide profile icon
+        // Show/hide profile icon and auth links
         const navProfile = document.querySelector('.nav-profile');
-        if (navProfile) {
+        const navAuth = document.querySelector('.nav-auth');
+        
+        if (navProfile && navAuth) {
             if (user) {
+                // User is logged in - show profile, hide auth links
                 navProfile.style.display = 'block';
+                navAuth.style.display = 'none';
                 this.updateProfileInfo(user);
             } else {
+                // User is logged out - hide profile, show auth links
                 navProfile.style.display = 'none';
-            }
-        }
-
-        if (user) {
-            // Convert Login to Dashboard
-            if (loginLink) {
-                const userType = user.user_metadata?.account_type === 'owner' ? 'owner' : 'renter';
-                const dashboardPath = this.makePath(`pages/${userType}-dashboard.html`);
-                loginLink.textContent = 'Dashboard';
-                loginLink.classList.remove('login-btn');
-                loginLink.classList.add('nav-link');
-                loginLink.href = dashboardPath;
-                loginLink.onclick = (e) => {
-                    e.preventDefault();
-                    auth.redirectToDashboard();
-                };
-            }
-            
-            // Convert Get Started to Logout
-            if (registerLink) {
-                registerLink.textContent = 'Logout';
-                registerLink.classList.remove('register-btn');
-                registerLink.classList.add('nav-link', 'logout-btn');
-                registerLink.href = '#';
-                registerLink.onclick = async (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    try { 
-                        console.log('Logging out...');
-                        await auth.waitForInit(); // Ensure Supabase is initialized
-                        await auth.signOut();
-                        console.log('Logout successful');
-                        // signOut will trigger auth state change and redirect to home
-                    } catch (error) {
-                        console.error('Logout error:', error);
-                        // Don't show error for session missing - just proceed
-                        if (!error.message.includes('session')) {
-                            alert('Failed to logout: ' + error.message);
-                        } else {
-                            // Session already cleared, just reload
-                            window.location.reload();
-                        }
-                    }
-                };
-            }
-        } else {
-            // Restore original Login link
-            if (loginLink) {
-                loginLink.textContent = 'Login';
-                loginLink.href = this.makePath('pages/login.html');
-                loginLink.onclick = null;
-                loginLink.classList.remove('nav-link');
-                loginLink.classList.add('login-btn');
-            }
-            
-            // Restore original Get Started button
-            if (registerLink) {
-                registerLink.textContent = 'Get Started';
-                registerLink.href = this.makePath('pages/register.html');
-                registerLink.onclick = null;
-                registerLink.classList.remove('logout-btn');
-                registerLink.classList.add('register-btn');
+                navAuth.style.display = 'flex';
             }
         }
     }
@@ -255,6 +194,14 @@ class RentThatViewApp {
                             await auth.signOut();
                         } catch (error) {
                             console.error('Logout error:', error);
+                            // If session is already missing, just clear local state and redirect
+                            if (error.name === 'AuthSessionMissingError' || error.message?.includes('session')) {
+                                // Clear any cached user data
+                                auth.user = null;
+                                auth.session = null;
+                                // Redirect to home
+                                window.location.href = auth.makePath ? auth.makePath('../index.html') : '../index.html';
+                            }
                         }
                     }
                 });
