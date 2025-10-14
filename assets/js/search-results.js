@@ -1,4 +1,5 @@
-// Search Results Page JavaScript
+'use strict';
+
 class SearchResultsManager {
     constructor() {
         this.supabaseClient = window.supabaseClient;
@@ -8,8 +9,7 @@ class SearchResultsManager {
         this.map = null;
         this.markers = [];
         this.isRendering = false;
-        
-        // Popular destinations for autocomplete
+
         this.popularDestinations = [
             { name: 'Paris', region: 'France', full: 'Paris, France' },
             { name: 'New York', region: 'United States', full: 'New York, United States' },
@@ -18,32 +18,27 @@ class SearchResultsManager {
             { name: 'Barcelona', region: 'Spain', full: 'Barcelona, Spain' },
             { name: 'Dubai', region: 'United Arab Emirates', full: 'Dubai, United Arab Emirates' }
         ];
-        
-        this.init();
+
+        this.#init();
     }
-    
-    async init() {
-        // Initialize authentication
+
+    async #init() {
         if (this.supabaseClient) {
             await this.supabaseClient.waitForInit();
         }
-        
-        // Get search parameters from URL
-        this.parseURLParams();
-        
-        // Setup UI components
-        this.setupSearchBar();
-        this.setupFilters();
-        
-        // Wait for Google Maps to load before setting up map
-        await this.waitForGoogleMaps();
-        this.setupMap();
-        
-        // Load properties
-        await this.loadProperties();
+
+        this.#parseURLParams();
+
+        this.#setupSearchBar();
+        this.#setupFilters();
+
+        await this.#waitForGoogleMaps();
+        this.#setupMap();
+
+        await this.#loadProperties();
     }
-    
-    waitForGoogleMaps() {
+
+    #waitForGoogleMaps() {
         return new Promise((resolve) => {
             if (typeof google !== 'undefined' && google.maps) {
                 resolve();
@@ -54,20 +49,18 @@ class SearchResultsManager {
                         resolve();
                     }
                 }, 100);
-                
-                // Timeout after 10 seconds
+
                 setTimeout(() => {
                     clearInterval(checkInterval);
-                    console.warn('Google Maps failed to load');
                     resolve();
                 }, 10000);
             }
         });
     }
-    
-    parseURLParams() {
+
+    #parseURLParams() {
         const params = new URLSearchParams(window.location.search);
-        
+
         this.currentFilters = {
             location: params.get('location') || '',
             checkIn: params.get('checkIn') || '',
@@ -83,83 +76,77 @@ class SearchResultsManager {
             bathrooms: params.get('bathrooms') || '',
             amenities: params.get('amenities') ? params.get('amenities').split(',') : []
         };
-        
-        // Populate search bar with parameters
-        this.populateSearchBar();
+
+        this.#populateSearchBar();
     }
-    
-    populateSearchBar() {
+
+    #populateSearchBar() {
         const searchLocation = document.getElementById('searchLocation');
         const searchDates = document.getElementById('searchDates');
         const searchGuests = document.getElementById('searchGuests');
         const searchAdultsCount = document.getElementById('searchAdultsCount');
         const searchChildrenCount = document.getElementById('searchChildrenCount');
-        
+
         if (searchLocation && this.currentFilters.location) {
             searchLocation.value = this.currentFilters.location;
         }
-        
+
         if (searchDates && this.currentFilters.checkIn && this.currentFilters.checkOut) {
             const checkIn = new Date(this.currentFilters.checkIn);
             const checkOut = new Date(this.currentFilters.checkOut);
-            searchDates.value = `${this.formatDate(checkIn)} - ${this.formatDate(checkOut)}`;
+            searchDates.value = `${this.#formatDate(checkIn)} - ${this.#formatDate(checkOut)}`;
         }
-        
+
         const adults = this.currentFilters.adults;
         const children = this.currentFilters.children;
-        
+
         if (searchAdultsCount) searchAdultsCount.value = adults;
         if (searchChildrenCount) searchChildrenCount.value = children;
-        
+
         if (searchGuests && (adults > 0 || children > 0)) {
             const parts = [];
             if (adults > 0) parts.push(`${adults} adult${adults !== 1 ? 's' : ''}`);
             if (children > 0) parts.push(`${children} child${children !== 1 ? 'ren' : ''}`);
             searchGuests.value = parts.join(', ');
         }
-        
-        // Update displays
+
         const searchAdultsDisplay = document.getElementById('searchAdultsDisplay');
         const searchChildrenDisplay = document.getElementById('searchChildrenDisplay');
         if (searchAdultsDisplay) searchAdultsDisplay.textContent = adults;
         if (searchChildrenDisplay) searchChildrenDisplay.textContent = children;
     }
-    
-    formatDate(date) {
+
+    #formatDate(date) {
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         return `${months[date.getMonth()]} ${date.getDate()}`;
     }
-    
-    setupSearchBar() {
-        // Setup date picker
-        this.setupDatePicker();
-        
-        // Setup location autocomplete
-        this.setupLocationAutocomplete();
-        
-        // Setup guests counter
-        this.setupGuestsCounter();
-        
-        // Handle search form submission
+
+    #setupSearchBar() {
+        this.#setupDatePicker();
+
+        this.#setupLocationAutocomplete();
+
+        this.#setupGuestsCounter();
+
         const searchForm = document.getElementById('searchResultsForm');
         if (searchForm) {
             searchForm.addEventListener('submit', (e) => {
                 e.preventDefault();
-                this.handleSearch();
+                this.#handleSearch();
             });
         }
     }
-    
-    setupDatePicker() {
+
+    #setupDatePicker() {
         const searchDates = document.getElementById('searchDates');
         const searchCheckIn = document.getElementById('searchCheckIn');
         const searchCheckOut = document.getElementById('searchCheckOut');
-        
+
         if (!searchDates) return;
-        
+
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
+
         flatpickr(searchDates, {
             minDate: today,
             dateFormat: "M j",
@@ -172,13 +159,13 @@ class SearchResultsManager {
             },
             onChange: (selectedDates, dateStr) => {
                 if (selectedDates.length === 2) {
-                    const start = this.formatDate(selectedDates[0]);
-                    const end = this.formatDate(selectedDates[1]);
+                    const start = this.#formatDate(selectedDates[0]);
+                    const end = this.#formatDate(selectedDates[1]);
                     searchDates.value = `${start} - ${end}`;
-                    
+
                     if (searchCheckIn) searchCheckIn.value = flatpickr.formatDate(selectedDates[0], 'Y-m-d');
                     if (searchCheckOut) searchCheckOut.value = flatpickr.formatDate(selectedDates[1], 'Y-m-d');
-                    
+
                     this.currentFilters.checkIn = searchCheckIn.value;
                     this.currentFilters.checkOut = searchCheckOut.value;
                 } else if (selectedDates.length === 0) {
@@ -190,32 +177,30 @@ class SearchResultsManager {
                 }
             }
         });
-        
-        // Set initial dates if provided
+
         if (this.currentFilters.checkIn && this.currentFilters.checkOut) {
             if (searchCheckIn) searchCheckIn.value = this.currentFilters.checkIn;
             if (searchCheckOut) searchCheckOut.value = this.currentFilters.checkOut;
         }
     }
-    
-    setupLocationAutocomplete() {
+
+    #setupLocationAutocomplete() {
         const input = document.getElementById('searchLocation');
         const dropdown = document.getElementById('searchLocationAutocomplete');
-        
+
         if (!input || !dropdown) return;
-        
+
         let debounceTimer;
         let selectedIndex = -1;
-        
-        // Setup clear button
+
         const clearBtn = document.getElementById('clearSearchLocation');
-        
+
         const updateClearButton = () => {
             if (clearBtn) {
                 clearBtn.style.display = input.value.trim() ? 'flex' : 'none';
             }
         };
-        
+
         if (clearBtn) {
             clearBtn.addEventListener('click', () => {
                 input.value = '';
@@ -225,119 +210,156 @@ class SearchResultsManager {
                 input.focus();
             });
         }
-        
-        // Initialize clear button state
+
         updateClearButton();
-        
+
         const hideDropdown = () => {
             dropdown.classList.remove('active');
             selectedIndex = -1;
         };
-        
+
         const showDropdown = () => {
             dropdown.classList.add('active');
         };
-        
+
         const onSelect = (item) => {
             input.value = item.place_name || item.full_name;
             this.currentFilters.location = input.value;
             updateClearButton();
             hideDropdown();
         };
-        
-        // Show popular destinations on focus
+
         input.addEventListener('focus', () => {
             if (input.value.trim() === '') {
-                this.showPopularDestinations(dropdown, onSelect);
+                this.#showPopularDestinations(dropdown, onSelect);
                 showDropdown();
             }
         });
-        
-        // Handle input
+
         input.addEventListener('input', (e) => {
             const query = e.target.value.trim();
             updateClearButton();
-            
+
             clearTimeout(debounceTimer);
-            
+
             if (query.length === 0) {
-                this.showPopularDestinations(dropdown, onSelect);
+                this.#showPopularDestinations(dropdown, onSelect);
                 showDropdown();
                 return;
             }
-            
+
             if (query.length < 2) {
                 hideDropdown();
                 return;
             }
-            
+
             debounceTimer = setTimeout(async () => {
-                await this.searchLocations(query, dropdown, onSelect);
+                await this.#searchLocations(query, dropdown, onSelect);
             }, 300);
         });
-        
-        // Close on click outside
+
         document.addEventListener('click', (e) => {
             if (!input.contains(e.target) && !dropdown.contains(e.target)) {
                 hideDropdown();
             }
         });
     }
-    
-    showPopularDestinations(dropdown, onSelect) {
-        dropdown.innerHTML = `
-            <div class="autocomplete-header">Popular destinations</div>
-            ${this.popularDestinations.map(dest => `
-                <div class="autocomplete-item" data-value="${this.escapeHtml(dest.full)}">
-                    <div class="autocomplete-item-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                            <circle cx="12" cy="10" r="3"></circle>
-                        </svg>
-                    </div>
-                    <div class="autocomplete-item-text">
-                        <div class="autocomplete-item-name">${this.escapeHtml(dest.name)}</div>
-                        <div class="autocomplete-item-location">${this.escapeHtml(dest.region)}</div>
-                    </div>
-                </div>
-            `).join('')}
-        `;
-        
-        dropdown.querySelectorAll('.autocomplete-item').forEach(item => {
+
+    #showPopularDestinations(dropdown, onSelect) {
+        const container = document.createElement('div');
+
+        const header = document.createElement('div');
+        header.className = 'autocomplete-header';
+        header.textContent = 'Popular destinations';
+        container.appendChild(header);
+
+        this.popularDestinations.forEach(dest => {
+            const item = document.createElement('div');
+            item.className = 'autocomplete-item';
+            item.dataset.value = dest.full;
+
+            const icon = document.createElement('div');
+            icon.className = 'autocomplete-item-icon';
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('viewBox', '0 0 24 24');
+            svg.setAttribute('fill', 'none');
+            svg.setAttribute('stroke', 'currentColor');
+            svg.setAttribute('stroke-width', '2');
+            svg.setAttribute('stroke-linecap', 'round');
+            svg.setAttribute('stroke-linejoin', 'round');
+            const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path1.setAttribute('d', 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z');
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', '12');
+            circle.setAttribute('cy', '10');
+            circle.setAttribute('r', '3');
+            svg.appendChild(path1);
+            svg.appendChild(circle);
+            icon.appendChild(svg);
+
+            const textDiv = document.createElement('div');
+            textDiv.className = 'autocomplete-item-text';
+
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'autocomplete-item-name';
+            nameDiv.textContent = dest.name;
+
+            const locationDiv = document.createElement('div');
+            locationDiv.className = 'autocomplete-item-location';
+            locationDiv.textContent = dest.region;
+
+            textDiv.appendChild(nameDiv);
+            textDiv.appendChild(locationDiv);
+
+            item.appendChild(icon);
+            item.appendChild(textDiv);
+
             item.addEventListener('click', () => {
                 onSelect({
                     place_name: item.dataset.value,
                     full_name: item.dataset.value
                 });
             });
+
+            container.appendChild(item);
         });
+
+        dropdown.innerHTML = '';
+        dropdown.appendChild(container);
     }
-    
-    async searchLocations(query, dropdown, onSelect) {
-        dropdown.innerHTML = '<div class="autocomplete-loading">Searching...</div>';
+
+    async #searchLocations(query, dropdown, onSelect) {
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'autocomplete-loading';
+        loadingDiv.textContent = 'Searching...';
+        dropdown.innerHTML = '';
+        dropdown.appendChild(loadingDiv);
         dropdown.classList.add('active');
-        
+
         try {
             const response = await fetch(
                 `https://nominatim.openstreetmap.org/search?` +
                 `format=json&q=${encodeURIComponent(query)}&limit=15&featuretype=city&addressdetails=1`
             );
-            
+
             if (!response.ok) throw new Error('Search failed');
-            
+
             const data = await response.json();
-            const filtered = this.filterAndDeduplicateResults(data);
-            this.renderAutocompleteResults(filtered, dropdown, onSelect);
+            const filtered = this.#filterAndDeduplicateResults(data);
+            this.#renderAutocompleteResults(filtered, dropdown, onSelect);
         } catch (error) {
-            console.error('Location search error:', error);
-            dropdown.innerHTML = '<div class="autocomplete-no-results">Search failed. Please try again.</div>';
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'autocomplete-no-results';
+            errorDiv.textContent = 'Search failed. Please try again.';
+            dropdown.innerHTML = '';
+            dropdown.appendChild(errorDiv);
         }
     }
-    
-    filterAndDeduplicateResults(results) {
+
+    #filterAndDeduplicateResults(results) {
         const priorityTypes = ['city', 'town', 'village'];
         const avoidTypes = ['suburb', 'quarter', 'neighbourhood', 'administrative'];
-        
+
         let filtered = results.filter(item => {
             if (item.importance < 0.3) return false;
             if (item.class === 'building' || item.class === 'amenity') return false;
@@ -353,12 +375,12 @@ class SearchResultsManager {
             const bIsPriority = priorityTypes.includes(b.type);
             const aIsAvoid = avoidTypes.includes(a.type);
             const bIsAvoid = avoidTypes.includes(b.type);
-            
+
             if (aIsPriority && !bIsPriority) return -1;
             if (!aIsPriority && bIsPriority) return 1;
             if (aIsAvoid && !bIsAvoid) return 1;
             if (!aIsAvoid && bIsAvoid) return -1;
-            
+
             return b.importance - a.importance;
         });
 
@@ -368,14 +390,14 @@ class SearchResultsManager {
         for (const item of filtered) {
             const nameLower = item.name.toLowerCase().trim();
             const country = item.address?.country?.toLowerCase() || '';
-            
+
             const normalizedName = nameLower
                 .replace(/\s+governorate/gi, '')
                 .replace(/\s+district/gi, '')
                 .replace(/\s+province/gi, '');
-            
+
             const uniqueKey = `${normalizedName}-${country}`;
-            
+
             let isDuplicate = false;
             for (const seenName of seenNames) {
                 if (seenName === uniqueKey) {
@@ -388,66 +410,95 @@ class SearchResultsManager {
                     break;
                 }
             }
-            
+
             if (!isDuplicate) {
                 seenNames.add(uniqueKey);
                 deduplicated.push(item);
             }
         }
-        
+
         return deduplicated.slice(0, 5);
     }
-    
-    renderAutocompleteResults(results, dropdown, onSelect) {
+
+    #renderAutocompleteResults(results, dropdown, onSelect) {
         if (results.length === 0) {
-            dropdown.innerHTML = '<div class="autocomplete-no-results">No locations found</div>';
+            const noResultsDiv = document.createElement('div');
+            noResultsDiv.className = 'autocomplete-no-results';
+            noResultsDiv.textContent = 'No locations found';
+            dropdown.innerHTML = '';
+            dropdown.appendChild(noResultsDiv);
             return;
         }
-        
-        dropdown.innerHTML = results.map(item => {
+
+        const container = document.createElement('div');
+
+        results.forEach(item => {
             const name = item.name || 'Unknown';
             const region = item.address?.state || item.address?.country || '';
             const fullName = region ? `${name}, ${region}` : name;
-            
-            return `
-                <div class="autocomplete-item" data-value="${this.escapeHtml(fullName)}" data-raw='${JSON.stringify({
-                    name,
-                    region,
-                    lat: item.lat,
-                    lon: item.lon
-                })}'>
-                    <div class="autocomplete-item-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                            <circle cx="12" cy="10" r="3"></circle>
-                        </svg>
-                    </div>
-                    <div class="autocomplete-item-text">
-                        <div class="autocomplete-item-name">${this.escapeHtml(name)}</div>
-                        <div class="autocomplete-item-location">${this.escapeHtml(region)}</div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-        
-        dropdown.querySelectorAll('.autocomplete-item').forEach(item => {
-            item.addEventListener('click', () => {
+
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'autocomplete-item';
+            itemDiv.dataset.value = fullName;
+
+            const icon = document.createElement('div');
+            icon.className = 'autocomplete-item-icon';
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('viewBox', '0 0 24 24');
+            svg.setAttribute('fill', 'none');
+            svg.setAttribute('stroke', 'currentColor');
+            svg.setAttribute('stroke-width', '2');
+            svg.setAttribute('stroke-linecap', 'round');
+            svg.setAttribute('stroke-linejoin', 'round');
+            const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path1.setAttribute('d', 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z');
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', '12');
+            circle.setAttribute('cy', '10');
+            circle.setAttribute('r', '3');
+            svg.appendChild(path1);
+            svg.appendChild(circle);
+            icon.appendChild(svg);
+
+            const textDiv = document.createElement('div');
+            textDiv.className = 'autocomplete-item-text';
+
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'autocomplete-item-name';
+            nameDiv.textContent = name;
+
+            const locationDiv = document.createElement('div');
+            locationDiv.className = 'autocomplete-item-location';
+            locationDiv.textContent = region;
+
+            textDiv.appendChild(nameDiv);
+            textDiv.appendChild(locationDiv);
+
+            itemDiv.appendChild(icon);
+            itemDiv.appendChild(textDiv);
+
+            itemDiv.addEventListener('click', () => {
                 onSelect({
-                    place_name: item.dataset.value,
-                    full_name: item.dataset.value
+                    place_name: itemDiv.dataset.value,
+                    full_name: itemDiv.dataset.value
                 });
             });
+
+            container.appendChild(itemDiv);
         });
+
+        dropdown.innerHTML = '';
+        dropdown.appendChild(container);
     }
-    
-    setupGuestsCounter() {
+
+    #setupGuestsCounter() {
         const input = document.getElementById('searchGuests');
         const dropdown = document.getElementById('searchGuestsDropdown');
         const adultsDisplay = document.getElementById('searchAdultsDisplay');
         const childrenDisplay = document.getElementById('searchChildrenDisplay');
         const adultsCount = document.getElementById('searchAdultsCount');
         const childrenCount = document.getElementById('searchChildrenCount');
-        
+
         if (!input || !dropdown) return;
 
         let adults = this.currentFilters.adults || 0;
@@ -469,17 +520,17 @@ class SearchResultsManager {
                 if (children > 0) parts.push(`${children} child${children !== 1 ? 'ren' : ''}`);
                 input.value = parts.join(', ');
             }
-            
+
             this.currentFilters.adults = adults;
             this.currentFilters.children = children;
-            
+
             updateButtonStates();
         };
 
         const updateButtonStates = () => {
             const minusAdults = dropdown.querySelector('[data-target="search-adults"].counter-minus');
             const minusChildren = dropdown.querySelector('[data-target="search-children"].counter-minus');
-            
+
             if (minusAdults) minusAdults.disabled = adults === 0;
             if (minusChildren) minusChildren.disabled = children === 0;
         };
@@ -500,18 +551,18 @@ class SearchResultsManager {
         dropdown.addEventListener('click', (e) => {
             const btn = e.target.closest('.counter-btn');
             if (!btn) return;
-            
+
             e.stopPropagation();
-            
+
             const target = btn.dataset.target;
             const isPlus = btn.classList.contains('counter-plus');
-            
+
             if (target === 'search-adults') {
                 adults = isPlus ? Math.min(adults + 1, 20) : Math.max(adults - 1, 0);
             } else if (target === 'search-children') {
                 children = isPlus ? Math.min(children + 1, 20) : Math.max(children - 1, 0);
             }
-            
+
             updateDisplay();
         });
 
@@ -523,95 +574,93 @@ class SearchResultsManager {
 
         updateDisplay();
     }
-    
-    setupFilters() {
-        // Toggle filters panel
+
+    #setupFilters() {
         const filtersToggle = document.getElementById('filtersToggle');
         const filtersPanel = document.getElementById('filtersPanel');
         const filtersClose = document.getElementById('filtersClose');
         const filtersBackdrop = document.getElementById('filtersBackdrop');
-        
+
         const openFilters = () => {
             filtersPanel.classList.add('active');
             filtersBackdrop.classList.add('active');
             document.body.style.overflow = 'hidden';
         };
-        
+
         const closeFilters = () => {
             filtersPanel.classList.remove('active');
             filtersBackdrop.classList.remove('active');
             document.body.style.overflow = '';
         };
-        
+
         if (filtersToggle) {
             filtersToggle.addEventListener('click', openFilters);
         }
-        
+
         if (filtersClose) {
             filtersClose.addEventListener('click', closeFilters);
         }
-        
+
         if (filtersBackdrop) {
             filtersBackdrop.addEventListener('click', closeFilters);
         }
-        
-        // Amenity icon buttons
+
         document.querySelectorAll('.amenity-icon-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 btn.classList.toggle('active');
             });
         });
-        
-        // Type of place toggle buttons
+
         document.querySelectorAll('.toggle-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
             });
         });
-        
-        // Price range sliders
-        this.setupPriceSliders();
-        
-        // Apply filters
+
+        this.#setupPriceSliders();
+
         const applyFilters = document.getElementById('applyFilters');
         if (applyFilters) {
             applyFilters.addEventListener('click', () => {
-                this.applyFiltersFromPanel();
+                this.#applyFiltersFromPanel();
                 closeFilters();
             });
         }
-        
-        // Clear filters
+
         const clearFilters = document.getElementById('clearFilters');
         if (clearFilters) {
             clearFilters.addEventListener('click', () => {
-                this.clearAllFilters();
+                this.#clearAllFilters();
             });
         }
-        
-        // Toggle map
+
         const mapToggle = document.getElementById('mapToggle');
         const mapSection = document.getElementById('mapSection');
         const contentWrapper = document.querySelector('.content-wrapper');
-        
+
         if (mapToggle) {
             mapToggle.addEventListener('click', () => {
                 mapToggle.classList.toggle('active');
                 mapSection.classList.toggle('active');
                 contentWrapper.classList.toggle('map-active');
-                
+
                 if (mapToggle.classList.contains('active')) {
-                    mapToggle.innerHTML = `
-                        <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
-                            <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm15 2h-4v3h4V4zm0 4h-4v3h4V8zm0 4h-4v3h3a1 1 0 0 0 1-1v-2zm-5 3v-3H6v3h4zm-5 0v-3H1v2a1 1 0 0 0 1 1h3zm-4-4h4V8H1v3zm0-4h4V4H1v3zm5-3v3h4V4H6zm4 4H6v3h4V8z"/>
-                        </svg>
-                        Show list
-                    `;
-                    // Trigger resize for Google Maps
+                    const svg1 = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                    svg1.setAttribute('viewBox', '0 0 16 16');
+                    svg1.setAttribute('width', '16');
+                    svg1.setAttribute('height', '16');
+                    svg1.setAttribute('fill', 'currentColor');
+                    const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path1.setAttribute('d', 'M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2zm15 2h-4v3h4V4zm0 4h-4v3h4V8zm0 4h-4v3h3a1 1 0 0 0 1-1v-2zm-5 3v-3H6v3h4zm-5 0v-3H1v2a1 1 0 0 0 1 1h3zm-4-4h4V8H1v3zm0-4h4V4H1v3zm5-3v3h4V4H6zm4 4H6v3h4V8z');
+                    svg1.appendChild(path1);
+                    const text1 = document.createTextNode(' Show list');
+                    mapToggle.innerHTML = '';
+                    mapToggle.appendChild(svg1);
+                    mapToggle.appendChild(text1);
+
                     if (this.map) {
                         google.maps.event.trigger(this.map, 'resize');
-                        // Re-fit bounds if there are markers
                         if (this.markers.length > 0) {
                             const bounds = new google.maps.LatLngBounds();
                             this.markers.forEach(marker => {
@@ -622,114 +671,110 @@ class SearchResultsManager {
                         }
                     }
                 } else {
-                    mapToggle.innerHTML = `
-                        <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
-                            <path d="M15.817.113A.5.5 0 0 1 16 .5v14a.5.5 0 0 1-.402.49l-5 1a.502.502 0 0 1-.196 0L5.5 15.01l-4.902.98A.5.5 0 0 1 0 15.5v-14a.5.5 0 0 1 .402-.49l5-1a.5.5 0 0 1 .196 0L10.5.99l4.902-.98a.5.5 0 0 1 .415.103zM10 1.91l-4-.8v12.98l4 .8V1.91zm1 12.98 4-.8V1.11l-4 .8v12.98zm-6-.8V1.11l-4 .8v12.98l4-.8z"></path>
-                        </svg>
-                        Show map
-                    `;
+                    const svg2 = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                    svg2.setAttribute('viewBox', '0 0 16 16');
+                    svg2.setAttribute('width', '16');
+                    svg2.setAttribute('height', '16');
+                    svg2.setAttribute('fill', 'currentColor');
+                    const path2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path2.setAttribute('d', 'M15.817.113A.5.5 0 0 1 16 .5v14a.5.5 0 0 1-.402.49l-5 1a.502.502 0 0 1-.196 0L5.5 15.01l-4.902.98A.5.5 0 0 1 0 15.5v-14a.5.5 0 0 1 .402-.49l5-1a.5.5 0 0 1 .196 0L10.5.99l4.902-.98a.5.5 0 0 1 .415.103zM10 1.91l-4-.8v12.98l4 .8V1.91zm1 12.98 4-.8V1.11l-4 .8v12.98zm-6-.8V1.11l-4 .8v12.98l4-.8z');
+                    svg2.appendChild(path2);
+                    const text2 = document.createTextNode(' Show map');
+                    mapToggle.innerHTML = '';
+                    mapToggle.appendChild(svg2);
+                    mapToggle.appendChild(text2);
                 }
             });
         }
-        
-        // Populate filters from URL params
-        this.populateFiltersFromParams();
+
+        this.#populateFiltersFromParams();
     }
-    
-    setupPriceSliders() {
+
+    #setupPriceSliders() {
         const minSlider = document.getElementById('minPriceSlider');
         const maxSlider = document.getElementById('maxPriceSlider');
         const minDisplay = document.getElementById('minPriceDisplay');
         const maxDisplay = document.getElementById('maxPriceDisplay');
-        
+
         if (!minSlider || !maxSlider) return;
-        
+
         const updateSliders = () => {
             let minVal = parseInt(minSlider.value);
             let maxVal = parseInt(maxSlider.value);
-            
-            // Ensure min doesn't exceed max
+
             if (minVal > maxVal - 50) {
                 minVal = maxVal - 50;
                 minSlider.value = minVal;
             }
-            
-            // Ensure max doesn't go below min
+
             if (maxVal < minVal + 50) {
                 maxVal = minVal + 50;
                 maxSlider.value = maxVal;
             }
-            
+
             if (minDisplay) minDisplay.textContent = minVal;
             if (maxDisplay) maxDisplay.textContent = maxVal >= 1000 ? '1000+' : maxVal;
         };
-        
+
         minSlider.addEventListener('input', updateSliders);
         maxSlider.addEventListener('input', updateSliders);
-        
-        // Initialize displays
+
         updateSliders();
     }
-    
-    populateFiltersFromParams() {
-        // Set price sliders
+
+    #populateFiltersFromParams() {
         if (this.currentFilters.minPrice) {
             const minSlider = document.getElementById('minPriceSlider');
             const minDisplay = document.getElementById('minPriceDisplay');
             if (minSlider) minSlider.value = this.currentFilters.minPrice;
             if (minDisplay) minDisplay.textContent = this.currentFilters.minPrice;
         }
-        
+
         if (this.currentFilters.maxPrice) {
             const maxSlider = document.getElementById('maxPriceSlider');
             const maxDisplay = document.getElementById('maxPriceDisplay');
             if (maxSlider) maxSlider.value = this.currentFilters.maxPrice;
             if (maxDisplay) maxDisplay.textContent = this.currentFilters.maxPrice;
         }
-        
+
         const fields = ['propertyType', 'viewType', 'bedrooms', 'bathrooms'];
-        
+
         fields.forEach(field => {
             const element = document.getElementById(field);
             if (element && this.currentFilters[field]) {
                 element.value = this.currentFilters[field];
             }
         });
-        
-        // Amenity icon buttons
+
         if (this.currentFilters.amenities && this.currentFilters.amenities.length > 0) {
             this.currentFilters.amenities.forEach(amenity => {
                 const btn = document.querySelector(`.amenity-icon-btn[data-amenity="${amenity}"]`);
                 if (btn) btn.classList.add('active');
             });
         }
-        
-        // Place type toggle
+
         if (this.currentFilters.placeType) {
             document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
             const typeBtn = document.querySelector(`.toggle-btn[data-type="${this.currentFilters.placeType}"]`);
             if (typeBtn) typeBtn.classList.add('active');
         }
     }
-    
-    applyFiltersFromPanel() {
-        // Get price from sliders
+
+    #applyFiltersFromPanel() {
         const minPrice = document.getElementById('minPriceSlider').value;
         const maxPrice = document.getElementById('maxPriceSlider').value;
-        
-        // Get place type from toggle buttons
+
         const activeTypeBtn = document.querySelector('.toggle-btn.active');
         const placeType = activeTypeBtn ? activeTypeBtn.dataset.type : '';
-        
+
         const propertyType = document.getElementById('propertyType').value;
         const viewType = document.getElementById('viewType').value;
         const bedrooms = document.getElementById('bedrooms').value;
         const bathrooms = document.getElementById('bathrooms').value;
-        
-        // Get amenities from icon buttons
+
         const amenities = Array.from(document.querySelectorAll('.amenity-icon-btn.active'))
             .map(btn => btn.dataset.amenity);
-        
+
         this.currentFilters = {
             ...this.currentFilters,
             minPrice: minPrice > 0 ? minPrice : '',
@@ -741,36 +786,31 @@ class SearchResultsManager {
             bathrooms,
             amenities
         };
-        
-        this.filterProperties();
+
+        this.#filterProperties();
     }
-    
-    clearAllFilters() {
-        // Clear price sliders
+
+    #clearAllFilters() {
         const minSlider = document.getElementById('minPriceSlider');
         const maxSlider = document.getElementById('maxPriceSlider');
         const minDisplay = document.getElementById('minPriceDisplay');
         const maxDisplay = document.getElementById('maxPriceDisplay');
-        
+
         if (minSlider) minSlider.value = 0;
         if (maxSlider) maxSlider.value = 1000;
         if (minDisplay) minDisplay.textContent = '0';
         if (maxDisplay) maxDisplay.textContent = '1000';
-        
-        // Clear toggle buttons
+
         document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelector('.toggle-btn[data-type=""]')?.classList.add('active');
-        
-        // Clear amenity icon buttons
+
         document.querySelectorAll('.amenity-icon-btn').forEach(btn => btn.classList.remove('active'));
-        
-        // Clear form inputs
+
         document.getElementById('propertyType').value = '';
         document.getElementById('viewType').value = '';
         document.getElementById('bedrooms').value = '';
         document.getElementById('bathrooms').value = '';
-        
-        // Reset filters but keep search params
+
         this.currentFilters = {
             location: this.currentFilters.location,
             checkIn: this.currentFilters.checkIn,
@@ -786,31 +826,30 @@ class SearchResultsManager {
             bathrooms: '',
             amenities: []
         };
-        
-        this.filterProperties();
+
+        this.#filterProperties();
     }
-    
-    handleSearch() {
+
+    #handleSearch() {
         const location = document.getElementById('searchLocation').value;
         const checkIn = document.getElementById('searchCheckIn').value;
         const checkOut = document.getElementById('searchCheckOut').value;
         const adults = parseInt(document.getElementById('searchAdultsCount').value) || 0;
         const children = parseInt(document.getElementById('searchChildrenCount').value) || 0;
-        
+
         this.currentFilters.location = location;
         this.currentFilters.checkIn = checkIn;
         this.currentFilters.checkOut = checkOut;
         this.currentFilters.adults = adults;
         this.currentFilters.children = children;
-        
-        this.filterProperties();
+
+        this.#filterProperties();
     }
-    
-    setupMap() {
+
+    #setupMap() {
         const mapElement = document.getElementById('map');
         if (!mapElement) return;
-        
-        // Initialize Google Map
+
         this.map = new google.maps.Map(mapElement, {
             center: { lat: 20, lng: 0 },
             zoom: 2,
@@ -825,83 +864,80 @@ class SearchResultsManager {
                 }
             ]
         });
-        
+
         this.infoWindow = new google.maps.InfoWindow();
     }
-    
-    async loadProperties() {
+
+    async #loadProperties() {
         const loadingState = document.getElementById('loadingState');
         const emptyState = document.getElementById('emptyState');
         const propertiesGrid = document.getElementById('propertiesGrid');
-        
-        // Show loading state
+
         if (loadingState) {
             loadingState.style.display = 'flex';
             loadingState.classList.remove('hidden');
         }
         if (emptyState) emptyState.style.display = 'none';
         if (propertiesGrid) propertiesGrid.innerHTML = '';
-        
+
         try {
             if (!this.supabaseClient || !this.supabaseClient.supabase) {
                 throw new Error('Database connection not initialized');
             }
-            
+
             let query = this.supabaseClient.supabase
                 .from('properties')
                 .select('*')
                 .eq('is_active', true);
-            
+
             const { data, error } = await query;
-            
+
             if (error) throw error;
-            
+
             this.properties = data || [];
-            this.filterProperties();
-            
+            this.#filterProperties();
+
         } catch (error) {
-            console.error('Error loading properties:', error);
             if (loadingState) {
                 loadingState.style.display = 'none';
                 loadingState.classList.add('hidden');
             }
             if (emptyState) {
                 emptyState.style.display = 'flex';
-                emptyState.querySelector('h3').textContent = 'Error loading properties';
-                emptyState.querySelector('p').textContent = error.message;
+                const h3 = emptyState.querySelector('h3');
+                const p = emptyState.querySelector('p');
+                if (h3) h3.textContent = 'Error loading properties';
+                if (p) p.textContent = error.message;
             }
         }
     }
-    
-    filterProperties() {
-        // Prevent concurrent filter operations
+
+    #filterProperties() {
         if (this.isRendering) {
             return;
         }
-        
+
         this.isRendering = true;
-        
-        // Use requestAnimationFrame for smoother updates
+
         requestAnimationFrame(() => {
             let filtered = [...this.properties];
             const filters = this.currentFilters;
-            
-            // Location filter
+
             if (filters.location) {
                 const location = filters.location.toLowerCase();
                 const locationParts = location.split(',').map(part => part.trim()).filter(part => part);
-                
+
                 filtered = filtered.filter(property => {
                     const city = property.city?.toLowerCase() || '';
                     const state = property.state?.toLowerCase() || '';
                     const country = property.country?.toLowerCase() || '';
                     const address = property.address?.toLowerCase() || '';
                     const title = property.title?.toLowerCase() || '';
-                    
+
                     if (locationParts.length === 1) {
                         const searchTerm = locationParts[0];
-                        return city.includes(searchTerm) || 
-                               state.includes(searchTerm) || 
+                        return city.includes(searchTerm) ||
+                               state.includes(searchTerm) ||
                                country.includes(searchTerm) ||
                                address.includes(searchTerm) ||
                                title.includes(searchTerm);
@@ -918,81 +954,72 @@ class SearchResultsManager {
                     }
                 });
             }
-            
-            // Guest count filter
+
             const totalGuests = filters.adults + filters.children;
             if (totalGuests > 0) {
                 filtered = filtered.filter(property => property.max_guests >= totalGuests);
             }
-            
-            // View type filter
+
             if (filters.viewType) {
                 filtered = filtered.filter(property => property.view_type === filters.viewType);
             }
-            
-            // Property type filter
+
             if (filters.propertyType) {
-                filtered = filtered.filter(property => 
+                filtered = filtered.filter(property =>
                     property.property_type?.toLowerCase() === filters.propertyType.toLowerCase()
                 );
             }
-            
-            // Price filter
+
             if (filters.minPrice) {
                 const minPrice = parseFloat(filters.minPrice);
                 filtered = filtered.filter(property => property.base_price >= minPrice);
             }
-            
+
             if (filters.maxPrice) {
                 const maxPrice = parseFloat(filters.maxPrice);
                 filtered = filtered.filter(property => property.base_price <= maxPrice);
             }
-            
-            // Bedrooms filter
+
             if (filters.bedrooms) {
                 const minBedrooms = parseInt(filters.bedrooms);
                 filtered = filtered.filter(property => property.bedrooms >= minBedrooms);
             }
-            
-            // Bathrooms filter
+
             if (filters.bathrooms) {
                 const minBathrooms = parseInt(filters.bathrooms);
                 filtered = filtered.filter(property => property.bathrooms >= minBathrooms);
             }
-            
-            // Amenities filter
+
             if (filters.amenities && filters.amenities.length > 0) {
                 filtered = filtered.filter(property => {
                     const propertyAmenities = property.amenities || [];
-                    return filters.amenities.every(amenity => 
+                    return filters.amenities.every(amenity =>
                         propertyAmenities.includes(amenity)
                     );
                 });
             }
-            
+
             this.filteredProperties = filtered;
-            this.renderProperties();
-            
-            // Update map markers after a short delay to prevent interference
+            this.#renderProperties();
+
             setTimeout(() => {
-                this.updateMapMarkers();
+                this.#updateMapMarkers();
                 this.isRendering = false;
             }, 100);
         });
     }
-    
-    renderProperties() {
+
+    #renderProperties() {
         const propertiesGrid = document.getElementById('propertiesGrid');
         const loadingState = document.getElementById('loadingState');
         const emptyState = document.getElementById('emptyState');
         const resultsCount = document.getElementById('resultsCount');
-        
-        // Hide loading state immediately
+
         if (loadingState) {
             loadingState.style.display = 'none';
             loadingState.classList.add('hidden');
         }
-        
+
         if (this.filteredProperties.length === 0) {
             if (propertiesGrid) propertiesGrid.innerHTML = '';
             if (emptyState) {
@@ -1002,72 +1029,64 @@ class SearchResultsManager {
             if (resultsCount) resultsCount.textContent = 'No properties found';
             return;
         }
-        
+
         if (emptyState) {
             emptyState.style.display = 'none';
         }
-        
+
         if (resultsCount) {
             const count = this.filteredProperties.length;
             resultsCount.textContent = `${count} propert${count === 1 ? 'y' : 'ies'} found`;
         }
-        
+
         if (propertiesGrid) {
-            // Create HTML string with all properties
-            const html = this.filteredProperties.map(property => 
-                this.createPropertyCard(property)
-            ).join('');
-            
-            // Update DOM in one operation
-            propertiesGrid.innerHTML = html;
-            
-            // Force a reflow to ensure all elements are fully rendered
+            propertiesGrid.innerHTML = '';
+
+            this.filteredProperties.forEach(property => {
+                const card = this.#createPropertyCard(property);
+                propertiesGrid.appendChild(card);
+            });
+
             void propertiesGrid.offsetHeight;
-            
-            // Add click handlers after a brief delay to ensure rendering is complete
+
             requestAnimationFrame(() => {
                 propertiesGrid.querySelectorAll('.property-card').forEach((card, index) => {
-                    this.setupPropertyCardInteractions(card, this.filteredProperties[index]);
+                    this.#setupPropertyCardInteractions(card, this.filteredProperties[index]);
                 });
             });
         }
     }
-    
-    setupPropertyCardInteractions(card, property) {
+
+    #setupPropertyCardInteractions(card, property) {
         const images = JSON.parse(card.dataset.images || '[]');
         let currentImageIndex = 0;
-        
-        // Wishlist button
+
         const wishlistBtn = card.querySelector('.property-card-wishlist');
         if (wishlistBtn) {
             wishlistBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 wishlistBtn.classList.toggle('active');
-                // TODO: Add wishlist functionality
-                console.log('Wishlist toggled for property:', property.property_id);
             });
         }
-        
-        // Image navigation
+
         const updateImage = (newIndex) => {
             const allImages = card.querySelectorAll('.property-card-image');
             const allDots = card.querySelectorAll('.property-card-dot');
-            
+
             allImages.forEach((img, i) => {
                 img.classList.toggle('active', i === newIndex);
             });
-            
+
             allDots.forEach((dot, i) => {
                 dot.classList.toggle('active', i === newIndex);
             });
-            
+
             currentImageIndex = newIndex;
         };
-        
-        // Arrow buttons
+
         const leftArrow = card.querySelector('.property-card-arrow-left');
         const rightArrow = card.querySelector('.property-card-arrow-right');
-        
+
         if (leftArrow) {
             leftArrow.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -1075,7 +1094,7 @@ class SearchResultsManager {
                 updateImage(newIndex);
             });
         }
-        
+
         if (rightArrow) {
             rightArrow.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -1083,133 +1102,197 @@ class SearchResultsManager {
                 updateImage(newIndex);
             });
         }
-        
-        // Dot indicators
+
         card.querySelectorAll('.property-card-dot').forEach((dot, index) => {
             dot.addEventListener('click', (e) => {
                 e.stopPropagation();
                 updateImage(index);
             });
         });
-        
-        // Show/hide arrows on hover (only if multiple images)
+
         if (images.length > 1) {
             const imageContainer = card.querySelector('.property-card-image-container');
             imageContainer.addEventListener('mouseenter', () => {
                 if (leftArrow) leftArrow.style.opacity = '1';
                 if (rightArrow) rightArrow.style.opacity = '1';
             });
-            
+
             imageContainer.addEventListener('mouseleave', () => {
                 if (leftArrow) leftArrow.style.opacity = '0';
                 if (rightArrow) rightArrow.style.opacity = '0';
             });
         }
-        
-        // Click on card to view details (but not on interactive elements)
+
         card.addEventListener('click', (e) => {
-            if (e.target.closest('.property-card-arrow') || 
+            if (e.target.closest('.property-card-arrow') ||
                 e.target.closest('.property-card-dot') ||
                 e.target.closest('.property-card-wishlist')) {
                 return;
             }
-            this.viewPropertyDetails(property);
+            this.#viewPropertyDetails(property);
         });
     }
-    
-    createPropertyCard(property) {
-        // Prepare images array
-        const images = property.images && property.images.length > 0 
-            ? property.images 
+
+    #createPropertyCard(property) {
+        const images = property.images && property.images.length > 0
+            ? property.images
             : ['https://via.placeholder.com/350x240?text=No+Image'];
-        
+
         const hasMultipleImages = images.length > 1;
-        
-        // Create image carousel HTML
-        const imagesHtml = images.map((img, index) => 
-            `<img src="${img}" alt="${this.escapeHtml(property.title)}" class="property-card-image ${index === 0 ? 'active' : ''}" loading="lazy" onerror="this.src='https://via.placeholder.com/350x240?text=No+Image'">`
-        ).join('');
-        
-        // Create dot indicators
-        const dotsHtml = hasMultipleImages ? `
-            <div class="property-card-dots">
-                ${images.map((_, index) => 
-                    `<span class="property-card-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>`
-                ).join('')}
-            </div>
-        ` : '';
-        
-        return `
-            <div class="property-card" data-id="${property.property_id}" data-images='${JSON.stringify(images)}'>
-                <div class="property-card-image-container">
-                    ${imagesHtml}
-                    
-                    <!-- Wishlist heart -->
-                    <button class="property-card-wishlist" aria-label="Save to wishlist" title="Save">
-                        <svg viewBox="0 0 32 32" width="24" height="24" fill="rgba(0,0,0,0.5)" stroke="white" stroke-width="2">
-                            <path d="M16 28c7-4.733 14-10 14-17a6.98 6.98 0 0 0-7-7c-1.8 0-3.5.973-4.977 2.227L16 8.25l-2.023-2.023C12.5 4.973 10.8 4 9 4a6.98 6.98 0 0 0-7 7c0 7 7 12.267 14 17z"></path>
-                        </svg>
-                    </button>
-                    
-                    ${hasMultipleImages ? `
-                        <button class="property-card-arrow property-card-arrow-left" aria-label="Previous image">
-                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="15 18 9 12 15 6"></polyline>
-                            </svg>
-                        </button>
-                        <button class="property-card-arrow property-card-arrow-right" aria-label="Next image">
-                            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="9 18 15 12 9 6"></polyline>
-                            </svg>
-                        </button>
-                        ${dotsHtml}
-                    ` : ''}
-                </div>
-                <div class="property-content">
-                    <div class="property-header">
-                        <p class="property-location">${this.escapeHtml(property.city)}, ${this.escapeHtml(property.country)}</p>
-                        ${property.view_type ? `<div class="property-rating">★ ${this.escapeHtml(property.view_type)}</div>` : ''}
-                    </div>
-                    <div class="property-type">${this.escapeHtml(property.property_type || 'Property')}</div>
-                    <div class="property-details">
-                        ${property.bedrooms} bed · ${property.bathrooms} bath · ${property.max_guests} guests
-                    </div>
-                    <div class="property-footer">
-                        <div class="property-price">
-                            $${property.base_price} <span>/ night</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
+
+        const card = document.createElement('div');
+        card.className = 'property-card';
+        card.dataset.id = property.property_id;
+        card.dataset.images = JSON.stringify(images);
+
+        const imageContainer = document.createElement('div');
+        imageContainer.className = 'property-card-image-container';
+
+        images.forEach((img, index) => {
+            const imgEl = document.createElement('img');
+            imgEl.src = img;
+            imgEl.alt = this.#sanitize(property.title);
+            imgEl.className = `property-card-image ${index === 0 ? 'active' : ''}`;
+            imgEl.loading = 'lazy';
+            imgEl.onerror = function() { this.src = 'https://via.placeholder.com/350x240?text=No+Image'; };
+            imageContainer.appendChild(imgEl);
+        });
+
+        const wishlistBtn = document.createElement('button');
+        wishlistBtn.className = 'property-card-wishlist';
+        wishlistBtn.setAttribute('aria-label', 'Save to wishlist');
+        wishlistBtn.title = 'Save';
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('viewBox', '0 0 32 32');
+        svg.setAttribute('width', '24');
+        svg.setAttribute('height', '24');
+        svg.setAttribute('fill', 'rgba(0,0,0,0.5)');
+        svg.setAttribute('stroke', 'white');
+        svg.setAttribute('stroke-width', '2');
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', 'M16 28c7-4.733 14-10 14-17a6.98 6.98 0 0 0-7-7c-1.8 0-3.5.973-4.977 2.227L16 8.25l-2.023-2.023C12.5 4.973 10.8 4 9 4a6.98 6.98 0 0 0-7 7c0 7 7 12.267 14 17z');
+        svg.appendChild(path);
+        wishlistBtn.appendChild(svg);
+        imageContainer.appendChild(wishlistBtn);
+
+        if (hasMultipleImages) {
+            const leftArrow = document.createElement('button');
+            leftArrow.className = 'property-card-arrow property-card-arrow-left';
+            leftArrow.setAttribute('aria-label', 'Previous image');
+            const svgLeft = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svgLeft.setAttribute('viewBox', '0 0 24 24');
+            svgLeft.setAttribute('width', '12');
+            svgLeft.setAttribute('height', '12');
+            svgLeft.setAttribute('fill', 'none');
+            svgLeft.setAttribute('stroke', 'currentColor');
+            svgLeft.setAttribute('stroke-width', '3');
+            svgLeft.setAttribute('stroke-linecap', 'round');
+            svgLeft.setAttribute('stroke-linejoin', 'round');
+            const polylineLeft = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+            polylineLeft.setAttribute('points', '15 18 9 12 15 6');
+            svgLeft.appendChild(polylineLeft);
+            leftArrow.appendChild(svgLeft);
+            imageContainer.appendChild(leftArrow);
+
+            const rightArrow = document.createElement('button');
+            rightArrow.className = 'property-card-arrow property-card-arrow-right';
+            rightArrow.setAttribute('aria-label', 'Next image');
+            const svgRight = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svgRight.setAttribute('viewBox', '0 0 24 24');
+            svgRight.setAttribute('width', '12');
+            svgRight.setAttribute('height', '12');
+            svgRight.setAttribute('fill', 'none');
+            svgRight.setAttribute('stroke', 'currentColor');
+            svgRight.setAttribute('stroke-width', '3');
+            svgRight.setAttribute('stroke-linecap', 'round');
+            svgRight.setAttribute('stroke-linejoin', 'round');
+            const polylineRight = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+            polylineRight.setAttribute('points', '9 18 15 12 9 6');
+            svgRight.appendChild(polylineRight);
+            rightArrow.appendChild(svgRight);
+            imageContainer.appendChild(rightArrow);
+
+            const dotsContainer = document.createElement('div');
+            dotsContainer.className = 'property-card-dots';
+            images.forEach((_, index) => {
+                const dot = document.createElement('span');
+                dot.className = `property-card-dot ${index === 0 ? 'active' : ''}`;
+                dot.dataset.index = index;
+                dotsContainer.appendChild(dot);
+            });
+            imageContainer.appendChild(dotsContainer);
+        }
+
+        card.appendChild(imageContainer);
+
+        const content = document.createElement('div');
+        content.className = 'property-content';
+
+        const header = document.createElement('div');
+        header.className = 'property-header';
+
+        const locationP = document.createElement('p');
+        locationP.className = 'property-location';
+        locationP.textContent = `${this.#sanitize(property.city)}, ${this.#sanitize(property.country)}`;
+        header.appendChild(locationP);
+
+        if (property.view_type) {
+            const ratingDiv = document.createElement('div');
+            ratingDiv.className = 'property-rating';
+            ratingDiv.textContent = `★ ${this.#sanitize(property.view_type)}`;
+            header.appendChild(ratingDiv);
+        }
+
+        content.appendChild(header);
+
+        const typeDiv = document.createElement('div');
+        typeDiv.className = 'property-type';
+        typeDiv.textContent = this.#sanitize(property.property_type || 'Property');
+        content.appendChild(typeDiv);
+
+        const detailsDiv = document.createElement('div');
+        detailsDiv.className = 'property-details';
+        detailsDiv.textContent = `${property.bedrooms} bed · ${property.bathrooms} bath · ${property.max_guests} guests`;
+        content.appendChild(detailsDiv);
+
+        const footer = document.createElement('div');
+        footer.className = 'property-footer';
+
+        const priceDiv = document.createElement('div');
+        priceDiv.className = 'property-price';
+        priceDiv.textContent = `$${property.base_price} `;
+        const span = document.createElement('span');
+        span.textContent = '/ night';
+        priceDiv.appendChild(span);
+        footer.appendChild(priceDiv);
+
+        content.appendChild(footer);
+        card.appendChild(content);
+
+        return card;
     }
-    
-    createCustomMarkerIcon(price) {
-        // Create modern pill-style marker similar to Airbnb
+
+    #createCustomMarkerIcon(price) {
         const priceText = `$${price}`;
-        const textWidth = priceText.length * 8 + 20; // Dynamic width based on price length
-        
+        const textWidth = priceText.length * 8 + 20;
+
         const svg = `
             <svg width="${textWidth + 10}" height="40" viewBox="0 0 ${textWidth + 10} 40" xmlns="http://www.w3.org/2000/svg">
-                <!-- Shadow -->
                 <ellipse cx="${textWidth / 2 + 5}" cy="36" rx="${textWidth / 3}" ry="3" fill="rgba(0,0,0,0.15)"/>
-                
-                <!-- Main pill container with subtle gradient -->
+
                 <g filter="url(#shadow)">
-                    <rect x="5" y="8" width="${textWidth}" height="24" rx="12" 
+                    <rect x="5" y="8" width="${textWidth}" height="24" rx="12"
                           fill="white" stroke="#222" stroke-width="1.5"/>
-                    
-                    <!-- Price text -->
-                    <text x="${textWidth / 2 + 5}" y="21" 
-                          font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
-                          font-size="14" 
-                          font-weight="600" 
-                          fill="#222" 
-                          text-anchor="middle" 
-                          dominant-baseline="middle">${priceText}</text>
+
+                    <text x="${textWidth / 2 + 5}" y="21"
+                          font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+                          font-size="14"
+                          font-weight="600"
+                          fill="#222"
+                          text-anchor="middle"
+                          dominant-baseline="middle">${this.#sanitize(priceText)}</text>
                 </g>
-                
-                <!-- Definitions -->
+
                 <defs>
                     <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
                         <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.25"/>
@@ -1217,41 +1300,38 @@ class SearchResultsManager {
                 </defs>
             </svg>
         `;
-        
+
         return {
             url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
             scaledSize: new google.maps.Size(textWidth + 10, 40),
             anchor: new google.maps.Point((textWidth + 10) / 2, 40)
         };
     }
-    
-    updateMapMarkers() {
-        // Clear existing markers
+
+    #updateMapMarkers() {
         this.markers.forEach(marker => {
             if (marker.setMap) {
                 marker.setMap(null);
             }
         });
         this.markers = [];
-        
+
         if (!this.map || typeof google === 'undefined' || !google.maps) return;
-        
+
         const validProperties = this.filteredProperties.filter(p => p.latitude && p.longitude);
-        
+
         if (validProperties.length === 0) return;
-        
+
         const bounds = new google.maps.LatLngBounds();
-        
-        // Add new markers
+
         validProperties.forEach(property => {
-            const position = { 
-                lat: parseFloat(property.latitude), 
-                lng: parseFloat(property.longitude) 
+            const position = {
+                lat: parseFloat(property.latitude),
+                lng: parseFloat(property.longitude)
             };
-            
-            // Create custom pin marker with price
-            const markerIcon = this.createCustomMarkerIcon(property.base_price);
-            
+
+            const markerIcon = this.#createCustomMarkerIcon(property.base_price);
+
             const marker = new google.maps.Marker({
                 map: this.map,
                 position: position,
@@ -1259,108 +1339,197 @@ class SearchResultsManager {
                 icon: markerIcon,
                 optimized: false
             });
-            
-            this.addMarkerListener(marker, property);
+
+            this.#addMarkerListener(marker, property);
             this.markers.push(marker);
-            
+
             bounds.extend(position);
         });
-        
-        // Fit map to markers
+
         if (this.markers.length > 0) {
             this.map.fitBounds(bounds);
-            
-            // Adjust zoom if only one marker
+
             if (this.markers.length === 1) {
                 this.map.setZoom(14);
             }
         }
     }
-    
-    addMarkerListener(marker, property) {
+
+    #addMarkerListener(marker, property) {
         marker.addListener('click', () => {
-            // Prepare images array
-            const images = property.images && property.images.length > 0 
-                ? property.images 
+            const images = property.images && property.images.length > 0
+                ? property.images
                 : ['https://via.placeholder.com/320x240?text=No+Image'];
-            
+
             const hasMultipleImages = images.length > 1;
-            
-            // Create image carousel HTML
-            const imagesHtml = images.map((img, index) => 
-                `<img src="${img}" alt="${this.escapeHtml(property.title)}" class="map-popup-image ${index === 0 ? 'active' : ''}" data-index="${index}" onerror="this.src='https://via.placeholder.com/320x240?text=No+Image'">`
-            ).join('');
-            
-            // Create dot indicators
-            const dotsHtml = hasMultipleImages ? images.map((_, index) => 
-                `<span class="map-popup-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>`
-            ).join('') : '';
-            
-            const contentString = `
-                <div class="map-popup" data-property-id="${property.property_id}">
-                    <div class="map-popup-image-container">
-                        ${imagesHtml}
-                        
-                        <!-- Top Right Icons -->
-                        <div class="map-popup-top-icons">
-                            <button class="map-popup-icon-btn map-popup-close" aria-label="Close" title="Close">
-                                <svg viewBox="0 0 32 32" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3">
-                                    <path d="m6 6 20 20M26 6 6 26"></path>
-                                </svg>
-                            </button>
-                            <button class="map-popup-icon-btn map-popup-wishlist" aria-label="Save to wishlist" title="Save">
-                                <svg viewBox="0 0 32 32" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M16 28c7-4.733 14-10 14-17a6.98 6.98 0 0 0-7-7c-1.8 0-3.5.973-4.977 2.227L16 8.25l-2.023-2.023C12.5 4.973 10.8 4 9 4a6.98 6.98 0 0 0-7 7c0 7 7 12.267 14 17z"></path>
-                                </svg>
-                            </button>
-                        </div>
-                        
-                        ${hasMultipleImages ? `
-                            <button class="map-popup-arrow map-popup-arrow-left" aria-label="Previous image">
-                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="15 18 9 12 15 6"></polyline>
-                                </svg>
-                            </button>
-                            <button class="map-popup-arrow map-popup-arrow-right" aria-label="Next image">
-                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="9 18 15 12 9 6"></polyline>
-                                </svg>
-                            </button>
-                            <div class="map-popup-dots">${dotsHtml}</div>
-                        ` : ''}
-                    </div>
-                    <div class="map-popup-content">
-                        <div class="map-popup-header">
-                            <div class="map-popup-location">${this.escapeHtml(property.property_type || 'Property')} in ${this.escapeHtml(property.city)}</div>
-                            ${property.view_type ? `<div class="map-popup-badge">★ ${this.escapeHtml(property.view_type)}</div>` : ''}
-                        </div>
-                        <div class="map-popup-title">${this.escapeHtml(property.title)}</div>
-                        <div class="map-popup-details">${property.bedrooms} bed · ${property.bathrooms} bath · ${property.max_guests} guests</div>
-                        <div class="map-popup-price-container">
-                            <span class="map-popup-price">$${property.base_price}</span>
-                            <span class="map-popup-price-period">for ${property.booking_days || 5} nights · ${this.formatDateRange()}</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            this.infoWindow.setContent(contentString);
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'map-popup';
+            contentDiv.dataset.propertyId = property.property_id;
+
+            const imageContainer = document.createElement('div');
+            imageContainer.className = 'map-popup-image-container';
+
+            images.forEach((img, index) => {
+                const imgEl = document.createElement('img');
+                imgEl.src = img;
+                imgEl.alt = this.#sanitize(property.title);
+                imgEl.className = `map-popup-image ${index === 0 ? 'active' : ''}`;
+                imgEl.dataset.index = index;
+                imgEl.onerror = function() { this.src = 'https://via.placeholder.com/320x240?text=No+Image'; };
+                imageContainer.appendChild(imgEl);
+            });
+
+            const topIcons = document.createElement('div');
+            topIcons.className = 'map-popup-top-icons';
+
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'map-popup-icon-btn map-popup-close';
+            closeBtn.setAttribute('aria-label', 'Close');
+            closeBtn.title = 'Close';
+            const closeSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            closeSvg.setAttribute('viewBox', '0 0 32 32');
+            closeSvg.setAttribute('width', '16');
+            closeSvg.setAttribute('height', '16');
+            closeSvg.setAttribute('fill', 'none');
+            closeSvg.setAttribute('stroke', 'currentColor');
+            closeSvg.setAttribute('stroke-width', '3');
+            const closePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            closePath.setAttribute('d', 'm6 6 20 20M26 6 6 26');
+            closeSvg.appendChild(closePath);
+            closeBtn.appendChild(closeSvg);
+            topIcons.appendChild(closeBtn);
+
+            const wishlistBtn = document.createElement('button');
+            wishlistBtn.className = 'map-popup-icon-btn map-popup-wishlist';
+            wishlistBtn.setAttribute('aria-label', 'Save to wishlist');
+            wishlistBtn.title = 'Save';
+            const wishSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            wishSvg.setAttribute('viewBox', '0 0 32 32');
+            wishSvg.setAttribute('width', '16');
+            wishSvg.setAttribute('height', '16');
+            wishSvg.setAttribute('fill', 'none');
+            wishSvg.setAttribute('stroke', 'currentColor');
+            wishSvg.setAttribute('stroke-width', '2');
+            const wishPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            wishPath.setAttribute('d', 'M16 28c7-4.733 14-10 14-17a6.98 6.98 0 0 0-7-7c-1.8 0-3.5.973-4.977 2.227L16 8.25l-2.023-2.023C12.5 4.973 10.8 4 9 4a6.98 6.98 0 0 0-7 7c0 7 7 12.267 14 17z');
+            wishSvg.appendChild(wishPath);
+            wishlistBtn.appendChild(wishSvg);
+            topIcons.appendChild(wishlistBtn);
+
+            imageContainer.appendChild(topIcons);
+
+            if (hasMultipleImages) {
+                const leftArrow = document.createElement('button');
+                leftArrow.className = 'map-popup-arrow map-popup-arrow-left';
+                leftArrow.setAttribute('aria-label', 'Previous image');
+                const svgLeft = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svgLeft.setAttribute('viewBox', '0 0 24 24');
+                svgLeft.setAttribute('width', '16');
+                svgLeft.setAttribute('height', '16');
+                svgLeft.setAttribute('fill', 'none');
+                svgLeft.setAttribute('stroke', 'currentColor');
+                svgLeft.setAttribute('stroke-width', '3');
+                svgLeft.setAttribute('stroke-linecap', 'round');
+                svgLeft.setAttribute('stroke-linejoin', 'round');
+                const polylineLeft = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+                polylineLeft.setAttribute('points', '15 18 9 12 15 6');
+                svgLeft.appendChild(polylineLeft);
+                leftArrow.appendChild(svgLeft);
+                imageContainer.appendChild(leftArrow);
+
+                const rightArrow = document.createElement('button');
+                rightArrow.className = 'map-popup-arrow map-popup-arrow-right';
+                rightArrow.setAttribute('aria-label', 'Next image');
+                const svgRight = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svgRight.setAttribute('viewBox', '0 0 24 24');
+                svgRight.setAttribute('width', '16');
+                svgRight.setAttribute('height', '16');
+                svgRight.setAttribute('fill', 'none');
+                svgRight.setAttribute('stroke', 'currentColor');
+                svgRight.setAttribute('stroke-width', '3');
+                svgRight.setAttribute('stroke-linecap', 'round');
+                svgRight.setAttribute('stroke-linejoin', 'round');
+                const polylineRight = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+                polylineRight.setAttribute('points', '9 18 15 12 9 6');
+                svgRight.appendChild(polylineRight);
+                rightArrow.appendChild(svgRight);
+                imageContainer.appendChild(rightArrow);
+
+                const dotsContainer = document.createElement('div');
+                dotsContainer.className = 'map-popup-dots';
+                images.forEach((_, index) => {
+                    const dot = document.createElement('span');
+                    dot.className = `map-popup-dot ${index === 0 ? 'active' : ''}`;
+                    dot.dataset.index = index;
+                    dotsContainer.appendChild(dot);
+                });
+                imageContainer.appendChild(dotsContainer);
+            }
+
+            contentDiv.appendChild(imageContainer);
+
+            const contentBody = document.createElement('div');
+            contentBody.className = 'map-popup-content';
+
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'map-popup-header';
+
+            const locationDiv = document.createElement('div');
+            locationDiv.className = 'map-popup-location';
+            locationDiv.textContent = `${this.#sanitize(property.property_type || 'Property')} in ${this.#sanitize(property.city)}`;
+            headerDiv.appendChild(locationDiv);
+
+            if (property.view_type) {
+                const badgeDiv = document.createElement('div');
+                badgeDiv.className = 'map-popup-badge';
+                badgeDiv.textContent = `★ ${this.#sanitize(property.view_type)}`;
+                headerDiv.appendChild(badgeDiv);
+            }
+
+            contentBody.appendChild(headerDiv);
+
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'map-popup-title';
+            titleDiv.textContent = this.#sanitize(property.title);
+            contentBody.appendChild(titleDiv);
+
+            const detailsDiv = document.createElement('div');
+            detailsDiv.className = 'map-popup-details';
+            detailsDiv.textContent = `${property.bedrooms} bed · ${property.bathrooms} bath · ${property.max_guests} guests`;
+            contentBody.appendChild(detailsDiv);
+
+            const priceContainer = document.createElement('div');
+            priceContainer.className = 'map-popup-price-container';
+
+            const priceSpan = document.createElement('span');
+            priceSpan.className = 'map-popup-price';
+            priceSpan.textContent = `$${property.base_price}`;
+            priceContainer.appendChild(priceSpan);
+
+            const periodSpan = document.createElement('span');
+            periodSpan.className = 'map-popup-price-period';
+            periodSpan.textContent = `for ${property.booking_days || 5} nights · ${this.#formatDateRange()}`;
+            priceContainer.appendChild(periodSpan);
+
+            contentBody.appendChild(priceContainer);
+            contentDiv.appendChild(contentBody);
+
+            this.infoWindow.setContent(contentDiv);
             this.infoWindow.open(this.map, marker);
-            
-            // Setup carousel and interactions after popup is ready
+
             google.maps.event.addListenerOnce(this.infoWindow, 'domready', () => {
-                this.setupMapPopupInteractions(property, images);
+                this.#setupMapPopupInteractions(property, images);
             });
         });
     }
-    
-    setupMapPopupInteractions(property, images) {
+
+    #setupMapPopupInteractions(property, images) {
         const popup = document.querySelector('.map-popup');
         if (!popup) return;
-        
+
         let currentImageIndex = 0;
-        
-        // Close button
+
         const closeBtn = popup.querySelector('.map-popup-close');
         if (closeBtn) {
             closeBtn.addEventListener('click', (e) => {
@@ -1368,38 +1537,33 @@ class SearchResultsManager {
                 this.infoWindow.close();
             });
         }
-        
-        // Wishlist button
+
         const wishlistBtn = popup.querySelector('.map-popup-wishlist');
         if (wishlistBtn) {
             wishlistBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 wishlistBtn.classList.toggle('active');
-                // TODO: Add wishlist functionality
-                console.log('Wishlist toggled for property:', property.property_id);
             });
         }
-        
-        // Image navigation
+
         const updateImage = (newIndex) => {
             const allImages = popup.querySelectorAll('.map-popup-image');
             const allDots = popup.querySelectorAll('.map-popup-dot');
-            
+
             allImages.forEach((img, i) => {
                 img.classList.toggle('active', i === newIndex);
             });
-            
+
             allDots.forEach((dot, i) => {
                 dot.classList.toggle('active', i === newIndex);
             });
-            
+
             currentImageIndex = newIndex;
         };
-        
-        // Arrow buttons
+
         const leftArrow = popup.querySelector('.map-popup-arrow-left');
         const rightArrow = popup.querySelector('.map-popup-arrow-right');
-        
+
         if (leftArrow) {
             leftArrow.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -1407,7 +1571,7 @@ class SearchResultsManager {
                 updateImage(newIndex);
             });
         }
-        
+
         if (rightArrow) {
             rightArrow.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -1415,61 +1579,56 @@ class SearchResultsManager {
                 updateImage(newIndex);
             });
         }
-        
-        // Dot indicators
+
         popup.querySelectorAll('.map-popup-dot').forEach((dot, index) => {
             dot.addEventListener('click', (e) => {
                 e.stopPropagation();
                 updateImage(index);
             });
         });
-        
-        // Click on popup content to view details
+
         const content = popup.querySelector('.map-popup-content');
         if (content) {
             content.style.cursor = 'pointer';
             content.addEventListener('click', () => {
-                this.viewPropertyDetails(property);
+                this.#viewPropertyDetails(property);
             });
         }
-        
-        // Also make image clickable (but not arrows, dots, or top icons)
+
         const imageContainer = popup.querySelector('.map-popup-image-container');
         if (imageContainer) {
             imageContainer.addEventListener('click', (e) => {
-                // Don't trigger if clicking interactive elements
-                if (e.target.closest('.map-popup-arrow') || 
+                if (e.target.closest('.map-popup-arrow') ||
                     e.target.closest('.map-popup-dot') ||
                     e.target.closest('.map-popup-icon-btn')) {
                     return;
                 }
-                this.viewPropertyDetails(property);
+                this.#viewPropertyDetails(property);
             });
         }
     }
-    
-    formatDateRange() {
+
+    #formatDateRange() {
         if (this.currentFilters.checkIn && this.currentFilters.checkOut) {
             const checkIn = new Date(this.currentFilters.checkIn);
             const checkOut = new Date(this.currentFilters.checkOut);
-            return `${this.formatDate(checkIn)} - ${this.formatDate(checkOut)}`;
+            return `${this.#formatDate(checkIn)} - ${this.#formatDate(checkOut)}`;
         }
         return '';
     }
-    
-    viewPropertyDetails(property) {
+
+    #viewPropertyDetails(property) {
         window.location.href = `property-details.html?id=${property.property_id}`;
     }
-    
-    escapeHtml(text) {
-        if (!text) return '';
+
+    #sanitize(str) {
+        if (!str) return '';
         const div = document.createElement('div');
-        div.textContent = text;
+        div.textContent = str;
         return div.innerHTML;
     }
 }
 
-// Initialize when DOM is loaded
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         new SearchResultsManager();
@@ -1477,4 +1636,3 @@ if (document.readyState === 'loading') {
 } else {
     new SearchResultsManager();
 }
-

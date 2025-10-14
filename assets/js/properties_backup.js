@@ -1,6 +1,5 @@
-'use strict';
-
-
+// Properties Page JavaScript
+// Handles property search, filtering, display, and user interactions
 
 class PropertiesManager {
     constructor() {
@@ -13,38 +12,40 @@ class PropertiesManager {
         this.currentFilters = {};
         this.isLoading = false;
         
-        this.#init();
+        this.init();
     }
 
-    async #init() {
+    async init() {
         try {
-
+            // Wait for Supabase to be initialized
             await this.supabaseClient.waitForInit();
             
-            this.#setupLocationAutocomplete();
-            this.#setupDatePickers();
-            this.#setupGuestsDropdown();
-            this.#setupEventListeners();
-            this.#setupAdvancedFilters();
-            this.#setupViewControls();
-            this.#setupCategoryTabs();
-            this.#setupCompactNavSearch();
-            this.#setupPagination();
-            this.#handleUrlParameters();
-            this.#loadProperties();
-            this.#updateAuthUI();
+            this.setupLocationAutocomplete();
+            this.setupDatePickers();
+            this.setupGuestsDropdown();
+            this.setupEventListeners();
+            this.setupAdvancedFilters();
+            this.setupViewControls();
+            this.setupCategoryTabs();
+            this.setupCompactNavSearch();
+            this.setupPagination();
+            this.handleUrlParameters();
+            this.loadProperties();
+            this.updateAuthUI();
         } catch (error) {
-            
-            this.#showError('Failed to initialize properties page. Please refresh.');
+            console.error('Properties initialization error:', error);
+            this.showError('Failed to initialize properties page. Please refresh.');
         }
     }
 
-    #setupLocationAutocomplete() {
+    // Setup location autocomplete
+    setupLocationAutocomplete() {
         const mainInput = document.getElementById('location');
         const mainDropdown = document.getElementById('locationAutocomplete');
         const navInput = document.getElementById('navLocation');
         const navDropdown = document.getElementById('navLocationAutocomplete');
 
+        // Popular destinations
         this.popularDestinations = [
             { name: 'New York', region: 'New York, United States', full: 'New York, New York, United States' },
             { name: 'Paris', region: 'France', full: 'Paris, France' },
@@ -57,18 +58,19 @@ class PropertiesManager {
         ];
 
         if (mainInput && mainDropdown) {
-            this.#initAutocomplete(mainInput, mainDropdown, navInput);
+            this.initAutocomplete(mainInput, mainDropdown, navInput);
         }
 
         if (navInput && navDropdown) {
-            this.#initAutocomplete(navInput, navDropdown, mainInput);
+            this.initAutocomplete(navInput, navDropdown, mainInput);
         }
     }
 
-    #initAutocomplete(input, dropdown, syncInput) {
+    initAutocomplete(input, dropdown, syncInput) {
         let debounceTimer;
         let selectedIndex = -1;
-
+        
+        // Setup clear button
         const clearBtn = input.parentElement.querySelector('.clear-location-btn');
         
         const updateClearButton = () => {
@@ -105,6 +107,7 @@ class PropertiesManager {
             hideDropdown();
         };
 
+        // Handle input
         input.addEventListener('input', (e) => {
             const query = e.target.value.trim();
             updateClearButton();
@@ -121,27 +124,28 @@ class PropertiesManager {
 
             debounceTimer = setTimeout(async () => {
                 try {
-                    const results = await this.#searchLocations(query);
-                    this.#renderAutocompleteResults(dropdown, results, selectItem);
+                    const results = await this.searchLocations(query);
+                    this.renderAutocompleteResults(dropdown, results, selectItem);
                     showDropdown();
                 } catch (error) {
-                    
+                    console.error('Autocomplete error:', error);
                     dropdown.innerHTML = '<div class="autocomplete-no-results">Error loading results</div>';
                 }
             }, 300);
         });
 
+        // Handle keyboard navigation
         input.addEventListener('keydown', (e) => {
             const items = dropdown.querySelectorAll('.autocomplete-item');
 
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
-                this.#updateSelectedItem(items, selectedIndex);
+                this.updateSelectedItem(items, selectedIndex);
             } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
                 selectedIndex = Math.max(selectedIndex - 1, 0);
-                this.#updateSelectedItem(items, selectedIndex);
+                this.updateSelectedItem(items, selectedIndex);
             } else if (e.key === 'Enter' && selectedIndex >= 0) {
                 e.preventDefault();
                 items[selectedIndex]?.click();
@@ -150,16 +154,18 @@ class PropertiesManager {
             }
         });
 
+        // Close dropdown when clicking outside
         document.addEventListener('click', (e) => {
             if (!input.contains(e.target) && !dropdown.contains(e.target)) {
                 hideDropdown();
             }
         });
 
+        // Show popular destinations when focusing on empty field
         input.addEventListener('focus', () => {
             const value = input.value.trim();
             if (value.length === 0) {
-                this.#showPopularDestinations(dropdown, selectItem);
+                this.showPopularDestinations(dropdown, selectItem);
                 showDropdown();
             } else if (dropdown.children.length > 0 && value.length >= 2) {
                 showDropdown();
@@ -167,8 +173,9 @@ class PropertiesManager {
         });
     }
 
-    async #searchLocations(query) {
-
+    async searchLocations(query) {
+        // Using Nominatim (OpenStreetMap) - free, no API key required
+        // Increased limit to get more results for filtering
         const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=15&addressdetails=1&featuretype=city`;
         
         const response = await fetch(url, {
@@ -182,14 +189,15 @@ class PropertiesManager {
         }
 
         const data = await response.json();
-
+        
+        // Transform and filter results
         const transformed = data.map(item => {
             const address = item.address || {};
             return {
-                place_name: this.#formatPlaceName(item),
-                full_name: this.#formatPlaceName(item),
-                name: this.#getLocationName(item),
-                region: this.#getRegion(item),
+                place_name: this.formatPlaceName(item),
+                full_name: this.formatPlaceName(item),
+                name: this.getLocationName(item),
+                region: this.getRegion(item),
                 type: item.type,
                 class: item.class,
                 importance: item.importance || 0,
@@ -199,32 +207,38 @@ class PropertiesManager {
             };
         });
 
-        return this.#filterAndDeduplicateResults(transformed);
+        // Filter and deduplicate
+        return this.filterAndDeduplicateResults(transformed);
     }
 
-    #getLocationName(item) {
+    getLocationName(item) {
         const address = item.address || {};
-
+        
+        // Prioritize city, town, village names
         if (address.city) return address.city;
         if (address.town) return address.town;
         if (address.village) return address.village;
         if (address.state) return address.state;
         if (address.country) return address.country;
-
+        
+        // Fallback to name or first part of display name
         return item.name || item.display_name.split(',')[0].trim();
     }
 
-    #formatPlaceName(item) {
+    formatPlaceName(item) {
         const address = item.address || {};
         const parts = [];
-
-        const mainName = this.#getLocationName(item);
+        
+        // Get main location name
+        const mainName = this.getLocationName(item);
         parts.push(mainName);
-
+        
+        // Add state if it's different from city
         if (address.state && address.state !== mainName) {
             parts.push(address.state);
         }
-
+        
+        // Always add country
         if (address.country) {
             parts.push(address.country);
         }
@@ -232,11 +246,12 @@ class PropertiesManager {
         return parts.join(', ');
     }
 
-    #getRegion(item) {
+    getRegion(item) {
         const address = item.address || {};
         const parts = [];
-
-        const mainName = this.#getLocationName(item);
+        
+        // Don't repeat the main city name
+        const mainName = this.getLocationName(item);
         
         if (address.state && address.state !== mainName) {
             parts.push(address.state);
@@ -248,17 +263,20 @@ class PropertiesManager {
         return parts.join(', ') || 'Location';
     }
 
-    #filterAndDeduplicateResults(results) {
-
+    filterAndDeduplicateResults(results) {
+        // Prioritize certain location types - cities and towns over governorates
         const priorityTypes = ['city', 'town', 'village'];
         const avoidTypes = ['suburb', 'quarter', 'neighbourhood', 'administrative'];
-
+        
+        // Filter out less relevant results
         let filtered = results.filter(item => {
-
+            // Remove very low importance results
             if (item.importance < 0.3) return false;
-
+            
+            // Remove if it's a building or very specific place
             if (item.class === 'building' || item.class === 'amenity') return false;
-
+            
+            // Remove governorates, districts, and administrative divisions
             if (item.type === 'administrative' && item.name.toLowerCase().includes('governorate')) return false;
             if (item.name.toLowerCase().includes('governorate')) return false;
             if (item.name.toLowerCase().includes('district')) return false;
@@ -267,8 +285,9 @@ class PropertiesManager {
             return true;
         });
 
+        // Sort by importance and type priority
         filtered.sort((a, b) => {
-
+            // Strongly prioritize cities/towns
             const aIsPriority = priorityTypes.includes(a.type);
             const bIsPriority = priorityTypes.includes(b.type);
             const aIsAvoid = avoidTypes.includes(a.type);
@@ -278,33 +297,38 @@ class PropertiesManager {
             if (!aIsPriority && bIsPriority) return 1;
             if (aIsAvoid && !bIsAvoid) return 1;
             if (!aIsAvoid && bIsAvoid) return -1;
-
+            
+            // Then by importance
             return b.importance - a.importance;
         });
 
+        // Smart deduplication - remove similar locations
         const deduplicated = [];
         const seenNames = new Set();
 
         for (const item of filtered) {
             const nameLower = item.name.toLowerCase().trim();
             const country = item.raw?.address?.country?.toLowerCase() || '';
-
+            
+            // Create a normalized key
             const normalizedName = nameLower
                 .replace(/\s+governorate/gi, '')
                 .replace(/\s+district/gi, '')
                 .replace(/\s+province/gi, '');
             
             const uniqueKey = `${normalizedName}-${country}`;
-
+            
+            // Check if we already have this location or a very similar one
             let isDuplicate = false;
             
             for (const seenName of seenNames) {
-
+                // Check if names are too similar
                 if (seenName === uniqueKey) {
                     isDuplicate = true;
                     break;
                 }
-
+                
+                // Check if one name contains the other (e.g., "Beirut" and "Beirut Governorate")
                 const [seenBase] = seenName.split('-');
                 if (normalizedName.includes(seenBase) || seenBase.includes(normalizedName)) {
                     isDuplicate = true;
@@ -318,14 +342,15 @@ class PropertiesManager {
             }
         }
 
+        // Return top 5 results
         return deduplicated.slice(0, 5);
     }
 
-    #showPopularDestinations(dropdown, onSelect) {
+    showPopularDestinations(dropdown, onSelect) {
         dropdown.innerHTML = `
             <div class="autocomplete-header">Popular destinations</div>
             ${this.popularDestinations.map(dest => `
-                <div class="autocomplete-item" data-value="${this.#escapeHtml(dest.full)}">
+                <div class="autocomplete-item" data-value="${this.escapeHtml(dest.full)}">
                     <div class="autocomplete-item-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
@@ -333,13 +358,14 @@ class PropertiesManager {
                         </svg>
                     </div>
                     <div class="autocomplete-item-text">
-                        <div class="autocomplete-item-name">${this.#escapeHtml(dest.name)}</div>
-                        <div class="autocomplete-item-location">${this.#escapeHtml(dest.region)}</div>
+                        <div class="autocomplete-item-name">${this.escapeHtml(dest.name)}</div>
+                        <div class="autocomplete-item-location">${this.escapeHtml(dest.region)}</div>
                     </div>
                 </div>
             `).join('')}
         `;
 
+        // Add click handlers
         dropdown.querySelectorAll('.autocomplete-item').forEach(item => {
             item.addEventListener('click', () => {
                 onSelect({
@@ -350,14 +376,14 @@ class PropertiesManager {
         });
     }
 
-    #renderAutocompleteResults(dropdown, results, onSelect) {
+    renderAutocompleteResults(dropdown, results, onSelect) {
         if (results.length === 0) {
             dropdown.innerHTML = '<div class="autocomplete-no-results">No locations found</div>';
             return;
         }
 
         dropdown.innerHTML = results.map(result => `
-            <div class="autocomplete-item" data-value="${this.#escapeHtml(result.full_name)}">
+            <div class="autocomplete-item" data-value="${this.escapeHtml(result.full_name)}">
                 <div class="autocomplete-item-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
@@ -365,12 +391,13 @@ class PropertiesManager {
                     </svg>
                 </div>
                 <div class="autocomplete-item-text">
-                    <div class="autocomplete-item-name">${this.#escapeHtml(result.name)}</div>
-                    <div class="autocomplete-item-location">${this.#escapeHtml(result.region)}</div>
+                    <div class="autocomplete-item-name">${this.escapeHtml(result.name)}</div>
+                    <div class="autocomplete-item-location">${this.escapeHtml(result.region)}</div>
                 </div>
             </div>
         `).join('');
 
+        // Add click handlers
         dropdown.querySelectorAll('.autocomplete-item').forEach(item => {
             item.addEventListener('click', () => {
                 onSelect({
@@ -381,7 +408,7 @@ class PropertiesManager {
         });
     }
 
-    #updateSelectedItem(items, selectedIndex) {
+    updateSelectedItem(items, selectedIndex) {
         items.forEach((item, index) => {
             if (index === selectedIndex) {
                 item.classList.add('selected');
@@ -392,15 +419,16 @@ class PropertiesManager {
         });
     }
 
-    #escapeHtml(text) {
+    escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
 
-    #setupGuestsDropdown() {
-
-        this.#initGuestsCounter({
+    // Setup guests dropdown with counters
+    setupGuestsDropdown() {
+        // Main search counters
+        this.initGuestsCounter({
             input: document.getElementById('guests'),
             dropdown: document.getElementById('guestsDropdown'),
             adultsDisplay: document.getElementById('adultsDisplay'),
@@ -410,7 +438,8 @@ class PropertiesManager {
             targetPrefix: ''
         });
 
-        this.#initGuestsCounter({
+        // Nav search counters
+        this.initGuestsCounter({
             input: document.getElementById('navGuests'),
             dropdown: document.getElementById('navGuestsDropdown'),
             adultsDisplay: document.getElementById('navAdultsDisplay'),
@@ -421,7 +450,7 @@ class PropertiesManager {
         });
     }
 
-    #initGuestsCounter(config) {
+    initGuestsCounter(config) {
         const { input, dropdown, adultsDisplay, childrenDisplay, adultsCount, childrenCount, targetPrefix } = config;
         
         if (!input || !dropdown) return;
@@ -446,8 +475,10 @@ class PropertiesManager {
                 input.value = parts.join(', ');
             }
 
+            // Update button states
             updateButtonStates();
-
+            
+            // Sync with other search bar
             syncWithOther();
         };
 
@@ -460,9 +491,9 @@ class PropertiesManager {
         };
 
         const syncWithOther = () => {
-
+            // Sync main <-> nav
             if (targetPrefix === '') {
-
+                // We're in main, update nav
                 const navInput = document.getElementById('navGuests');
                 const navAdultsDisplay = document.getElementById('navAdultsDisplay');
                 const navChildrenDisplay = document.getElementById('navChildrenDisplay');
@@ -475,7 +506,7 @@ class PropertiesManager {
                 if (navAdultsCount) navAdultsCount.value = adults;
                 if (navChildrenCount) navChildrenCount.value = children;
             } else {
-
+                // We're in nav, update main
                 const mainInput = document.getElementById('guests');
                 const mainAdultsDisplay = document.getElementById('adultsDisplay');
                 const mainChildrenDisplay = document.getElementById('childrenDisplay');
@@ -498,11 +529,13 @@ class PropertiesManager {
             dropdown.classList.add('active');
         };
 
+        // Show dropdown on click
         input.addEventListener('click', (e) => {
             e.stopPropagation();
             showDropdown();
         });
 
+        // Handle counter buttons
         dropdown.addEventListener('click', (e) => {
             const btn = e.target.closest('.counter-btn');
             if (!btn) return;
@@ -521,31 +554,37 @@ class PropertiesManager {
             updateDisplay();
         });
 
+        // Close dropdown when clicking outside
         document.addEventListener('click', (e) => {
             if (!input.contains(e.target) && !dropdown.contains(e.target)) {
                 hideDropdown();
             }
         });
 
+        // Initial state
         updateDisplay();
     }
 
-    #setupDatePickers() {
+    // Setup modern date pickers with Flatpickr
+    setupDatePickers() {
         if (typeof flatpickr === 'undefined') {
-            
+            console.warn('Flatpickr not loaded');
             return;
         }
 
         const today = new Date();
-
+        
+        // Main search date inputs
         const datesInput = document.getElementById('dates');
         const checkInInput = document.getElementById('checkIn');
         const checkOutInput = document.getElementById('checkOut');
-
+        
+        // Nav compact search date inputs
         const navDatesInput = document.getElementById('navDates');
         const navCheckInInput = document.getElementById('navCheckIn');
         const navCheckOutInput = document.getElementById('navCheckOut');
-
+        
+        // Common Flatpickr config
         const commonConfig = {
             minDate: today,
             dateFormat: "M j",
@@ -557,25 +596,28 @@ class PropertiesManager {
                 instance.calendarContainer.classList.add('rent-that-view-calendar');
             }
         };
-
+        
+        // Initialize main dates picker
         if (datesInput) {
             flatpickr(datesInput, {
                 ...commonConfig,
                 onChange: (selectedDates, dateStr) => {
                     if (selectedDates.length === 2) {
-
+                        // Update the visible dates field with formatted range
                         const start = flatpickr.formatDate(selectedDates[0], 'M j');
                         const end = flatpickr.formatDate(selectedDates[1], 'M j');
                         datesInput.value = `${start} - ${end}`;
-
+                        
+                        // Update hidden fields with full dates
                         if (checkInInput) checkInInput.value = flatpickr.formatDate(selectedDates[0], 'Y-m-d');
                         if (checkOutInput) checkOutInput.value = flatpickr.formatDate(selectedDates[1], 'Y-m-d');
-
+                        
+                        // Sync to nav inputs
                         if (navDatesInput) navDatesInput.value = datesInput.value;
                         if (navCheckInInput) navCheckInInput.value = checkInInput.value;
                         if (navCheckOutInput) navCheckOutInput.value = checkOutInput.value;
                     } else if (selectedDates.length === 0) {
-
+                        // Clear all fields
                         datesInput.value = '';
                         if (checkInInput) checkInInput.value = '';
                         if (checkOutInput) checkOutInput.value = '';
@@ -586,20 +628,23 @@ class PropertiesManager {
                 }
             });
         }
-
+        
+        // Initialize nav dates picker
         if (navDatesInput) {
             flatpickr(navDatesInput, {
                 ...commonConfig,
                 onChange: (selectedDates, dateStr) => {
                     if (selectedDates.length === 2) {
-
+                        // Update the visible dates field with formatted range
                         const start = flatpickr.formatDate(selectedDates[0], 'M j');
                         const end = flatpickr.formatDate(selectedDates[1], 'M j');
                         navDatesInput.value = `${start} - ${end}`;
-
+                        
+                        // Update hidden fields
                         if (navCheckInInput) navCheckInInput.value = flatpickr.formatDate(selectedDates[0], 'Y-m-d');
                         if (navCheckOutInput) navCheckOutInput.value = flatpickr.formatDate(selectedDates[1], 'Y-m-d');
-
+                        
+                        // Sync to main inputs
                         if (datesInput) datesInput.value = navDatesInput.value;
                         if (checkInInput) checkInInput.value = navCheckInInput.value;
                         if (checkOutInput) checkOutInput.value = navCheckOutInput.value;
@@ -616,7 +661,8 @@ class PropertiesManager {
         }
     }
 
-    #setupCompactNavSearch() {
+    // Compact search in navbar on scroll
+    setupCompactNavSearch() {
         const navSearchWrap = document.getElementById('navSearchCompact');
         const compactForm = document.getElementById('compactSearchForm');
         const mainLocation = document.getElementById('location');
@@ -631,49 +677,55 @@ class PropertiesManager {
         const syncToMain = () => {
             if (mainLocation && navLocation) mainLocation.value = navLocation.value;
             if (mainGuests && navGuests) mainGuests.value = navGuests.value;
-
-            this.#handleSearch();
+            // Dates are synced via Flatpickr onChange handlers
+            this.handleSearch();
         };
 
         const syncFromMain = () => {
             if (mainLocation && navLocation) navLocation.value = mainLocation.value;
             if (mainGuests && navGuests) navGuests.value = mainGuests.value;
-
+            // Dates are synced via Flatpickr onChange handlers
         };
 
+        // Keep values in sync when user types in the main field
         [mainLocation, mainGuests].forEach(el => {
             if (!el) return;
             const evt = el.tagName === 'SELECT' ? 'change' : 'input';
             el.addEventListener(evt, syncFromMain);
         });
 
+        // Submit from compact form redirects to search results
         compactForm.addEventListener('submit', (e) => {
             e.preventDefault();
-
+            
+            // Get values from compact form
             const location = document.getElementById('navLocation')?.value || '';
             const checkIn = document.getElementById('navCheckIn')?.value || '';
             const checkOut = document.getElementById('navCheckOut')?.value || '';
             const adultsCount = document.getElementById('navAdultsCount')?.value || '0';
             const childrenCount = document.getElementById('navChildrenCount')?.value || '0';
-
+            
+            // Build URL for search results page
             const params = new URLSearchParams();
             if (location) params.set('location', location);
             if (checkIn) params.set('checkIn', checkIn);
             if (checkOut) params.set('checkOut', checkOut);
             if (adultsCount !== '0') params.set('adults', adultsCount);
             if (childrenCount !== '0') params.set('children', childrenCount);
-
+            
+            // Redirect to search results page
             window.location.href = `pages/search-results.html?${params.toString()}`;
         });
 
         const showOrHide = () => {
-
+            // Show compact search when main search bar is scrolled out of view
             const mainSearchBar = document.querySelector('.main-search-bar');
             if (!mainSearchBar) return;
             
             const searchBarBottom = mainSearchBar.getBoundingClientRect().bottom;
             const navbarHeight = navbar.offsetHeight;
-
+            
+            // Show when main search bar is no longer visible below navbar
             const shouldShow = searchBarBottom < navbarHeight;
             
             navSearchWrap.classList.toggle('is-visible', shouldShow);
@@ -684,49 +736,56 @@ class PropertiesManager {
         window.addEventListener('resize', this.debounce(showOrHide, 100));
     }
 
-    #setupEventListeners() {
+    // Setup event listeners
+    setupEventListeners() {
         const searchForm = document.getElementById('propertySearchForm');
         if (searchForm) {
             searchForm.addEventListener('submit', (e) => {
                 e.preventDefault();
-                this.#handleSearch();
+                this.handleSearch();
             });
         }
 
+        // Real-time search on input
         const locationInput = document.getElementById('location');
         if (locationInput) {
             locationInput.addEventListener('input', this.debounce(() => {
-                this.#handleSearch();
+                this.handleSearch();
             }, 500));
         }
 
+        // Date inputs
         const checkInInput = document.getElementById('checkIn');
         const checkOutInput = document.getElementById('checkOut');
         
         if (checkInInput && checkOutInput) {
-            checkInInput.addEventListener('change', () => this.#handleSearch());
-            checkOutInput.addEventListener('change', () => this.#validateDates());
+            checkInInput.addEventListener('change', () => this.handleSearch());
+            checkOutInput.addEventListener('change', () => this.validateDates());
         }
 
+        // Sort dropdown
         const sortSelect = document.getElementById('sortBy');
         if (sortSelect) {
-            sortSelect.addEventListener('change', () => this.#handleSort());
+            sortSelect.addEventListener('change', () => this.handleSort());
         }
 
-        this.#setupFilterListeners();
+        // Filter inputs
+        this.setupFilterListeners();
     }
 
-    #setupFilterListeners() {
+    // Setup filter input listeners
+    setupFilterListeners() {
         const filterInputs = document.querySelectorAll('#advancedFilters input, #advancedFilters select');
         filterInputs.forEach(input => {
             const eventType = input.type === 'checkbox' ? 'change' : 'input';
             input.addEventListener(eventType, this.debounce(() => {
-                this.#handleSearch();
+                this.handleSearch();
             }, 300));
         });
     }
 
-    #setupAdvancedFilters() {
+    // Setup filters functionality
+    setupAdvancedFilters() {
         const filtersToggle = document.getElementById('filtersToggle');
         const filtersPanel = document.getElementById('filtersPanel');
         const clearFilters = document.querySelector('.clear-filters-compact');
@@ -738,7 +797,8 @@ class PropertiesManager {
                 const isVisible = filtersPanel.style.display !== 'none';
                 filtersPanel.style.display = isVisible ? 'none' : 'block';
             });
-
+            
+            // Close filters when clicking outside
             document.addEventListener('click', (e) => {
                 if (!filtersToggle.contains(e.target) && !filtersPanel.contains(e.target)) {
                     filtersPanel.style.display = 'none';
@@ -748,7 +808,7 @@ class PropertiesManager {
         
         if (clearFilters) {
             clearFilters.addEventListener('click', () => {
-
+                // Clear all filter inputs
                 document.querySelectorAll('#filtersPanel input, #filtersPanel select').forEach(input => {
                     if (input.type === 'checkbox' || input.type === 'radio') {
                         input.checked = false;
@@ -761,14 +821,15 @@ class PropertiesManager {
         
         if (showResults) {
             showResults.addEventListener('click', () => {
-
+                // Hide filters panel and trigger search
                 filtersPanel.style.display = 'none';
-                this.#performSearch();
+                this.performSearch();
             });
         }
     }
 
-    #setupViewControls() {
+    // Setup view controls (grid/list)
+    setupViewControls() {
         const viewButtons = document.querySelectorAll('.view-btn');
         const propertiesGrid = document.getElementById('propertiesGrid');
         
@@ -776,40 +837,47 @@ class PropertiesManager {
             btn.addEventListener('click', () => {
                 const view = btn.getAttribute('data-view');
                 this.currentView = view;
-
+                
+                // Update button states
                 viewButtons.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-
+                
+                // Update grid class
                 if (propertiesGrid) {
                     propertiesGrid.classList.toggle('list-view', view === 'list');
                 }
-
-                this.#renderProperties();
+                
+                // Re-render properties with new view
+                this.renderProperties();
             });
         });
     }
 
-    #setupCategoryTabs() {
+    // Setup category tabs
+    setupCategoryTabs() {
         const categoryTabs = document.querySelectorAll('.category-tab');
         
         categoryTabs.forEach(tab => {
             tab.addEventListener('click', () => {
                 const category = tab.getAttribute('data-category');
-
+                
+                // Update active tab
                 categoryTabs.forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
-
-                this.#filterByCategory(category);
+                
+                // Filter properties by category
+                this.filterByCategory(category);
             });
         });
     }
 
-    #filterByCategory(category) {
+    // Filter properties by category
+    filterByCategory(category) {
         if (category === 'all') {
-
+            // Show all properties
             this.currentFilters.viewType = '';
         } else {
-
+            // Map category to view type (matches database format)
             const categoryMap = {
                 'mountain': 'Mountain View',
                 'ocean': 'Ocean View', 
@@ -818,27 +886,31 @@ class PropertiesManager {
             };
             this.currentFilters.viewType = categoryMap[category] || '';
         }
-
+        
+        // Reset to first page and reload
         this.currentPage = 1;
-        this.#loadProperties();
+        this.loadProperties();
     }
 
-    #setupPagination() {
+    // Setup pagination
+    setupPagination() {
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
         
         if (prevBtn) {
-            prevBtn.addEventListener('click', () => this.#goToPage(this.currentPage - 1));
+            prevBtn.addEventListener('click', () => this.goToPage(this.currentPage - 1));
         }
         
         if (nextBtn) {
-            nextBtn.addEventListener('click', () => this.#goToPage(this.currentPage + 1));
+            nextBtn.addEventListener('click', () => this.goToPage(this.currentPage + 1));
         }
     }
 
-    #handleUrlParameters() {
+    // Handle URL parameters for bookmarkable searches
+    handleUrlParameters() {
         const urlParams = new URLSearchParams(window.location.search);
-
+        
+        // Pre-fill form from URL parameters
         const location = urlParams.get('location');
         const checkIn = urlParams.get('checkin');
         const checkOut = urlParams.get('checkout');
@@ -889,8 +961,9 @@ class PropertiesManager {
         }
     }
 
-    #updateUrl() {
-        const formData = this.#getFormData();
+    // Update URL with current search parameters
+    updateUrl() {
+        const formData = this.getFormData();
         const params = new URLSearchParams();
         
         Object.keys(formData).forEach(key => {
@@ -903,7 +976,8 @@ class PropertiesManager {
         window.history.replaceState({}, '', newUrl);
     }
 
-    #getFormData() {
+    // Get form data
+    getFormData() {
         const form = document.getElementById('propertySearchForm');
         if (!form) return {};
 
@@ -918,14 +992,16 @@ class PropertiesManager {
                 data[key] = value;
             }
         }
-
+        
+        // Get checked amenities separately
         const amenityCheckboxes = form.querySelectorAll('input[name="amenities"]:checked');
         data.amenities = Array.from(amenityCheckboxes).map(cb => cb.value);
         
         return data;
     }
 
-    #validateDates() {
+    // Validate date inputs
+    validateDates() {
         const checkIn = document.getElementById('checkIn');
         const checkOut = document.getElementById('checkOut');
         
@@ -934,58 +1010,66 @@ class PropertiesManager {
             const checkOutDate = new Date(checkOut.value);
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-
+            
+            // Check-in can't be in the past
             if (checkInDate < today) {
                 checkIn.value = today.toISOString().split('T')[0];
-                this.#showNotification('Check-in date cannot be in the past', 'warning');
+                this.showNotification('Check-in date cannot be in the past', 'warning');
             }
-
+            
+            // Check-out must be after check-in
             if (checkOutDate <= checkInDate) {
                 const nextDay = new Date(checkInDate);
                 nextDay.setDate(nextDay.getDate() + 1);
                 checkOut.value = nextDay.toISOString().split('T')[0];
-                this.#showNotification('Check-out date must be after check-in date', 'warning');
+                this.showNotification('Check-out date must be after check-in date', 'warning');
             }
         }
         
-        this.#handleSearch();
+        this.handleSearch();
     }
 
-    async #handleSearch() {
+    // Handle search form submission
+    async handleSearch() {
         if (this.isLoading) return;
-
+        
+        // Get form data
         const location = document.getElementById('location')?.value || '';
         const checkIn = document.getElementById('checkIn')?.value || '';
         const checkOut = document.getElementById('checkOut')?.value || '';
         const adultsCount = document.getElementById('adultsCount')?.value || '0';
         const childrenCount = document.getElementById('childrenCount')?.value || '0';
-
+        
+        // Build URL for search results page
         const params = new URLSearchParams();
         if (location) params.set('location', location);
         if (checkIn) params.set('checkIn', checkIn);
         if (checkOut) params.set('checkOut', checkOut);
         if (adultsCount !== '0') params.set('adults', adultsCount);
         if (childrenCount !== '0') params.set('children', childrenCount);
-
+        
+        // Redirect to search results page
         window.location.href = `pages/search-results.html?${params.toString()}`;
     }
 
-    #handleSort() {
+    // Handle sorting
+    handleSort() {
         const sortSelect = document.getElementById('sortBy');
         if (!sortSelect) return;
         
         const sortBy = sortSelect.value;
-        this.#sortProperties(sortBy);
-        this.#renderProperties();
+        this.sortProperties(sortBy);
+        this.renderProperties();
     }
 
-    async #loadProperties() {
-        this.#showLoading(true);
+    // Load properties from database
+    async loadProperties() {
+        this.showLoading(true);
         
         try {
             if (!this.supabaseClient.supabase) {
-
-                this.properties = this.#getSampleProperties();
+                // Use sample data if Supabase not configured
+                this.properties = this.getSampleProperties();
             } else {
                 const { data, error } = await this.supabaseClient.supabase
                     .from('properties')
@@ -1000,30 +1084,32 @@ class PropertiesManager {
                 
                 if (error) throw error;
                 
-                this.properties = data.map(property => this.#processProperty(property));
+                this.properties = data.map(property => this.processProperty(property));
             }
             
             this.filteredProperties = [...this.properties];
-            this.#applyFilters();
+            this.applyFilters();
             
         } catch (error) {
-            
-            this.#showError('Failed to load properties. Using sample data.');
-            this.properties = this.#getSampleProperties();
+            console.error('Error loading properties:', error);
+            this.showError('Failed to load properties. Using sample data.');
+            this.properties = this.getSampleProperties();
             this.filteredProperties = [...this.properties];
-            this.#renderProperties();
+            this.renderProperties();
         } finally {
-            this.#showLoading(false);
+            this.showLoading(false);
         }
     }
 
-    #processProperty(property) {
-
+    // Process property data from database
+    processProperty(property) {
+        // Calculate average rating
         const ratings = property.reviews || [];
         const avgRating = ratings.length > 0 
             ? ratings.reduce((sum, review) => sum + review.overall_rating, 0) / ratings.length 
             : 0;
-
+        
+        // Get primary image
         const images = property.property_images || [];
         const primaryImage = images.find(img => img.is_primary) || images[0];
         
@@ -1039,13 +1125,15 @@ class PropertiesManager {
         };
     }
 
-    #applyFilters() {
+    // Apply filters to properties
+    applyFilters() {
         const filters = this.currentFilters;
         let filtered = [...this.properties];
-
+        
+        // Location filter
         if (filters.location) {
             const location = filters.location.toLowerCase();
-
+            // Split by comma to handle "City, State, Country" format
             const locationParts = location.split(',').map(part => part.trim()).filter(part => part);
             
             filtered = filtered.filter(property => {
@@ -1054,9 +1142,11 @@ class PropertiesManager {
                 const country = property.country?.toLowerCase() || '';
                 const address = property.address?.toLowerCase() || '';
                 const title = property.title?.toLowerCase() || '';
-
+                
+                // All parts must match (AND logic)
+                // First part should match city, subsequent parts should match state/country
                 if (locationParts.length === 1) {
-
+                    // Single search term - check all fields
                     const searchTerm = locationParts[0];
                     return city.includes(searchTerm) || 
                            state.includes(searchTerm) || 
@@ -1064,28 +1154,30 @@ class PropertiesManager {
                            address.includes(searchTerm) ||
                            title.includes(searchTerm);
                 } else {
-
+                    // Multiple parts - prioritize matching in order (city, state, country)
                     return locationParts.every((part, index) => {
                         if (index === 0) {
-
+                            // First part should match city or address
                             return city.includes(part) || address.includes(part) || title.includes(part);
                         } else if (index === 1) {
-
+                            // Second part should match state
                             return state.includes(part) || city.includes(part);
                         } else {
-
+                            // Third+ part should match country
                             return country.includes(part);
                         }
                     });
                 }
             });
         }
-
+        
+        // Guest count filter
         if (filters.guests) {
             const guestCount = parseInt(filters.guests.replace('+', ''));
             filtered = filtered.filter(property => property.max_guests >= guestCount);
         }
-
+        
+        // Price range filter
         if (filters.minPrice) {
             const minPrice = parseFloat(filters.minPrice);
             filtered = filtered.filter(property => property.base_price >= minPrice);
@@ -1095,19 +1187,22 @@ class PropertiesManager {
             const maxPrice = parseFloat(filters.maxPrice);
             filtered = filtered.filter(property => property.base_price <= maxPrice);
         }
-
+        
+        // View type filter
         if (filters.viewType) {
             filtered = filtered.filter(property => 
                 property.view_type.toLowerCase() === filters.viewType.toLowerCase()
             );
         }
-
+        
+        // Property type filter
         if (filters.propertyType) {
             filtered = filtered.filter(property => 
                 property.property_type.toLowerCase() === filters.propertyType.toLowerCase()
             );
         }
-
+        
+        // Amenities filter
         if (filters.amenities && filters.amenities.length > 0) {
             filtered = filtered.filter(property => {
                 const propertyAmenities = property.amenities || [];
@@ -1116,16 +1211,19 @@ class PropertiesManager {
                 );
             });
         }
-
+        
+        // Date availability filter (would need to check availability table)
         if (filters.checkIn && filters.checkOut) {
-
+            // This would require a more complex query to check availability
+            // For now, we'll skip this filter in the frontend
         }
         
         this.filteredProperties = filtered;
-        this.#renderProperties();
+        this.renderProperties();
     }
 
-    #sortProperties(sortBy) {
+    // Sort properties
+    sortProperties(sortBy) {
         switch (sortBy) {
             case 'price_low':
                 this.filteredProperties.sort((a, b) => a.base_price - b.base_price);
@@ -1140,41 +1238,50 @@ class PropertiesManager {
                 this.filteredProperties.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
                 break;
             default: // relevance
-
+                // Keep original order or implement relevance scoring
                 break;
         }
     }
 
-    #renderProperties() {
+    // Render properties
+    renderProperties() {
         const grid = document.getElementById('propertiesGrid');
         if (!grid) return;
-
+        
+        // Calculate pagination
         const totalProperties = this.filteredProperties.length;
         const totalPages = Math.ceil(totalProperties / this.propertiesPerPage);
         const startIndex = (this.currentPage - 1) * this.propertiesPerPage;
         const endIndex = startIndex + this.propertiesPerPage;
         const currentProperties = this.filteredProperties.slice(startIndex, endIndex);
-
-        this.#updateResultsCount(totalProperties);
-
+        
+        // Update results count
+        this.updateResultsCount(totalProperties);
+        
+        // Show no results if empty
         if (totalProperties === 0) {
-            this.#showNoResults();
+            this.showNoResults();
             return;
         }
-
-        this.#hideNoResults();
-        this.#showLoading(false);
-
-        grid.innerHTML = currentProperties.map(property => this.#renderPropertyCard(property)).join('');
-
-        this.#setupPropertyCardListeners();
-
-        this.#updatePagination(totalPages);
+        
+        // Hide no results and loading states
+        this.hideNoResults();
+        this.showLoading(false);
+        
+        // Render property cards
+        grid.innerHTML = currentProperties.map(property => this.renderPropertyCard(property)).join('');
+        
+        // Setup property card event listeners
+        this.setupPropertyCardListeners();
+        
+        // Update pagination
+        this.updatePagination(totalPages);
     }
 
-    #renderPropertyCard(property) {
+    // Render individual property card
+    renderPropertyCard(property) {
         const imageUrl = property.primaryImage || property.images?.[0];
-        const isGuestFavorite = this.#isPropertyGuestFavorite(property.id);
+        const isGuestFavorite = this.isPropertyGuestFavorite(property.id);
 
         const features = [
             property.bedrooms ? `${property.bedrooms} bed${property.bedrooms > 1 ? 's' : ''}` : null,
@@ -1203,7 +1310,7 @@ class PropertiesManager {
                             <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M15.094 1.346l-4.124 8.341-9.214 1.34 6.669 6.5-1.574 9.176L16 21.854l9.149 4.85-1.574-9.176 6.669-6.5-9.214-1.34z"></path>
                             </svg>
-                            <span class="rating-number">${this.#getPropertyRating(property.id)}</span>
+                            <span class="rating-number">${this.getPropertyRating(property.id)}</span>
                         </div>
                     </div>
                     <div class="property-title">${property.title}</div>
@@ -1217,8 +1324,9 @@ class PropertiesManager {
         `;
     }
 
-    #isPropertyGuestFavorite(propertyId) {
-
+    // Determine if property is guest favorite (consistent based on property ID)
+    isPropertyGuestFavorite(propertyId) {
+        // Create a simple hash from the property ID to ensure consistency
         let hash = 0;
         const str = propertyId.toString();
         for (let i = 0; i < str.length; i++) {
@@ -1226,12 +1334,14 @@ class PropertiesManager {
             hash = ((hash << 5) - hash) + char;
             hash = hash & hash; // Convert to 32-bit integer
         }
-
+        
+        // Use the hash to determine if it's a guest favorite (approximately 30% chance)
         return Math.abs(hash) % 10 < 3;
     }
 
-    #getPropertyRating(propertyId) {
-
+    // Get consistent rating for property based on ID
+    getPropertyRating(propertyId) {
+        // Create a different hash for rating
         let hash = 0;
         const str = propertyId.toString() + '_rating';
         for (let i = 0; i < str.length; i++) {
@@ -1239,21 +1349,24 @@ class PropertiesManager {
             hash = ((hash << 5) - hash) + char;
             hash = hash & hash; // Convert to 32-bit integer
         }
-
+        
+        // Generate rating between 4.0 and 5.0
         const normalizedHash = Math.abs(hash) / 2147483647; // Normalize to 0-1
         const rating = 4.0 + normalizedHash;
         return rating.toFixed(1);
     }
 
-    #setupPropertyCardListeners() {
+    // Setup property card event listeners
+    setupPropertyCardListeners() {
         const propertyCards = document.querySelectorAll('.property-card');
         const favoriteBtns = document.querySelectorAll('.property-favorite');
-
+        
+        // Setup favorite button functionality
         favoriteBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 e.preventDefault();
-                this.#toggleFavorite(btn);
+                this.toggleFavorite(btn);
             });
         });
         
@@ -1261,41 +1374,47 @@ class PropertiesManager {
             card.addEventListener('click', (e) => {
                 if (!e.target.closest('.property-favorite')) {
                     const propertyId = card.getAttribute('data-property-id');
-                    this.#showPropertyModal(propertyId);
+                    this.showPropertyModal(propertyId);
                 }
             });
-
+            
+            // Keyboard support
             card.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     const propertyId = card.getAttribute('data-property-id');
-                    this.#showPropertyModal(propertyId);
+                    this.showPropertyModal(propertyId);
                 }
             });
         });
-
+        // Guard: wishlist buttons may not exist on all cards
         const wishlistBtns = document.querySelectorAll('.wishlist-btn');
         wishlistBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const propertyId = btn.getAttribute('data-property-id');
-                this.#toggleWishlist(propertyId, btn);
+                this.toggleWishlist(propertyId, btn);
             });
         });
     }
 
-    #toggleFavorite(btn) {
+    // Toggle favorite status
+    toggleFavorite(btn) {
         const isActive = btn.classList.contains('active');
         btn.classList.toggle('active', !isActive);
-
+        
+        // Optional: Add animation feedback
         btn.style.transform = 'scale(0.8)';
         setTimeout(() => {
             btn.style.transform = 'scale(1)';
         }, 150);
-
+        
+        // Here you would normally save to database/localStorage
+        // For demo purposes, we'll just toggle the visual state
     }
 
-    #showPropertyModal(propertyId) {
+    // Show property modal
+    showPropertyModal(propertyId) {
         const property = this.properties.find(p => p.id === propertyId);
         if (!property) return;
         
@@ -1305,33 +1424,38 @@ class PropertiesManager {
         
         if (modal && modalTitle && modalBody) {
             modalTitle.textContent = property.title;
-            modalBody.innerHTML = this.#renderPropertyModalContent(property);
-
-            this.#initGallery(property.images || []);
-
+            modalBody.innerHTML = this.renderPropertyModalContent(property);
+            
+            // Initialize gallery with property images
+            this.initGallery(property.images || []);
+            
+            // Show modal
             modal.style.display = 'flex';
-
+            
+            // Setup modal close
             const closeBtn = modal.querySelector('.modal-close');
             if (closeBtn) {
                 closeBtn.addEventListener('click', () => {
                     modal.style.display = 'none';
                 });
             }
-
+            
+            // Close on backdrop click
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     modal.style.display = 'none';
                 }
             });
 
+            // Add keyboard navigation for gallery
             const handleKeyPress = (e) => {
                 if (modal.style.display === 'flex') {
                     if (e.key === 'ArrowLeft') {
                         e.preventDefault();
-                        this.#prevImage();
+                        this.prevImage();
                     } else if (e.key === 'ArrowRight') {
                         e.preventDefault();
-                        this.#nextImage();
+                        this.nextImage();
                     } else if (e.key === 'Escape') {
                         e.preventDefault();
                         modal.style.display = 'none';
@@ -1339,10 +1463,12 @@ class PropertiesManager {
                 }
             };
 
+            // Remove existing listener and add new one
             document.removeEventListener('keydown', this.galleryKeyListener);
             this.galleryKeyListener = handleKeyPress;
             document.addEventListener('keydown', this.galleryKeyListener);
 
+            // Add touch/swipe support for mobile
             let touchStartX = 0;
             let touchEndX = 0;
 
@@ -1357,18 +1483,19 @@ class PropertiesManager {
                     const swipeThreshold = 50;
                     
                     if (touchStartX - touchEndX > swipeThreshold) {
-
-                        this.#nextImage();
+                        // Swiped left - next image
+                        this.nextImage();
                     } else if (touchEndX - touchStartX > swipeThreshold) {
-
-                        this.#prevImage();
+                        // Swiped right - previous image
+                        this.prevImage();
                     }
                 });
             }
         }
     }
 
-    #renderImageGallery(images, title) {
+    // Render image gallery for modal
+    renderImageGallery(images, title) {
         if (!images || images.length === 0) return '';
 
         const sanitizedImages = images.map(img => window.viewVistaApp.sanitizeHTML(img));
@@ -1430,13 +1557,14 @@ class PropertiesManager {
         `;
     }
 
-    #renderPropertyModalContent(property) {
+    // Render property modal content
+    renderPropertyModalContent(property) {
         const allImages = property.images || [];
         const hasImages = allImages.length > 0;
         
         return `
             ${hasImages 
-                ? this.#renderImageGallery(allImages, property.title)
+                ? this.renderImageGallery(allImages, property.title)
                 : `<div class="image-placeholder" style="height: 300px;">${window.viewVistaApp.sanitizeHTML(property.title)}</div>`
             }
             <div class="modal-property-content">
@@ -1503,9 +1631,10 @@ class PropertiesManager {
         `;
     }
 
-    async #toggleWishlist(propertyId, button) {
+    // Toggle wishlist
+    async toggleWishlist(propertyId, button) {
         if (!this.supabaseClient.isAuthenticated()) {
-            this.#showNotification('Please sign in to save properties to your wishlist', 'info');
+            this.showNotification('Please sign in to save properties to your wishlist', 'info');
             return;
         }
         
@@ -1513,46 +1642,53 @@ class PropertiesManager {
             const isActive = button.classList.contains('active');
             
             if (isActive) {
-
+                // Remove from wishlist
                 button.classList.remove('active');
                 button.innerHTML = '<span>♡</span>';
-                this.#showNotification('Removed from wishlist', 'success');
+                this.showNotification('Removed from wishlist', 'success');
             } else {
-
+                // Add to wishlist
                 button.classList.add('active');
                 button.innerHTML = '<span>♥</span>';
-                this.#showNotification('Added to wishlist', 'success');
+                this.showNotification('Added to wishlist', 'success');
             }
-
-        } catch (error) {
             
-            this.#showNotification('Failed to update wishlist', 'error');
+            // TODO: Implement actual wishlist API calls when Supabase is configured
+            
+        } catch (error) {
+            console.error('Error updating wishlist:', error);
+            this.showNotification('Failed to update wishlist', 'error');
         }
     }
 
-    #goToPage(page) {
+    // Pagination
+    goToPage(page) {
         const totalPages = Math.ceil(this.filteredProperties.length / this.propertiesPerPage);
         
         if (page < 1 || page > totalPages) return;
         
         this.currentPage = page;
-        this.#renderProperties();
-
+        this.renderProperties();
+        
+        // Scroll to top of results
         document.querySelector('.search-results').scrollIntoView({ behavior: 'smooth' });
     }
 
-    #updatePagination(totalPages) {
+    // Update pagination UI
+    updatePagination(totalPages) {
         const pagination = document.getElementById('pagination');
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
         const paginationNumbers = document.getElementById('paginationNumbers');
         
         if (!pagination) return;
-
+        
+        // Show/hide pagination
         pagination.style.display = totalPages > 1 ? 'flex' : 'none';
         
         if (totalPages <= 1) return;
-
+        
+        // Update previous/next buttons
         if (prevBtn) {
             prevBtn.disabled = this.currentPage === 1;
         }
@@ -1560,21 +1696,24 @@ class PropertiesManager {
         if (nextBtn) {
             nextBtn.disabled = this.currentPage === totalPages;
         }
-
+        
+        // Update page numbers
         if (paginationNumbers) {
-            paginationNumbers.innerHTML = this.#generatePaginationNumbers(totalPages);
-
+            paginationNumbers.innerHTML = this.generatePaginationNumbers(totalPages);
+            
+            // Setup page number clicks
             const pageNumbers = paginationNumbers.querySelectorAll('.pagination-number');
             pageNumbers.forEach(btn => {
                 btn.addEventListener('click', () => {
                     const page = parseInt(btn.textContent);
-                    this.#goToPage(page);
+                    this.goToPage(page);
                 });
             });
         }
     }
 
-    #generatePaginationNumbers(totalPages) {
+    // Generate pagination numbers
+    generatePaginationNumbers(totalPages) {
         const maxVisible = 7;
         let start = Math.max(1, this.currentPage - Math.floor(maxVisible / 2));
         let end = Math.min(totalPages, start + maxVisible - 1);
@@ -1584,19 +1723,22 @@ class PropertiesManager {
         }
         
         const numbers = [];
-
+        
+        // First page
         if (start > 1) {
             numbers.push(`<button class="pagination-number" data-page="1">1</button>`);
             if (start > 2) {
                 numbers.push(`<span class="pagination-ellipsis">...</span>`);
             }
         }
-
+        
+        // Page numbers
         for (let i = start; i <= end; i++) {
             const isActive = i === this.currentPage ? 'active' : '';
             numbers.push(`<button class="pagination-number ${isActive}" data-page="${i}">${i}</button>`);
         }
-
+        
+        // Last page
         if (end < totalPages) {
             if (end < totalPages - 1) {
                 numbers.push(`<span class="pagination-ellipsis">...</span>`);
@@ -1607,7 +1749,8 @@ class PropertiesManager {
         return numbers.join('');
     }
 
-    #updateResultsCount(count) {
+    // Update results count
+    updateResultsCount(count) {
         const resultsCount = document.getElementById('resultsCount');
         if (resultsCount) {
             const text = count === 0 
@@ -1619,7 +1762,8 @@ class PropertiesManager {
         }
     }
 
-    #showLoading(show) {
+    // Show/hide loading state
+    showLoading(show) {
         const loadingState = document.getElementById('loadingState');
         const propertiesGrid = document.getElementById('propertiesGrid');
         
@@ -1634,7 +1778,8 @@ class PropertiesManager {
         }
     }
 
-    #showNoResults() {
+    // Show/hide no results state
+    showNoResults() {
         const noResults = document.getElementById('noResults');
         const pagination = document.getElementById('pagination');
         
@@ -1644,30 +1789,34 @@ class PropertiesManager {
         document.getElementById('propertiesGrid').innerHTML = '';
     }
 
-    #hideNoResults() {
+    hideNoResults() {
         const noResults = document.getElementById('noResults');
         if (noResults) noResults.style.display = 'none';
     }
 
-    #clearFilters() {
+    // Clear all filters
+    clearFilters() {
         const form = document.getElementById('propertySearchForm');
         if (form) {
             form.reset();
             this.currentFilters = {};
-            this.#applyFilters();
-            this.#updateUrl();
+            this.applyFilters();
+            this.updateUrl();
         }
     }
 
-    #updateAuthUI() {
-
+    // Update authentication UI
+    updateAuthUI() {
+        // Auth UI is now handled globally by main.js syncAuthNav()
+        // This method kept for backwards compatibility but does nothing
     }
 
-    async #logSearch(searchData) {
+    // Log search for analytics
+    async logSearch(searchData) {
         if (!this.supabaseClient.supabase) return;
         
         try {
-            const sessionId = this.#getSessionId();
+            const sessionId = this.getSessionId();
             
             await this.supabaseClient.supabase
                 .from('search_logs')
@@ -1686,11 +1835,12 @@ class PropertiesManager {
                     results_count: this.filteredProperties.length
                 }]);
         } catch (error) {
-            
+            console.error('Error logging search:', error);
         }
     }
 
-    #getSessionId() {
+    // Get or create session ID
+    getSessionId() {
         let sessionId = sessionStorage.getItem('search_session_id');
         if (!sessionId) {
             sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -1699,12 +1849,13 @@ class PropertiesManager {
         return sessionId;
     }
 
-    #showNotification(message, type = 'info') {
+    // Show notification
+    showNotification(message, type = 'info') {
         if (window.UI && window.UI.showToast) {
             window.UI.showToast(message, type);
             return;
         }
-
+        // Fallback
         const notification = document.createElement('div');
         notification.className = `alert alert-${type}`;
         notification.textContent = message;
@@ -1712,11 +1863,13 @@ class PropertiesManager {
         setTimeout(() => notification.remove(), 3000);
     }
 
-    #showError(message) {
-        this.#showNotification(message, 'error');
+    // Show error message
+    showError(message) {
+        this.showNotification(message, 'error');
     }
 
-    #debounce(func, wait) {
+    // Utility: Debounce function
+    debounce(func, wait) {
         let timeout;
         return function executedFunction(...args) {
             const later = () => {
@@ -1728,17 +1881,21 @@ class PropertiesManager {
         };
     }
 
-    #showBookingForm(propertyId) {
+    // Show booking form
+    showBookingForm(propertyId) {
         const property = this.properties.find(p => p.id === propertyId);
         if (!property) return;
 
-        const bookingModal = this.#createBookingModal(property);
+        // Create booking modal
+        const bookingModal = this.createBookingModal(property);
         document.body.appendChild(bookingModal);
 
-        this.#initBookingForm(property);
+        // Initialize booking form
+        this.initBookingForm(property);
     }
 
-    #createBookingModal(property) {
+    // Create booking modal
+    createBookingModal(property) {
         const modal = document.createElement('div');
         modal.id = 'bookingModal';
         modal.style.cssText = `
@@ -1880,23 +2037,26 @@ class PropertiesManager {
             </div>
         `;
 
-        modal.querySelector('.booking-close').addEventListener('click', () => this.#closeBookingModal());
-        modal.querySelector('.booking-cancel').addEventListener('click', () => this.#closeBookingModal());
+        // Close modal handlers
+        modal.querySelector('.booking-close').addEventListener('click', () => this.closeBookingModal());
+        modal.querySelector('.booking-cancel').addEventListener('click', () => this.closeBookingModal());
         modal.addEventListener('click', (e) => {
-            if (e.target === modal) this.#closeBookingModal();
+            if (e.target === modal) this.closeBookingModal();
         });
 
         return modal;
     }
 
-    #closeBookingModal() {
+    // Close booking modal
+    closeBookingModal() {
         const modal = document.getElementById('bookingModal');
         if (modal) {
             modal.remove();
         }
     }
 
-    #initBookingForm(property) {
+    // Initialize booking form
+    initBookingForm(property) {
         const form = document.getElementById('bookingForm');
         const checkInInput = document.getElementById('checkInDate');
         const checkOutInput = document.getElementById('checkOutDate');
@@ -1905,10 +2065,12 @@ class PropertiesManager {
         const baseTotalSpan = document.getElementById('baseTotal');
         const totalAmountSpan = document.getElementById('totalAmount');
 
+        // Set minimum date to today
         const today = new Date().toISOString().split('T')[0];
         checkInInput.min = today;
         checkOutInput.min = today;
 
+        // Calculate pricing when dates change
         const updatePricing = () => {
             if (checkInInput.value && checkOutInput.value) {
                 const checkIn = new Date(checkInInput.value);
@@ -1924,6 +2086,7 @@ class PropertiesManager {
                     baseTotalSpan.textContent = `$${baseTotal}`;
                     totalAmountSpan.textContent = `$${total}`;
 
+                    // Validate minimum stay
                     if (property.min_stay && nights < property.min_stay) {
                         checkOutInput.setCustomValidity(`Minimum stay is ${property.min_stay} night${property.min_stay > 1 ? 's' : ''}`);
                     } else {
@@ -1938,6 +2101,7 @@ class PropertiesManager {
             }
         };
 
+        // Update check-out min date when check-in changes
         checkInInput.addEventListener('change', () => {
             if (checkInInput.value) {
                 const checkInDate = new Date(checkInInput.value);
@@ -1949,9 +2113,10 @@ class PropertiesManager {
 
         checkOutInput.addEventListener('change', updatePricing);
 
+        // Handle form submission
         form.addEventListener('submit', (e) => {
             e.preventDefault();
-            this.#submitBooking(property, {
+            this.submitBooking(property, {
                 checkIn: checkInInput.value,
                 checkOut: checkOutInput.value,
                 guests: parseInt(numGuestsInput.value),
@@ -1960,16 +2125,17 @@ class PropertiesManager {
         });
     }
 
-    async #submitBooking(property, bookingData) {
+    // Submit booking
+    async submitBooking(property, bookingData) {
         try {
             if (!this.supabaseClient.supabase) {
-                this.#showError('Booking system not configured');
+                this.showError('Booking system not configured');
                 return;
             }
 
             const user = this.supabaseClient.getCurrentUser();
             if (!user) {
-                this.#showError('You must be logged in to make a booking');
+                this.showError('You must be logged in to make a booking');
                 return;
             }
 
@@ -1977,6 +2143,7 @@ class PropertiesManager {
             submitBtn.disabled = true;
             submitBtn.textContent = 'Processing...';
 
+            // Calculate pricing
             const checkIn = new Date(bookingData.checkIn);
             const checkOut = new Date(bookingData.checkOut);
             const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
@@ -1984,6 +2151,7 @@ class PropertiesManager {
             const cleaningFee = property.cleaning_fee || 0;
             const totalAmount = baseAmount + cleaningFee;
 
+            // Create booking record
             const { data, error } = await this.supabaseClient.supabase
                 .from('bookings')
                 .insert([{
@@ -2006,9 +2174,10 @@ class PropertiesManager {
 
             if (error) throw error;
 
-            this.#showNotification('Booking request submitted successfully! The property owner will review your request.', 'success');
-            this.#closeBookingModal();
+            this.showNotification('Booking request submitted successfully! The property owner will review your request.', 'success');
+            this.closeBookingModal();
 
+            // Optionally redirect to user dashboard
             setTimeout(() => {
                 if (confirm('Would you like to view your bookings in your dashboard?')) {
                     this.supabaseClient.redirectToDashboard();
@@ -2016,8 +2185,8 @@ class PropertiesManager {
             }, 2000);
 
         } catch (error) {
-            
-            this.#showError('Failed to submit booking request. Please try again.');
+            console.error('Error submitting booking:', error);
+            this.showError('Failed to submit booking request. Please try again.');
             
             const submitBtn = document.getElementById('submitBooking');
             if (submitBtn) {
@@ -2027,12 +2196,13 @@ class PropertiesManager {
         }
     }
 
-    #initGallery(images) {
+    // Gallery navigation methods
+    initGallery(images) {
         this.currentGalleryImages = images || [];
         this.currentImageIndex = 0;
     }
 
-    #showImage(index) {
+    showImage(index) {
         if (!this.currentGalleryImages || index < 0 || index >= this.currentGalleryImages.length) return;
         
         this.currentImageIndex = index;
@@ -2046,26 +2216,28 @@ class PropertiesManager {
         if (counter) {
             counter.textContent = index + 1;
         }
-
+        
+        // Update thumbnail highlights
         document.querySelectorAll('[data-thumbnail-index]').forEach((thumb, i) => {
             thumb.style.opacity = i === index ? '1' : '0.7';
             thumb.style.border = i === index ? '2px solid white' : '2px solid transparent';
         });
     }
 
-    #nextImage() {
+    nextImage() {
         if (!this.currentGalleryImages) return;
         const nextIndex = (this.currentImageIndex + 1) % this.currentGalleryImages.length;
-        this.#showImage(nextIndex);
+        this.showImage(nextIndex);
     }
 
-    #prevImage() {
+    prevImage() {
         if (!this.currentGalleryImages) return;
         const prevIndex = (this.currentImageIndex - 1 + this.currentGalleryImages.length) % this.currentGalleryImages.length;
-        this.#showImage(prevIndex);
+        this.showImage(prevIndex);
     }
 
-    #getSampleProperties() {
+    // Get sample properties (for when Supabase is not configured)
+    getSampleProperties() {
         return [
             {
                 id: 'sample-1',
@@ -2461,14 +2633,16 @@ class PropertiesManager {
     }
 }
 
+// Global function for clearing filters (called from HTML)
 window.clearFilters = function() {
     if (window.propertiesManager) {
         window.propertiesManager.clearFilters();
     }
 };
 
+// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-
+    // Initialize if we're on the properties page or landing page (index.html)
     const isPropertiesPage = window.location.pathname.includes('properties.html') ||
                             window.location.pathname.endsWith('properties') ||
                             window.location.pathname.endsWith('/') ||
@@ -2480,6 +2654,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// Export for module use
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = PropertiesManager;
 }

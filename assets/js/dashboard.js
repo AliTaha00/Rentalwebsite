@@ -1,42 +1,39 @@
-// Dashboard JavaScript
-// Handles dashboard functionality for both renter and owner dashboards
+'use strict';
 
 class DashboardManager {
+    #supabaseClient;
+    #userProfile = null;
+    #userType = null;
+    #isLoaded = false;
+
     constructor() {
-        this.supabaseClient = window.supabaseClient;
-        this.userProfile = null;
-        this.userType = null;
-        this.isLoaded = false;
-        
-        this.init();
+        this.#supabaseClient = window.supabaseClient;
+        this.#init();
     }
 
-    async init() {
+    async #init() {
         try {
-            // Wait for Supabase to be initialized
-            await this.supabaseClient.waitForInit();
-            
-            if (this.checkAuthentication()) {
-                this.setupEventListeners();
-                this.loadUserData();
-                this.determineUserType();
+            await this.#supabaseClient.waitForInit();
+
+            if (this.#checkAuthentication()) {
+                this.#setupEventListeners();
+                this.#loadUserData();
+                this.#determineUserType();
             }
         } catch (error) {
-            this.showError('Failed to initialize dashboard. Please refresh the page.');
+            this.#showError('Failed to initialize dashboard. Please refresh the page.');
         }
     }
 
-    // Check if user is authenticated
-    checkAuthentication() {
-        if (!this.supabaseClient.isAuthenticated()) {
-            // Wait a moment for auth state to load, then check again
+    #checkAuthentication() {
+        if (!this.#supabaseClient.isAuthenticated()) {
             setTimeout(() => {
-                if (!this.supabaseClient.isAuthenticated()) {
+                if (!this.#supabaseClient.isAuthenticated()) {
                     window.location.href = 'login.html';
                 } else {
-                    this.setupEventListeners();
-                    this.loadUserData();
-                    this.determineUserType();
+                    this.#setupEventListeners();
+                    this.#loadUserData();
+                    this.#determineUserType();
                 }
             }, 1000);
             return false;
@@ -44,133 +41,117 @@ class DashboardManager {
         return true;
     }
 
-    // Setup event listeners
-    setupEventListeners() {
-        // Logout button
+    #setupEventListeners() {
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => this.handleLogout());
+            logoutBtn.addEventListener('click', () => this.#handleLogout());
         }
 
-        // Quick action buttons
-        this.setupQuickActions();
+        this.#setupQuickActions();
     }
 
-    // Setup quick action button handlers
-    setupQuickActions() {
-        // Add any quick action buttons here
+    #setupQuickActions() {
         const quickActionBtns = document.querySelectorAll('.quick-actions .btn');
         quickActionBtns.forEach(btn => {
             if (btn.textContent.includes('Add New Property')) {
-                btn.addEventListener('click', () => this.navigateToPropertyForm());
+                btn.addEventListener('click', () => this.#navigateToPropertyForm());
             } else if (btn.textContent.includes('Edit Profile')) {
-                btn.addEventListener('click', () => this.handleEditProfile());
+                btn.addEventListener('click', () => this.#handleEditProfile());
             }
         });
     }
 
-    // Determine user type from current page
-    determineUserType() {
+    #determineUserType() {
         const currentPath = window.location.pathname;
         if (currentPath.includes('owner-dashboard')) {
-            this.userType = 'owner';
+            this.#userType = 'owner';
         } else if (currentPath.includes('renter-dashboard')) {
-            this.userType = 'renter';
+            this.#userType = 'renter';
         }
     }
 
-    // Load user data and populate dashboard
-    async loadUserData() {
-        if (this.isLoaded) {
+    async #loadUserData() {
+        if (this.#isLoaded) {
             return;
         }
-        
+
         try {
-            const user = this.supabaseClient.getCurrentUser();
-            
+            const user = this.#supabaseClient.getCurrentUser();
+
             if (!user) {
                 return;
             }
-            
-            this.isLoaded = true;
 
-            // Update user name display
-            this.updateUserNameDisplay(user);
+            this.#isLoaded = true;
 
-            // Load user profile from database if Supabase is configured
-            if (this.supabaseClient.supabase) {
-                await this.loadUserProfile(user.id);
-                await this.loadDashboardData();
+            this.#updateUserNameDisplay(user);
+
+            if (this.#supabaseClient.supabase) {
+                await this.#loadUserProfile(user.id);
+                await this.#loadDashboardData();
             } else {
-                // Use sample data if Supabase not configured
-                this.loadSampleData();
+                this.#loadSampleData();
             }
 
         } catch (error) {
-            this.showError('Failed to load dashboard data');
+            this.#showError('Failed to load dashboard data');
         }
     }
 
-    // Update user name display
-    updateUserNameDisplay(user) {
+    #updateUserNameDisplay(user) {
         const userNameElement = document.getElementById('userName');
         if (userNameElement) {
-            const firstName = user.user_metadata?.first_name || 
+            const firstName = user.user_metadata?.first_name ||
                             user.user_metadata?.firstName ||
-                            user.email?.split('@')[0] || 
+                            user.email?.split('@')[0] ||
                             'User';
-            userNameElement.textContent = firstName;
+            userNameElement.textContent = this.#sanitize(firstName);
         }
     }
 
-    // Load user profile from database
-    async loadUserProfile(userId) {
+    async #loadUserProfile(userId) {
         try {
-            const { data, error } = await this.supabaseClient.supabase
+            const { data, error } = await this.#supabaseClient.supabase
                 .from('user_profiles')
                 .select('*')
                 .eq('user_id', userId)
                 .single();
 
             if (error) {
-                // Profile might not exist yet, create it
-                await this.createUserProfile(userId);
+                await this.#createUserProfile(userId);
                 return;
             }
 
-            this.userProfile = data;
-            
-            // Update display with profile data
+            this.#userProfile = data;
+
             const userNameElement = document.getElementById('userName');
             if (userNameElement && data.first_name) {
-                userNameElement.textContent = data.first_name;
+                userNameElement.textContent = this.#sanitize(data.first_name);
             }
 
         } catch (error) {
-            console.error('Error loading user profile:', error);
         }
     }
 
-    // Create user profile if it doesn't exist
-    async createUserProfile(userId) {
+    async #createUserProfile(userId) {
         try {
-            const user = this.supabaseClient.getCurrentUser();
+            const user = this.#supabaseClient.getCurrentUser();
             const metadata = user.user_metadata || {};
 
             const profileData = {
                 user_id: userId,
-                email: user.email,
+                email: user.email?.toLowerCase().trim(),
                 first_name: metadata.first_name || metadata.firstName || '',
                 last_name: metadata.last_name || metadata.lastName || '',
                 phone: metadata.phone || '',
-                account_type: metadata.account_type || this.userType || 'renter',
+                account_type: metadata.account_type || this.#userType || 'renter',
                 business_name: metadata.business_name || metadata.businessName || null,
                 is_active: true,
                 email_verified: !!user.email_confirmed_at,
                 created_at: new Date().toISOString()
             };
 
-            const { data, error } = await this.supabaseClient.supabase
+            const { data, error } = await this.#supabaseClient.supabase
                 .from('user_profiles')
                 .insert([profileData])
                 .select()
@@ -178,29 +159,25 @@ class DashboardManager {
 
             if (error) throw error;
 
-            this.userProfile = data;
+            this.#userProfile = data;
 
         } catch (error) {
-            // Ignore create errors for now; dashboard can continue rendering
         }
     }
 
-    // Load dashboard-specific data
-    async loadDashboardData() {
-        if (this.userType === 'owner') {
-            await this.loadOwnerData();
+    async #loadDashboardData() {
+        if (this.#userType === 'owner') {
+            await this.#loadOwnerData();
         } else {
-            await this.loadRenterData();
+            await this.#loadRenterData();
         }
     }
 
-    // Load owner-specific data
-    async loadOwnerData() {
+    async #loadOwnerData() {
         try {
-            const userId = this.supabaseClient.getCurrentUser()?.id;
-            
-            // Load properties
-            const { data: properties, error: propertiesError } = await this.supabaseClient.supabase
+            const userId = this.#supabaseClient.getCurrentUser()?.id;
+
+            const { data: properties, error: propertiesError } = await this.#supabaseClient.supabase
                 .from('properties')
                 .select('*, property_images(image_url, is_primary)')
                 .eq('owner_id', userId)
@@ -208,8 +185,7 @@ class DashboardManager {
 
             if (propertiesError) throw propertiesError;
 
-            // Load bookings with property and guest details
-            const { data: bookings, error: bookingsError } = await this.supabaseClient.supabase
+            const { data: bookings, error: bookingsError } = await this.#supabaseClient.supabase
                 .from('bookings')
                 .select(`
                     *,
@@ -221,8 +197,7 @@ class DashboardManager {
 
             if (bookingsError) throw bookingsError;
 
-            // Load reviews
-            const { data: reviews, error: reviewsError } = await this.supabaseClient.supabase
+            const { data: reviews, error: reviewsError } = await this.#supabaseClient.supabase
                 .from('reviews')
                 .select('overall_rating')
                 .eq('reviewee_id', userId)
@@ -230,24 +205,21 @@ class DashboardManager {
 
             if (reviewsError) throw reviewsError;
 
-            // Update dashboard with real data
-            this.updateOwnerStats(properties, bookings, reviews);
-            this.updatePropertiesGrid(properties);
-            this.updateBookingRequests(bookings);
-            this.setupAvailabilityCalendar(properties);
+            this.#updateOwnerStats(properties, bookings, reviews);
+            this.#updatePropertiesGrid(properties);
+            this.#updateBookingRequests(bookings);
+            this.#setupAvailabilityCalendar(properties);
 
         } catch (error) {
-            this.loadSampleOwnerData();
+            this.#loadSampleOwnerData();
         }
     }
 
-    // Load renter-specific data
-    async loadRenterData() {
+    async #loadRenterData() {
         try {
-            const userId = this.supabaseClient.getCurrentUser()?.id;
-            
-            // Load bookings with property details
-            const { data: bookings, error: bookingsError } = await this.supabaseClient.supabase
+            const userId = this.#supabaseClient.getCurrentUser()?.id;
+
+            const { data: bookings, error: bookingsError } = await this.#supabaseClient.supabase
                 .from('bookings')
                 .select(`
                     *,
@@ -258,16 +230,14 @@ class DashboardManager {
 
             if (bookingsError) throw bookingsError;
 
-            // Load wishlist
-            const { data: wishlist, error: wishlistError } = await this.supabaseClient.supabase
+            const { data: wishlist, error: wishlistError } = await this.#supabaseClient.supabase
                 .from('wishlists')
                 .select('*, properties(title, city, state, base_price)')
                 .eq('user_id', userId);
 
             if (wishlistError) throw wishlistError;
 
-            // Load reviews given
-            const { data: reviews, error: reviewsError } = await this.supabaseClient.supabase
+            const { data: reviews, error: reviewsError } = await this.#supabaseClient.supabase
                 .from('reviews')
                 .select('*')
                 .eq('reviewer_id', userId)
@@ -275,46 +245,40 @@ class DashboardManager {
 
             if (reviewsError) throw reviewsError;
 
-            // Update dashboard with real data
-            this.updateRenterStats(bookings, wishlist, reviews);
-            this.updateRenterBookings(bookings);
-            this.updateWishlist(wishlist);
+            this.#updateRenterStats(bookings, wishlist, reviews);
+            this.#updateRenterBookings(bookings);
+            this.#updateWishlist(wishlist);
 
         } catch (error) {
-            this.loadSampleRenterData();
+            this.#loadSampleRenterData();
         }
     }
 
-    // Update owner statistics
-    updateOwnerStats(properties, bookings, reviews) {
-        // Total properties
+    #updateOwnerStats(properties, bookings, reviews) {
         const totalPropertiesEl = document.getElementById('totalProperties');
         if (totalPropertiesEl) {
             totalPropertiesEl.textContent = properties.length;
         }
 
-        // Pending bookings (requests needing review)
         const pendingBookings = bookings.filter(b => b.status === 'pending').length;
         const pendingBookingsEl = document.getElementById('pendingBookings');
         if (pendingBookingsEl) {
             pendingBookingsEl.textContent = pendingBookings;
         }
 
-        // Active bookings
         const activeBookings = bookings.filter(b => b.status === 'confirmed').length;
         const activeBookingsEl = document.getElementById('activeBookings');
         if (activeBookingsEl) {
             activeBookingsEl.textContent = activeBookings;
         }
 
-        // Monthly earnings (placeholder calculation)
         const monthlyEarningsEl = document.getElementById('monthlyEarnings');
         if (monthlyEarningsEl) {
             const thisMonth = new Date().getMonth();
             const thisYear = new Date().getFullYear();
             const monthlyBookings = bookings.filter(b => {
                 const bookingDate = new Date(b.created_at);
-                return bookingDate.getMonth() === thisMonth && 
+                return bookingDate.getMonth() === thisMonth &&
                        bookingDate.getFullYear() === thisYear &&
                        b.status === 'completed';
             });
@@ -322,7 +286,6 @@ class DashboardManager {
             monthlyEarningsEl.textContent = `$${earnings.toFixed(0)}`;
         }
 
-        // Average rating
         const averageRatingEl = document.getElementById('averageRating');
         if (averageRatingEl && reviews.length > 0) {
             const avgRating = reviews.reduce((sum, r) => sum + r.overall_rating, 0) / reviews.length;
@@ -330,10 +293,8 @@ class DashboardManager {
         }
     }
 
-    // Update renter statistics
-    updateRenterStats(bookings, wishlist, reviews) {
-        // Upcoming bookings
-        const upcomingBookings = bookings.filter(b => 
+    #updateRenterStats(bookings, wishlist, reviews) {
+        const upcomingBookings = bookings.filter(b =>
             b.status === 'confirmed' && new Date(b.check_in_date) > new Date()
         ).length;
         const upcomingBookingsEl = document.getElementById('upcomingBookings');
@@ -341,101 +302,124 @@ class DashboardManager {
             upcomingBookingsEl.textContent = upcomingBookings;
         }
 
-        // Completed bookings
         const completedBookings = bookings.filter(b => b.status === 'completed').length;
         const completedBookingsEl = document.getElementById('completedBookings');
         if (completedBookingsEl) {
             completedBookingsEl.textContent = completedBookings;
         }
 
-        // Wishlist count
         const wishlistCountEl = document.getElementById('wishlistCount');
         if (wishlistCountEl) {
             wishlistCountEl.textContent = wishlist.length;
         }
 
-        // Reviews given
         const reviewsGivenEl = document.getElementById('reviewsGiven');
         if (reviewsGivenEl) {
             reviewsGivenEl.textContent = reviews.length;
         }
     }
 
-    // Update properties grid for owners
-    updatePropertiesGrid(properties) {
+    #updatePropertiesGrid(properties) {
         const propertiesGrid = document.getElementById('propertiesGrid');
         if (!propertiesGrid) return;
 
         if (properties.length === 0) {
-            // Keep empty state
             return;
         }
 
-        // Clear empty state
         propertiesGrid.innerHTML = '';
 
-        // Add property cards
         properties.forEach(property => {
-            const propertyCard = this.createPropertyCard(property);
+            const propertyCard = this.#createPropertyCard(property);
             propertiesGrid.appendChild(propertyCard);
         });
     }
 
-    // Create property card element
-    createPropertyCard(property) {
+    #createPropertyCard(property) {
         const card = document.createElement('div');
         card.className = 'property-card-dashboard';
-        
+
         const primaryImage = property.property_images?.find(img => img.is_primary);
         const imageUrl = primaryImage?.image_url;
+        const title = this.#sanitize(property.title);
+        const city = this.#sanitize(property.city);
+        const state = this.#sanitize(property.state);
+        const price = parseFloat(property.base_price) || 0;
 
-        card.innerHTML = `
-            <div class="property-status ${property.is_active ? 'active' : 'inactive'}" data-action="toggle-status" data-id="${property.id}" title="Click to ${property.is_active ? 'deactivate' : 'activate'}" style="cursor: pointer;">
-                ${property.is_active ? 'Active' : 'Inactive'}
-            </div>
-            ${imageUrl ? `<img src="${window.viewVistaApp.sanitizeHTML(imageUrl)}" alt="${window.viewVistaApp.sanitizeHTML(property.title)}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 6px; margin-bottom: 1rem;">` : ''}
-            <h4>${window.viewVistaApp.sanitizeHTML(property.title)}</h4>
-            <p>${window.viewVistaApp.sanitizeHTML(property.city)}, ${window.viewVistaApp.sanitizeHTML(property.state)}</p>
-            <p><strong>$${property.base_price}/night</strong></p>
-            <div class="property-actions">
-                <button class="btn btn-secondary" data-action="edit" data-id="${property.id}">Edit</button>
-                <button class="btn btn-danger" data-action="delete" data-id="${property.id}" data-title="${window.viewVistaApp.sanitizeHTML(property.title)}">Delete</button>
-                <button class="btn btn-primary" data-action="analytics" data-id="${property.id}">Analytics</button>
-            </div>
-        `;
+        const statusDiv = document.createElement('div');
+        statusDiv.className = `property-status ${property.is_active ? 'active' : 'inactive'}`;
+        statusDiv.setAttribute('data-action', 'toggle-status');
+        statusDiv.setAttribute('data-id', property.id);
+        statusDiv.style.cursor = 'pointer';
+        statusDiv.title = `Click to ${property.is_active ? 'deactivate' : 'activate'}`;
+        statusDiv.textContent = property.is_active ? 'Active' : 'Inactive';
 
-        // Wire action buttons
-        const editBtn = card.querySelector('[data-action="edit"]');
-        const deleteBtn = card.querySelector('[data-action="delete"]');
-        const statusToggle = card.querySelector('[data-action="toggle-status"]');
-
-        if (editBtn) {
-            editBtn.addEventListener('click', () => this.navigateToPropertyForm(property.id));
+        if (imageUrl) {
+            const img = document.createElement('img');
+            img.src = this.#sanitize(imageUrl);
+            img.alt = title;
+            img.style.cssText = 'width: 100%; height: 200px; object-fit: cover; border-radius: 6px; margin-bottom: 1rem;';
+            card.appendChild(img);
         }
 
-        if (deleteBtn) {
-            deleteBtn.addEventListener('click', () => this.handleDeleteProperty(property.id, property.title));
-        }
+        const titleEl = document.createElement('h4');
+        titleEl.textContent = title;
 
-        if (statusToggle) {
-            statusToggle.addEventListener('click', () => this.handleTogglePropertyStatus(property.id, property.is_active));
-        }
+        const locationEl = document.createElement('p');
+        locationEl.textContent = `${city}, ${state}`;
+
+        const priceEl = document.createElement('p');
+        const priceStrong = document.createElement('strong');
+        priceStrong.textContent = `$${price}/night`;
+        priceEl.appendChild(priceStrong);
+
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'property-actions';
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn btn-secondary';
+        editBtn.textContent = 'Edit';
+        editBtn.setAttribute('data-action', 'edit');
+        editBtn.setAttribute('data-id', property.id);
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn btn-danger';
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.setAttribute('data-action', 'delete');
+        deleteBtn.setAttribute('data-id', property.id);
+
+        const analyticsBtn = document.createElement('button');
+        analyticsBtn.className = 'btn btn-primary';
+        analyticsBtn.textContent = 'Analytics';
+        analyticsBtn.setAttribute('data-action', 'analytics');
+        analyticsBtn.setAttribute('data-id', property.id);
+
+        actionsDiv.appendChild(editBtn);
+        actionsDiv.appendChild(deleteBtn);
+        actionsDiv.appendChild(analyticsBtn);
+
+        card.appendChild(statusDiv);
+        card.appendChild(titleEl);
+        card.appendChild(locationEl);
+        card.appendChild(priceEl);
+        card.appendChild(actionsDiv);
+
+        editBtn.addEventListener('click', () => this.#navigateToPropertyForm(property.id));
+        deleteBtn.addEventListener('click', () => this.#handleDeleteProperty(property.id, property.title));
+        statusDiv.addEventListener('click', () => this.#handleTogglePropertyStatus(property.id, property.is_active));
 
         return card;
     }
 
-    // Load sample data when Supabase is not configured
-    loadSampleData() {
-        if (this.userType === 'owner') {
-            this.loadSampleOwnerData();
+    #loadSampleData() {
+        if (this.#userType === 'owner') {
+            this.#loadSampleOwnerData();
         } else {
-            this.loadSampleRenterData();
+            this.#loadSampleRenterData();
         }
     }
 
-    // Load sample owner data
-    loadSampleOwnerData() {
-        // Update stats with sample data
+    #loadSampleOwnerData() {
         const elements = [
             { id: 'totalProperties', value: '2' },
             { id: 'activeBookings', value: '5' },
@@ -449,9 +433,7 @@ class DashboardManager {
         });
     }
 
-    // Load sample renter data
-    loadSampleRenterData() {
-        // Update stats with sample data
+    #loadSampleRenterData() {
         const elements = [
             { id: 'upcomingBookings', value: '1' },
             { id: 'completedBookings', value: '3' },
@@ -465,28 +447,20 @@ class DashboardManager {
         });
     }
 
-    // Handle logout
-    async handleLogout() {
+    async #handleLogout() {
         try {
-            console.log('Dashboard logout initiated...');
-            await this.supabaseClient.waitForInit(); // Ensure Supabase is initialized
-            await this.supabaseClient.signOut();
-            console.log('Dashboard logout successful');
-            // Redirect will be handled by supabaseClient auth state change
+            await this.#supabaseClient.waitForInit();
+            await this.#supabaseClient.signOut();
         } catch (error) {
-            console.error('Dashboard logout error:', error);
-            // Don't show error for session missing - just proceed with redirect
             if (!error.message.includes('session')) {
-                this.showError('Failed to logout: ' + error.message);
+                this.#showError('Failed to logout: ' + error.message);
             } else {
-                // Session already cleared, redirect manually
-                this.supabaseClient.redirectToHome();
+                this.#supabaseClient.redirectToHome();
             }
         }
     }
 
-    // Navigate to property form (create or edit)
-    navigateToPropertyForm(propertyId = null) {
+    #navigateToPropertyForm(propertyId = null) {
         const base = 'property-form.html';
         if (window.location.protocol === 'file:') {
             const currentDir = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
@@ -498,17 +472,14 @@ class DashboardManager {
         }
     }
 
-    // Handle edit profile (placeholder)
-    handleEditProfile() {
-        this.showNotification('Profile editing feature coming soon!', 'info');
+    #handleEditProfile() {
+        this.#showNotification('Profile editing feature coming soon!', 'info');
     }
 
-    // Handle delete property
-    async handleDeleteProperty(propertyId, propertyTitle) {
-        // Show confirmation dialog
-        const confirmed = await this.showConfirmDialog(
+    async #handleDeleteProperty(propertyId, propertyTitle) {
+        const confirmed = await this.#showConfirmDialog(
             'Delete Property',
-            `Are you sure you want to delete "${propertyTitle}"? This action cannot be undone.`,
+            `Are you sure you want to delete "${this.#sanitize(propertyTitle)}"? This action cannot be undone.`,
             'Delete',
             'btn-danger'
         );
@@ -516,105 +487,88 @@ class DashboardManager {
         if (!confirmed) return;
 
         try {
-            if (!this.supabaseClient.supabase) {
-                this.showError('Database not configured');
+            if (!this.#supabaseClient.supabase) {
+                this.#showError('Database not configured');
                 return;
             }
 
-            // Delete property images from storage first
-            await this.deletePropertyImages(propertyId);
+            await this.#deletePropertyImages(propertyId);
 
-            // Delete property record (cascade will handle property_images table)
-            const { error } = await this.supabaseClient.supabase
+            const { error } = await this.#supabaseClient.supabase
                 .from('properties')
                 .delete()
                 .eq('id', propertyId)
-                .eq('owner_id', this.supabaseClient.getCurrentUser()?.id); // Additional security check
+                .eq('owner_id', this.#supabaseClient.getCurrentUser()?.id);
 
             if (error) throw error;
 
-            this.showNotification('Property deleted successfully', 'success');
-            
-            // Reload dashboard data
-            this.isLoaded = false;
-            this.loadUserData();
+            this.#showNotification('Property deleted successfully', 'success');
+
+            this.#isLoaded = false;
+            this.#loadUserData();
 
         } catch (error) {
-            this.showError('Failed to delete property. Please try again.');
+            this.#showError('Failed to delete property. Please try again.');
         }
     }
 
-    // Delete property images from storage
-    async deletePropertyImages(propertyId) {
+    async #deletePropertyImages(propertyId) {
         try {
-            const userId = this.supabaseClient.getCurrentUser()?.id;
+            const userId = this.#supabaseClient.getCurrentUser()?.id;
             if (!userId) return;
 
-            // List all files in the property folder
-            const { data: files, error: listError } = await this.supabaseClient.supabase
+            const { data: files, error: listError } = await this.#supabaseClient.supabase
                 .storage
                 .from('property-images')
                 .list(`properties/${userId}/${propertyId}`, { recursive: true });
 
             if (listError) {
-                console.warn('Could not list property images for deletion:', listError);
                 return;
             }
 
             if (!files || files.length === 0) return;
 
-            // Delete all files in the property folder
             const filesToDelete = files.map(file => `properties/${userId}/${propertyId}/${file.name}`);
-            
-            const { error: deleteError } = await this.supabaseClient.supabase
+
+            await this.#supabaseClient.supabase
                 .storage
                 .from('property-images')
                 .remove(filesToDelete);
 
-            if (deleteError) {
-                console.warn('Could not delete some property images:', deleteError);
-            }
-
         } catch (error) {
-            console.warn('Error deleting property images:', error);
-            // Don't throw - let property deletion continue
         }
     }
 
-    // Handle toggle property status
-    async handleTogglePropertyStatus(propertyId, currentStatus) {
+    async #handleTogglePropertyStatus(propertyId, currentStatus) {
         const newStatus = !currentStatus;
         const action = newStatus ? 'activate' : 'deactivate';
 
         try {
-            if (!this.supabaseClient.supabase) {
-                this.showError('Database not configured');
+            if (!this.#supabaseClient.supabase) {
+                this.#showError('Database not configured');
                 return;
             }
 
-            const { error } = await this.supabaseClient.supabase
+            const { error } = await this.#supabaseClient.supabase
                 .from('properties')
                 .update({ is_active: newStatus })
                 .eq('id', propertyId)
-                .eq('owner_id', this.supabaseClient.getCurrentUser()?.id); // Additional security check
+                .eq('owner_id', this.#supabaseClient.getCurrentUser()?.id);
 
             if (error) throw error;
 
-            this.showNotification(`Property ${action}d successfully`, 'success');
-            
-            // Reload dashboard data
-            this.isLoaded = false;
-            this.loadUserData();
+            this.#showNotification(`Property ${action}d successfully`, 'success');
+
+            this.#isLoaded = false;
+            this.#loadUserData();
 
         } catch (error) {
-            this.showError(`Failed to ${action} property. Please try again.`);
+            this.#showError(`Failed to ${action} property. Please try again.`);
         }
     }
 
-    // Show confirmation dialog
-    showConfirmDialog(title, message, confirmText = 'Confirm', buttonClass = 'btn-primary') {
+    #showConfirmDialog(title, message, confirmText = 'Confirm', buttonClass = 'btn-primary') {
         return new Promise((resolve) => {
-            // Create modal overlay
             const overlay = document.createElement('div');
             overlay.style.cssText = `
                 position: fixed;
@@ -629,7 +583,6 @@ class DashboardManager {
                 z-index: 10000;
             `;
 
-            // Create modal
             const modal = document.createElement('div');
             modal.style.cssText = `
                 background: white;
@@ -640,21 +593,34 @@ class DashboardManager {
                 box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             `;
 
-            modal.innerHTML = `
-                <h3 style="margin-top: 0; margin-bottom: 1rem;">${title}</h3>
-                <p style="margin-bottom: 2rem;">${message}</p>
-                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                    <button class="btn btn-secondary" id="cancelBtn">Cancel</button>
-                    <button class="btn ${buttonClass}" id="confirmBtn">${confirmText}</button>
-                </div>
-            `;
+            const titleEl = document.createElement('h3');
+            titleEl.style.cssText = 'margin-top: 0; margin-bottom: 1rem;';
+            titleEl.textContent = title;
+
+            const messageEl = document.createElement('p');
+            messageEl.style.cssText = 'margin-bottom: 2rem;';
+            messageEl.textContent = message;
+
+            const actionsDiv = document.createElement('div');
+            actionsDiv.style.cssText = 'display: flex; gap: 1rem; justify-content: flex-end;';
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'btn btn-secondary';
+            cancelBtn.textContent = 'Cancel';
+
+            const confirmBtn = document.createElement('button');
+            confirmBtn.className = `btn ${buttonClass}`;
+            confirmBtn.textContent = confirmText;
+
+            actionsDiv.appendChild(cancelBtn);
+            actionsDiv.appendChild(confirmBtn);
+
+            modal.appendChild(titleEl);
+            modal.appendChild(messageEl);
+            modal.appendChild(actionsDiv);
 
             overlay.appendChild(modal);
             document.body.appendChild(overlay);
-
-            // Handle buttons
-            const cancelBtn = modal.querySelector('#cancelBtn');
-            const confirmBtn = modal.querySelector('#confirmBtn');
 
             const cleanup = () => {
                 document.body.removeChild(overlay);
@@ -670,7 +636,6 @@ class DashboardManager {
                 resolve(true);
             });
 
-            // Close on overlay click
             overlay.addEventListener('click', (e) => {
                 if (e.target === overlay) {
                     cleanup();
@@ -678,18 +643,15 @@ class DashboardManager {
                 }
             });
 
-            // Focus confirm button
             confirmBtn.focus();
         });
     }
 
-    // Show notification
-    showNotification(message, type = 'info') {
+    #showNotification(message, type = 'info') {
         if (window.UI && window.UI.showToast) {
             window.UI.showToast(message, type);
             return;
         }
-        // Fallback
         const fallback = document.createElement('div');
         fallback.className = `alert alert-${type}`;
         fallback.textContent = message;
@@ -697,13 +659,11 @@ class DashboardManager {
         setTimeout(() => fallback.remove(), 3000);
     }
 
-    // Show error message
-    showError(message) {
-        this.showNotification(message, 'error');
+    #showError(message) {
+        this.#showNotification(message, 'error');
     }
 
-    // Update booking requests for owners
-    updateBookingRequests(bookings) {
+    #updateBookingRequests(bookings) {
         const bookingRequestsContainer = document.getElementById('bookingRequestsContainer');
         if (!bookingRequestsContainer) return;
 
@@ -711,40 +671,80 @@ class DashboardManager {
         const recentBookings = bookings.filter(b => ['confirmed', 'completed'].includes(b.status)).slice(0, 5);
 
         if (pendingBookings.length === 0 && recentBookings.length === 0) {
-            bookingRequestsContainer.innerHTML = `
-                <div class="no-bookings">
-                    <p><em>No booking requests yet.</em></p>
-                </div>
-            `;
+            const noBookingsDiv = document.createElement('div');
+            noBookingsDiv.className = 'no-bookings';
+            const p = document.createElement('p');
+            const em = document.createElement('em');
+            em.textContent = 'No booking requests yet.';
+            p.appendChild(em);
+            noBookingsDiv.appendChild(p);
+            bookingRequestsContainer.innerHTML = '';
+            bookingRequestsContainer.appendChild(noBookingsDiv);
             return;
         }
 
-        bookingRequestsContainer.innerHTML = `
-            ${pendingBookings.length > 0 ? `
-                <div class="booking-section">
-                    <h4 style="color: #f39c12; margin-bottom: 1rem;">⏳ Pending Requests (${pendingBookings.length})</h4>
-                    <div class="booking-cards">
-                        ${pendingBookings.map(booking => this.createBookingCard(booking, true)).join('')}
-                    </div>
-                </div>
-            ` : ''}
-            
-            ${recentBookings.length > 0 ? `
-                <div class="booking-section" style="margin-top: 2rem;">
-                    <h4 style="margin-bottom: 1rem;">📅 Recent Bookings</h4>
-                    <div class="booking-cards">
-                        ${recentBookings.map(booking => this.createBookingCard(booking, false)).join('')}
-                    </div>
-                </div>
-            ` : ''}
-        `;
+        bookingRequestsContainer.innerHTML = '';
 
-        // Set up event listeners for booking actions
-        this.setupBookingActions();
+        if (pendingBookings.length > 0) {
+            const pendingSection = this.#createBookingSection(
+                `⏳ Pending Requests (${pendingBookings.length})`,
+                pendingBookings,
+                true,
+                '#f39c12'
+            );
+            bookingRequestsContainer.appendChild(pendingSection);
+        }
+
+        if (recentBookings.length > 0) {
+            const recentSection = this.#createBookingSection(
+                '📅 Recent Bookings',
+                recentBookings,
+                false
+            );
+            recentSection.style.marginTop = '2rem';
+            bookingRequestsContainer.appendChild(recentSection);
+        }
+
+        this.#setupBookingActions();
     }
 
-    // Create booking card HTML
-    createBookingCard(booking, isPending) {
+    #createBookingSection(title, bookings, isPending, titleColor = null) {
+        const section = document.createElement('div');
+        section.className = 'booking-section';
+
+        const h4 = document.createElement('h4');
+        h4.style.marginBottom = '1rem';
+        if (titleColor) {
+            h4.style.color = titleColor;
+        }
+        h4.textContent = title;
+
+        const cardsDiv = document.createElement('div');
+        cardsDiv.className = 'booking-cards';
+
+        bookings.forEach(booking => {
+            const card = this.#createBookingCardElement(booking, isPending);
+            cardsDiv.appendChild(card);
+        });
+
+        section.appendChild(h4);
+        section.appendChild(cardsDiv);
+
+        return section;
+    }
+
+    #createBookingCardElement(booking, isPending) {
+        const card = document.createElement('div');
+        card.className = 'booking-card';
+        card.style.cssText = `
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        `;
+
         const guest = booking.user_profiles;
         const property = booking.properties;
         const checkIn = new Date(booking.check_in_date);
@@ -758,104 +758,140 @@ class DashboardManager {
             cancelled: '#e74c3c'
         };
 
-        return `
-            <div class="booking-card" style="
-                border: 1px solid #ddd;
-                border-radius: 8px;
-                padding: 1rem;
-                margin-bottom: 1rem;
-                background: white;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            ">
-                <div class="booking-header" style="
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: flex-start;
-                    margin-bottom: 0.75rem;
-                ">
-                    <div>
-                        <h5 style="margin: 0 0 0.25rem 0; color: #2c3e50;">
-                            ${window.viewVistaApp.sanitizeHTML(property?.title || 'Property')}
-                        </h5>
-                        <p style="margin: 0; color: #666; font-size: 0.9rem;">
-                            ${window.viewVistaApp.sanitizeHTML(guest?.first_name || 'Guest')} ${window.viewVistaApp.sanitizeHTML(guest?.last_name || '')}
-                        </p>
-                    </div>
-                    <span class="booking-status" style="
-                        background: ${statusColors[booking.status] || '#95a5a6'};
-                        color: white;
-                        padding: 0.25rem 0.75rem;
-                        border-radius: 12px;
-                        font-size: 0.8rem;
-                        font-weight: 500;
-                        text-transform: capitalize;
-                    ">
-                        ${booking.status}
-                    </span>
-                </div>
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'booking-header';
+        headerDiv.style.cssText = 'display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;';
 
-                <div class="booking-details" style="margin-bottom: 0.75rem;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.9rem;">
-                        <div><strong>Check-in:</strong> ${this.formatDate(booking.check_in_date)}</div>
-                        <div><strong>Check-out:</strong> ${this.formatDate(booking.check_out_date)}</div>
-                        <div><strong>Guests:</strong> ${booking.num_guests}</div>
-                        <div><strong>Nights:</strong> ${nights}</div>
-                    </div>
-                    <div style="margin-top: 0.5rem; font-weight: 500; color: #27ae60;">
-                        Total: $${booking.total_amount}
-                    </div>
-                    ${booking.special_requests ? `
-                        <div style="margin-top: 0.5rem; padding: 0.5rem; background: #f8f9fa; border-radius: 4px; font-size: 0.85rem;">
-                            <strong>Special Requests:</strong> ${window.viewVistaApp.sanitizeHTML(booking.special_requests)}
-                        </div>
-                    ` : ''}
-                </div>
+        const headerInfo = document.createElement('div');
+        const h5 = document.createElement('h5');
+        h5.style.cssText = 'margin: 0 0 0.25rem 0; color: #2c3e50;';
+        h5.textContent = this.#sanitize(property?.title || 'Property');
 
-                ${isPending ? `
-                    <div class="booking-actions" style="display: flex; gap: 0.5rem;">
-                        <button class="btn btn-success" data-action="approve" data-booking-id="${booking.id}" 
-                                style="flex: 1; padding: 0.5rem; font-size: 0.85rem;">
-                            ✓ Approve
-                        </button>
-                        <button class="btn btn-danger" data-action="decline" data-booking-id="${booking.id}"
-                                style="flex: 1; padding: 0.5rem; font-size: 0.85rem;">
-                            ✗ Decline
-                        </button>
-                        <button class="btn btn-secondary" data-action="message" data-booking-id="${booking.id}"
-                                style="padding: 0.5rem; font-size: 0.85rem;">
-                            💬
-                        </button>
-                    </div>
-                ` : `
-                    <div class="booking-info" style="font-size: 0.8rem; color: #666;">
-                        Booked on ${this.formatDate(booking.created_at)}
-                    </div>
-                `}
-            </div>
+        const guestP = document.createElement('p');
+        guestP.style.cssText = 'margin: 0; color: #666; font-size: 0.9rem;';
+        guestP.textContent = `${this.#sanitize(guest?.first_name || 'Guest')} ${this.#sanitize(guest?.last_name || '')}`;
+
+        headerInfo.appendChild(h5);
+        headerInfo.appendChild(guestP);
+
+        const statusSpan = document.createElement('span');
+        statusSpan.className = 'booking-status';
+        statusSpan.style.cssText = `
+            background: ${statusColors[booking.status] || '#95a5a6'};
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: capitalize;
         `;
+        statusSpan.textContent = booking.status;
+
+        headerDiv.appendChild(headerInfo);
+        headerDiv.appendChild(statusSpan);
+
+        const detailsDiv = document.createElement('div');
+        detailsDiv.className = 'booking-details';
+        detailsDiv.style.marginBottom = '0.75rem';
+
+        const detailsGrid = document.createElement('div');
+        detailsGrid.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.9rem;';
+
+        const checkInDiv = document.createElement('div');
+        checkInDiv.innerHTML = `<strong>Check-in:</strong> ${this.#formatDate(booking.check_in_date)}`;
+
+        const checkOutDiv = document.createElement('div');
+        checkOutDiv.innerHTML = `<strong>Check-out:</strong> ${this.#formatDate(booking.check_out_date)}`;
+
+        const guestsDiv = document.createElement('div');
+        guestsDiv.innerHTML = `<strong>Guests:</strong> ${parseInt(booking.num_guests) || 0}`;
+
+        const nightsDiv = document.createElement('div');
+        nightsDiv.innerHTML = `<strong>Nights:</strong> ${nights}`;
+
+        detailsGrid.appendChild(checkInDiv);
+        detailsGrid.appendChild(checkOutDiv);
+        detailsGrid.appendChild(guestsDiv);
+        detailsGrid.appendChild(nightsDiv);
+
+        const totalDiv = document.createElement('div');
+        totalDiv.style.cssText = 'margin-top: 0.5rem; font-weight: 500; color: #27ae60;';
+        totalDiv.textContent = `Total: $${parseFloat(booking.total_amount) || 0}`;
+
+        detailsDiv.appendChild(detailsGrid);
+        detailsDiv.appendChild(totalDiv);
+
+        if (booking.special_requests) {
+            const requestsDiv = document.createElement('div');
+            requestsDiv.style.cssText = 'margin-top: 0.5rem; padding: 0.5rem; background: #f8f9fa; border-radius: 4px; font-size: 0.85rem;';
+            requestsDiv.innerHTML = `<strong>Special Requests:</strong> ${this.#sanitize(booking.special_requests)}`;
+            detailsDiv.appendChild(requestsDiv);
+        }
+
+        card.appendChild(headerDiv);
+        card.appendChild(detailsDiv);
+
+        if (isPending) {
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'booking-actions';
+            actionsDiv.style.cssText = 'display: flex; gap: 0.5rem;';
+
+            const approveBtn = document.createElement('button');
+            approveBtn.className = 'btn btn-success';
+            approveBtn.setAttribute('data-action', 'approve');
+            approveBtn.setAttribute('data-booking-id', booking.id);
+            approveBtn.style.cssText = 'flex: 1; padding: 0.5rem; font-size: 0.85rem;';
+            approveBtn.textContent = '✓ Approve';
+
+            const declineBtn = document.createElement('button');
+            declineBtn.className = 'btn btn-danger';
+            declineBtn.setAttribute('data-action', 'decline');
+            declineBtn.setAttribute('data-booking-id', booking.id);
+            declineBtn.style.cssText = 'flex: 1; padding: 0.5rem; font-size: 0.85rem;';
+            declineBtn.textContent = '✗ Decline';
+
+            const messageBtn = document.createElement('button');
+            messageBtn.className = 'btn btn-secondary';
+            messageBtn.setAttribute('data-action', 'message');
+            messageBtn.setAttribute('data-booking-id', booking.id);
+            messageBtn.style.cssText = 'padding: 0.5rem; font-size: 0.85rem;';
+            messageBtn.textContent = '💬';
+
+            actionsDiv.appendChild(approveBtn);
+            actionsDiv.appendChild(declineBtn);
+            actionsDiv.appendChild(messageBtn);
+
+            card.appendChild(actionsDiv);
+        } else {
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'booking-info';
+            infoDiv.style.cssText = 'font-size: 0.8rem; color: #666;';
+            infoDiv.textContent = `Booked on ${this.#formatDate(booking.created_at)}`;
+            card.appendChild(infoDiv);
+        }
+
+        return card;
     }
 
-    // Setup booking action event listeners
-    setupBookingActions() {
+    #setupBookingActions() {
         document.querySelectorAll('[data-action="approve"]').forEach(btn => {
-            btn.addEventListener('click', () => this.handleBookingAction(btn.dataset.bookingId, 'approve'));
+            btn.addEventListener('click', () => this.#handleBookingAction(btn.dataset.bookingId, 'approve'));
         });
 
         document.querySelectorAll('[data-action="decline"]').forEach(btn => {
-            btn.addEventListener('click', () => this.handleBookingAction(btn.dataset.bookingId, 'decline'));
+            btn.addEventListener('click', () => this.#handleBookingAction(btn.dataset.bookingId, 'decline'));
         });
 
         document.querySelectorAll('[data-action="message"]').forEach(btn => {
-            btn.addEventListener('click', () => this.handleBookingMessage(btn.dataset.bookingId));
+            btn.addEventListener('click', () => this.#handleBookingMessage(btn.dataset.bookingId));
         });
     }
 
-    // Handle booking approve/decline
-    async handleBookingAction(bookingId, action) {
+    async #handleBookingAction(bookingId, action) {
         const newStatus = action === 'approve' ? 'confirmed' : 'cancelled';
         const actionText = action === 'approve' ? 'approve' : 'decline';
 
-        const confirmed = await this.showConfirmDialog(
+        const confirmed = await this.#showConfirmDialog(
             `${action === 'approve' ? 'Approve' : 'Decline'} Booking`,
             `Are you sure you want to ${actionText} this booking request?`,
             action === 'approve' ? 'Approve' : 'Decline',
@@ -865,96 +901,92 @@ class DashboardManager {
         if (!confirmed) return;
 
         try {
-            const { error } = await this.supabaseClient.supabase
+            const { error } = await this.#supabaseClient.supabase
                 .from('bookings')
-                .update({ 
+                .update({
                     status: newStatus,
                     confirmed_at: action === 'approve' ? new Date().toISOString() : null
                 })
                 .eq('id', bookingId)
-                .eq('owner_id', this.supabaseClient.getCurrentUser()?.id);
+                .eq('owner_id', this.#supabaseClient.getCurrentUser()?.id);
 
             if (error) throw error;
 
-            this.showNotification(`Booking ${action}d successfully!`, 'success');
-            
-            // Reload dashboard data
-            this.isLoaded = false;
-            this.loadUserData();
+            this.#showNotification(`Booking ${action}d successfully!`, 'success');
+
+            this.#isLoaded = false;
+            this.#loadUserData();
 
         } catch (error) {
-            console.error(`Error ${actionText}ing booking:`, error);
-            this.showError(`Failed to ${actionText} booking. Please try again.`);
+            this.#showError(`Failed to ${actionText} booking. Please try again.`);
         }
     }
 
-    // Handle booking message (placeholder)
-    handleBookingMessage(bookingId) {
-        this.showNotification('Messaging feature coming soon!', 'info');
+    #handleBookingMessage(bookingId) {
+        this.#showNotification('Messaging feature coming soon!', 'info');
     }
 
-    // Setup availability calendar
-    setupAvailabilityCalendar(properties) {
+    #setupAvailabilityCalendar(properties) {
         const propertySelect = document.getElementById('calendarPropertySelect');
         const bulkBtn = document.getElementById('bulkAvailabilityBtn');
-        
+
         if (!propertySelect) return;
 
-        // Populate property selector
-        propertySelect.innerHTML = '<option value="">Select a property...</option>';
+        propertySelect.innerHTML = '';
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'Select a property...';
+        propertySelect.appendChild(defaultOption);
+
         properties.forEach(property => {
             const option = document.createElement('option');
             option.value = property.id;
-            option.textContent = `${property.title} - ${property.city}, ${property.state}`;
+            option.textContent = `${this.#sanitize(property.title)} - ${this.#sanitize(property.city)}, ${this.#sanitize(property.state)}`;
             propertySelect.appendChild(option);
         });
 
-        // Handle property selection
         propertySelect.addEventListener('change', (e) => {
             const propertyId = e.target.value;
             if (propertyId) {
-                this.loadPropertyCalendar(propertyId);
+                this.#loadPropertyCalendar(propertyId);
                 if (bulkBtn) bulkBtn.disabled = false;
             } else {
-                this.clearCalendar();
+                this.#clearCalendar();
                 if (bulkBtn) bulkBtn.disabled = true;
             }
         });
 
-        // Handle bulk availability
         if (bulkBtn) {
             bulkBtn.addEventListener('click', () => {
                 const propertyId = propertySelect.value;
                 if (propertyId) {
-                    this.showBulkAvailabilityModal(propertyId);
+                    this.#showBulkAvailabilityModal(propertyId);
                 }
             });
         }
     }
 
-    // Load calendar for specific property
-    async loadPropertyCalendar(propertyId) {
+    async #loadPropertyCalendar(propertyId) {
         try {
             const container = document.getElementById('availabilityCalendarContainer');
             if (!container) return;
 
-            container.innerHTML = '<div style="text-align: center; padding: 2rem;">Loading calendar...</div>';
+            container.textContent = 'Loading calendar...';
+            container.style.cssText = 'text-align: center; padding: 2rem;';
 
-            // Load availability data for the next 12 months
             const startDate = new Date();
             const endDate = new Date();
             endDate.setMonth(endDate.getMonth() + 12);
 
-            // Load existing availability and bookings
             const [availabilityResult, bookingsResult] = await Promise.all([
-                this.supabaseClient.supabase
+                this.#supabaseClient.supabase
                     .from('property_availability')
                     .select('*')
                     .eq('property_id', propertyId)
                     .gte('date', startDate.toISOString().split('T')[0])
                     .lte('date', endDate.toISOString().split('T')[0]),
-                
-                this.supabaseClient.supabase
+
+                this.#supabaseClient.supabase
                     .from('bookings')
                     .select('check_in_date, check_out_date, status')
                     .eq('property_id', propertyId)
@@ -966,115 +998,141 @@ class DashboardManager {
             if (availabilityResult.error) throw availabilityResult.error;
             if (bookingsResult.error) throw bookingsResult.error;
 
-            this.renderCalendar(propertyId, availabilityResult.data || [], bookingsResult.data || []);
+            this.#renderCalendar(propertyId, availabilityResult.data || [], bookingsResult.data || []);
 
         } catch (error) {
             const container = document.getElementById('availabilityCalendarContainer');
             if (container) {
-                container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #e74c3c;">Error loading calendar. Please try again.</div>';
+                container.textContent = 'Error loading calendar. Please try again.';
+                container.style.cssText = 'text-align: center; padding: 2rem; color: #e74c3c;';
             }
         }
     }
 
-    // Render calendar
-    renderCalendar(propertyId, availabilityData, bookingsData) {
+    #renderCalendar(propertyId, availabilityData, bookingsData) {
         const container = document.getElementById('availabilityCalendarContainer');
         if (!container) return;
 
-        // Create calendar HTML
+        container.innerHTML = '';
+
+        const legend = this.#createCalendarLegend();
+        container.appendChild(legend);
+
+        const grid = document.createElement('div');
+        grid.className = 'calendar-grid';
+        grid.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;';
+
         const currentDate = new Date();
-        const months = [];
-        
-        // Generate 6 months of calendar
+
         for (let i = 0; i < 6; i++) {
             const monthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + i, 1);
-            months.push(this.renderMonth(monthDate, propertyId, availabilityData, bookingsData));
+            const monthEl = this.#renderMonth(monthDate, propertyId, availabilityData, bookingsData);
+            grid.appendChild(monthEl);
         }
 
-        container.innerHTML = `
-            <div class="calendar-legend" style="
-                display: flex;
-                justify-content: center;
-                gap: 2rem;
-                margin-bottom: 1.5rem;
-                padding: 1rem;
-                background: #f8f9fa;
-                border-radius: 8px;
-                font-size: 0.9rem;
-            ">
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <div style="width: 16px; height: 16px; background: #27ae60; border-radius: 3px;"></div>
-                    <span>Available</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <div style="width: 16px; height: 16px; background: #e74c3c; border-radius: 3px;"></div>
-                    <span>Blocked</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <div style="width: 16px; height: 16px; background: #3498db; border-radius: 3px;"></div>
-                    <span>Booked</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <div style="width: 16px; height: 16px; background: #f39c12; border-radius: 3px;"></div>
-                    <span>Pending</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <div style="width: 16px; height: 16px; background: #95a5a6; border-radius: 3px;"></div>
-                    <span>Past</span>
-                </div>
-            </div>
-            <div class="calendar-grid" style="
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-                gap: 1.5rem;
-            ">
-                ${months.join('')}
-            </div>
-        `;
+        container.appendChild(grid);
 
-        // Setup date click handlers
-        this.setupCalendarClickHandlers(propertyId);
+        this.#setupCalendarClickHandlers(propertyId);
     }
 
-    // Render individual month
-    renderMonth(monthDate, propertyId, availabilityData, bookingsData) {
+    #createCalendarLegend() {
+        const legend = document.createElement('div');
+        legend.className = 'calendar-legend';
+        legend.style.cssText = `
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        `;
+
+        const items = [
+            { color: '#27ae60', label: 'Available' },
+            { color: '#e74c3c', label: 'Blocked' },
+            { color: '#3498db', label: 'Booked' },
+            { color: '#f39c12', label: 'Pending' },
+            { color: '#95a5a6', label: 'Past' }
+        ];
+
+        items.forEach(item => {
+            const itemDiv = document.createElement('div');
+            itemDiv.style.cssText = 'display: flex; align-items: center; gap: 0.5rem;';
+
+            const colorBox = document.createElement('div');
+            colorBox.style.cssText = `width: 16px; height: 16px; background: ${item.color}; border-radius: 3px;`;
+
+            const span = document.createElement('span');
+            span.textContent = item.label;
+
+            itemDiv.appendChild(colorBox);
+            itemDiv.appendChild(span);
+            legend.appendChild(itemDiv);
+        });
+
+        return legend;
+    }
+
+    #renderMonth(monthDate, propertyId, availabilityData, bookingsData) {
+        const monthContainer = document.createElement('div');
+        monthContainer.className = 'month-calendar';
+        monthContainer.style.cssText = 'background: white; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;';
+
         const monthName = monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+        const header = document.createElement('div');
+        header.className = 'month-header';
+        header.style.cssText = 'background: #2c3e50; color: white; padding: 1rem; text-align: center; font-weight: 600;';
+        header.textContent = monthName;
+
+        const weekHeaders = document.createElement('div');
+        weekHeaders.className = 'week-headers';
+        weekHeaders.style.cssText = 'display: grid; grid-template-columns: repeat(7, 1fr); background: #34495e; color: white;';
+
+        ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(day => {
+            const dayHeader = document.createElement('div');
+            dayHeader.style.cssText = 'padding: 0.5rem; text-align: center; font-size: 0.85rem; font-weight: 500;';
+            dayHeader.textContent = day;
+            weekHeaders.appendChild(dayHeader);
+        });
+
+        const daysGrid = document.createElement('div');
+        daysGrid.className = 'days-grid';
+        daysGrid.style.cssText = 'display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #ecf0f1;';
+
         const firstDay = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
-        const lastDay = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
         const startDate = new Date(firstDay);
-        startDate.setDate(startDate.getDate() - firstDay.getDay()); // Start from Sunday
-        
+        startDate.setDate(startDate.getDate() - firstDay.getDay());
+
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
-        const days = [];
+
         const currentDay = new Date(startDate);
-        
-        // Generate 42 days (6 weeks)
+
         for (let i = 0; i < 42; i++) {
             const dateStr = currentDay.toISOString().split('T')[0];
             const isCurrentMonth = currentDay.getMonth() === monthDate.getMonth();
             const isPast = currentDay < today;
-            
+
             let status = 'available';
             let statusColor = '#27ae60';
-            
+
             if (isPast) {
                 status = 'past';
                 statusColor = '#95a5a6';
             } else {
-                // Check bookings
                 const booking = bookingsData.find(b => {
                     const checkIn = new Date(b.check_in_date);
                     const checkOut = new Date(b.check_out_date);
                     return currentDay >= checkIn && currentDay < checkOut;
                 });
-                
+
                 if (booking) {
                     status = booking.status === 'confirmed' ? 'booked' : 'pending';
                     statusColor = booking.status === 'confirmed' ? '#3498db' : '#f39c12';
                 } else {
-                    // Check availability settings
                     const availability = availabilityData.find(a => a.date === dateStr);
                     if (availability && !availability.is_available) {
                         status = 'blocked';
@@ -1082,74 +1140,48 @@ class DashboardManager {
                     }
                 }
             }
-            
-            days.push(`
-                <div class="calendar-day ${!isCurrentMonth ? 'other-month' : ''}" 
-                     data-date="${dateStr}" 
-                     data-property-id="${propertyId}"
-                     data-status="${status}"
-                     style="
-                        padding: 0.75rem 0.5rem;
-                        text-align: center;
-                        cursor: ${isPast || status === 'booked' ? 'default' : 'pointer'};
-                        background: ${statusColor};
-                        color: ${status === 'available' || isPast ? 'white' : 'white'};
-                        opacity: ${!isCurrentMonth ? '0.3' : '1'};
-                        border-radius: 4px;
-                        font-size: 0.9rem;
-                        transition: all 0.2s ease;
-                        position: relative;
-                     "
-                     ${isPast || status === 'booked' ? '' : 'title="Click to toggle availability"'}>
-                    ${currentDay.getDate()}
-                </div>
-            `);
-            
+
+            const dayEl = document.createElement('div');
+            dayEl.className = `calendar-day ${!isCurrentMonth ? 'other-month' : ''}`;
+            dayEl.setAttribute('data-date', dateStr);
+            dayEl.setAttribute('data-property-id', propertyId);
+            dayEl.setAttribute('data-status', status);
+            dayEl.style.cssText = `
+                padding: 0.75rem 0.5rem;
+                text-align: center;
+                cursor: ${isPast || status === 'booked' ? 'default' : 'pointer'};
+                background: ${statusColor};
+                color: white;
+                opacity: ${!isCurrentMonth ? '0.3' : '1'};
+                border-radius: 4px;
+                font-size: 0.9rem;
+                transition: all 0.2s ease;
+                position: relative;
+            `;
+            if (!(isPast || status === 'booked')) {
+                dayEl.title = 'Click to toggle availability';
+            }
+            dayEl.textContent = currentDay.getDate();
+
+            daysGrid.appendChild(dayEl);
+
             currentDay.setDate(currentDay.getDate() + 1);
         }
-        
-        return `
-            <div class="month-calendar" style="background: white; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
-                <div class="month-header" style="
-                    background: #2c3e50;
-                    color: white;
-                    padding: 1rem;
-                    text-align: center;
-                    font-weight: 600;
-                ">
-                    ${monthName}
-                </div>
-                <div class="week-headers" style="
-                    display: grid;
-                    grid-template-columns: repeat(7, 1fr);
-                    background: #34495e;
-                    color: white;
-                ">
-                    ${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => 
-                        `<div style="padding: 0.5rem; text-align: center; font-size: 0.85rem; font-weight: 500;">${day}</div>`
-                    ).join('')}
-                </div>
-                <div class="days-grid" style="
-                    display: grid;
-                    grid-template-columns: repeat(7, 1fr);
-                    gap: 1px;
-                    background: #ecf0f1;
-                ">
-                    ${days.join('')}
-                </div>
-            </div>
-        `;
+
+        monthContainer.appendChild(header);
+        monthContainer.appendChild(weekHeaders);
+        monthContainer.appendChild(daysGrid);
+
+        return monthContainer;
     }
 
-    // Setup calendar click handlers
-    setupCalendarClickHandlers(propertyId) {
+    #setupCalendarClickHandlers(propertyId) {
         document.querySelectorAll('.calendar-day').forEach(day => {
             const status = day.dataset.status;
-            
+
             if (status !== 'past' && status !== 'booked' && status !== 'pending') {
-                day.addEventListener('click', () => this.toggleDateAvailability(propertyId, day));
-                
-                // Hover effects
+                day.addEventListener('click', () => this.#toggleDateAvailability(propertyId, day));
+
                 day.addEventListener('mouseenter', () => {
                     if (status === 'available') {
                         day.style.background = '#e74c3c';
@@ -1159,7 +1191,7 @@ class DashboardManager {
                         day.style.transform = 'scale(1.05)';
                     }
                 });
-                
+
                 day.addEventListener('mouseleave', () => {
                     const originalColor = status === 'available' ? '#27ae60' : '#e74c3c';
                     day.style.background = originalColor;
@@ -1169,15 +1201,13 @@ class DashboardManager {
         });
     }
 
-    // Toggle date availability
-    async toggleDateAvailability(propertyId, dayElement) {
+    async #toggleDateAvailability(propertyId, dayElement) {
         const date = dayElement.dataset.date;
         const currentStatus = dayElement.dataset.status;
         const newAvailable = currentStatus === 'blocked';
 
         try {
-            // Update database
-            const { error } = await this.supabaseClient.supabase
+            const { error } = await this.#supabaseClient.supabase
                 .from('property_availability')
                 .upsert([{
                     property_id: propertyId,
@@ -1187,35 +1217,34 @@ class DashboardManager {
 
             if (error) throw error;
 
-            // Update UI
             const newStatus = newAvailable ? 'available' : 'blocked';
             const newColor = newAvailable ? '#27ae60' : '#e74c3c';
-            
+
             dayElement.dataset.status = newStatus;
             dayElement.style.background = newColor;
 
-            this.showNotification(`Date ${newAvailable ? 'unblocked' : 'blocked'} successfully`, 'success');
+            this.#showNotification(`Date ${newAvailable ? 'unblocked' : 'blocked'} successfully`, 'success');
 
         } catch (error) {
-            console.error('Error updating availability:', error);
-            this.showError('Failed to update availability. Please try again.');
+            this.#showError('Failed to update availability. Please try again.');
         }
     }
 
-    // Clear calendar
-    clearCalendar() {
+    #clearCalendar() {
         const container = document.getElementById('availabilityCalendarContainer');
         if (container) {
-            container.innerHTML = `
-                <div class="calendar-empty-state" style="text-align: center; padding: 2rem; color: #666;">
-                    <p>Select a property to manage its availability calendar.</p>
-                </div>
-            `;
+            container.innerHTML = '';
+            const emptyState = document.createElement('div');
+            emptyState.className = 'calendar-empty-state';
+            emptyState.style.cssText = 'text-align: center; padding: 2rem; color: #666;';
+            const p = document.createElement('p');
+            p.textContent = 'Select a property to manage its availability calendar.';
+            emptyState.appendChild(p);
+            container.appendChild(emptyState);
         }
     }
 
-    // Show bulk availability modal
-    showBulkAvailabilityModal(propertyId) {
+    #showBulkAvailabilityModal(propertyId) {
         const modal = document.createElement('div');
         modal.style.cssText = `
             position: fixed;
@@ -1230,72 +1259,109 @@ class DashboardManager {
             z-index: 10001;
         `;
 
-        modal.innerHTML = `
-            <div class="bulk-modal" style="
-                background: white;
-                border-radius: 12px;
-                padding: 2rem;
-                max-width: 400px;
-                width: 90%;
-            ">
-                <h3 style="margin: 0 0 1.5rem 0;">Bulk Availability Update</h3>
-                
-                <div class="form-group" style="margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem;">Start Date:</label>
-                    <input type="date" id="bulkStartDate" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
-                </div>
-                
-                <div class="form-group" style="margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem;">End Date:</label>
-                    <input type="date" id="bulkEndDate" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
-                </div>
-                
-                <div class="form-group" style="margin-bottom: 1.5rem;">
-                    <label style="display: block; margin-bottom: 0.5rem;">Action:</label>
-                    <select id="bulkAction" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
-                        <option value="block">Block dates (unavailable)</option>
-                        <option value="unblock">Unblock dates (available)</option>
-                    </select>
-                </div>
-                
-                <div class="modal-actions" style="display: flex; gap: 1rem;">
-                    <button class="btn btn-secondary bulk-cancel" style="flex: 1;">Cancel</button>
-                    <button class="btn btn-primary bulk-apply" style="flex: 1;">Apply</button>
-                </div>
-            </div>
-        `;
+        const modalContent = document.createElement('div');
+        modalContent.className = 'bulk-modal';
+        modalContent.style.cssText = 'background: white; border-radius: 12px; padding: 2rem; max-width: 400px; width: 90%;';
 
+        const h3 = document.createElement('h3');
+        h3.style.margin = '0 0 1.5rem 0';
+        h3.textContent = 'Bulk Availability Update';
+
+        const startGroup = document.createElement('div');
+        startGroup.className = 'form-group';
+        startGroup.style.marginBottom = '1rem';
+        const startLabel = document.createElement('label');
+        startLabel.style.cssText = 'display: block; margin-bottom: 0.5rem;';
+        startLabel.textContent = 'Start Date:';
+        const startInput = document.createElement('input');
+        startInput.type = 'date';
+        startInput.id = 'bulkStartDate';
+        startInput.style.cssText = 'width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;';
+        startGroup.appendChild(startLabel);
+        startGroup.appendChild(startInput);
+
+        const endGroup = document.createElement('div');
+        endGroup.className = 'form-group';
+        endGroup.style.marginBottom = '1rem';
+        const endLabel = document.createElement('label');
+        endLabel.style.cssText = 'display: block; margin-bottom: 0.5rem;';
+        endLabel.textContent = 'End Date:';
+        const endInput = document.createElement('input');
+        endInput.type = 'date';
+        endInput.id = 'bulkEndDate';
+        endInput.style.cssText = 'width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;';
+        endGroup.appendChild(endLabel);
+        endGroup.appendChild(endInput);
+
+        const actionGroup = document.createElement('div');
+        actionGroup.className = 'form-group';
+        actionGroup.style.marginBottom = '1.5rem';
+        const actionLabel = document.createElement('label');
+        actionLabel.style.cssText = 'display: block; margin-bottom: 0.5rem;';
+        actionLabel.textContent = 'Action:';
+        const actionSelect = document.createElement('select');
+        actionSelect.id = 'bulkAction';
+        actionSelect.style.cssText = 'width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;';
+        const blockOption = document.createElement('option');
+        blockOption.value = 'block';
+        blockOption.textContent = 'Block dates (unavailable)';
+        const unblockOption = document.createElement('option');
+        unblockOption.value = 'unblock';
+        unblockOption.textContent = 'Unblock dates (available)';
+        actionSelect.appendChild(blockOption);
+        actionSelect.appendChild(unblockOption);
+        actionGroup.appendChild(actionLabel);
+        actionGroup.appendChild(actionSelect);
+
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'modal-actions';
+        actionsDiv.style.cssText = 'display: flex; gap: 1rem;';
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn btn-secondary bulk-cancel';
+        cancelBtn.style.flex = '1';
+        cancelBtn.textContent = 'Cancel';
+        const applyBtn = document.createElement('button');
+        applyBtn.className = 'btn btn-primary bulk-apply';
+        applyBtn.style.flex = '1';
+        applyBtn.textContent = 'Apply';
+        actionsDiv.appendChild(cancelBtn);
+        actionsDiv.appendChild(applyBtn);
+
+        modalContent.appendChild(h3);
+        modalContent.appendChild(startGroup);
+        modalContent.appendChild(endGroup);
+        modalContent.appendChild(actionGroup);
+        modalContent.appendChild(actionsDiv);
+
+        modal.appendChild(modalContent);
         document.body.appendChild(modal);
 
-        // Set minimum dates
         const today = new Date().toISOString().split('T')[0];
-        document.getElementById('bulkStartDate').min = today;
-        document.getElementById('bulkEndDate').min = today;
+        startInput.min = today;
+        endInput.min = today;
 
-        // Handle actions
-        modal.querySelector('.bulk-cancel').addEventListener('click', () => modal.remove());
-        modal.querySelector('.bulk-apply').addEventListener('click', () => {
-            this.applyBulkAvailability(propertyId, modal);
+        cancelBtn.addEventListener('click', () => modal.remove());
+        applyBtn.addEventListener('click', () => {
+            this.#applyBulkAvailability(propertyId, modal);
         });
-        
+
         modal.addEventListener('click', (e) => {
             if (e.target === modal) modal.remove();
         });
     }
 
-    // Apply bulk availability changes
-    async applyBulkAvailability(propertyId, modal) {
+    async #applyBulkAvailability(propertyId, modal) {
         const startDate = document.getElementById('bulkStartDate').value;
         const endDate = document.getElementById('bulkEndDate').value;
         const action = document.getElementById('bulkAction').value;
 
         if (!startDate || !endDate) {
-            this.showError('Please select both start and end dates');
+            this.#showError('Please select both start and end dates');
             return;
         }
 
         if (new Date(endDate) <= new Date(startDate)) {
-            this.showError('End date must be after start date');
+            this.#showError('End date must be after start date');
             return;
         }
 
@@ -1305,7 +1371,6 @@ class DashboardManager {
             const current = new Date(startDate);
             const end = new Date(endDate);
 
-            // Generate date range
             while (current <= end) {
                 dates.push({
                     property_id: propertyId,
@@ -1315,78 +1380,123 @@ class DashboardManager {
                 current.setDate(current.getDate() + 1);
             }
 
-            // Batch update
-            const { error } = await this.supabaseClient.supabase
+            const { error } = await this.#supabaseClient.supabase
                 .from('property_availability')
                 .upsert(dates);
 
             if (error) throw error;
 
-            this.showNotification(`${dates.length} dates ${action}ed successfully!`, 'success');
+            this.#showNotification(`${dates.length} dates ${action}ed successfully!`, 'success');
             modal.remove();
 
-            // Reload calendar
-            this.loadPropertyCalendar(propertyId);
+            this.#loadPropertyCalendar(propertyId);
 
         } catch (error) {
-            this.showError('Failed to update availability. Please try again.');
+            this.#showError('Failed to update availability. Please try again.');
         }
     }
 
-    // Update renter bookings
-    updateRenterBookings(bookings) {
+    #updateRenterBookings(bookings) {
         const renterBookingsContainer = document.getElementById('renterBookingsContainer');
         if (!renterBookingsContainer) return;
 
-        const upcomingBookings = bookings.filter(b => 
+        const upcomingBookings = bookings.filter(b =>
             b.status === 'confirmed' && new Date(b.check_in_date) > new Date()
         );
-        const pastBookings = bookings.filter(b => 
+        const pastBookings = bookings.filter(b =>
             ['completed', 'confirmed'].includes(b.status) && new Date(b.check_out_date) <= new Date()
         ).slice(0, 5);
         const pendingBookings = bookings.filter(b => b.status === 'pending');
 
         if (bookings.length === 0) {
-            renterBookingsContainer.innerHTML = `
-                <div class="no-bookings">
-                    <p><em>No bookings yet. <a href="properties.html">Browse properties</a> to make your first booking!</em></p>
-                </div>
-            `;
+            renterBookingsContainer.innerHTML = '';
+            const noBookingsDiv = document.createElement('div');
+            noBookingsDiv.className = 'no-bookings';
+            const p = document.createElement('p');
+            const em = document.createElement('em');
+            em.textContent = 'No bookings yet. ';
+            const a = document.createElement('a');
+            a.href = 'properties.html';
+            a.textContent = 'Browse properties';
+            const text = document.createTextNode(' to make your first booking!');
+            p.appendChild(em);
+            em.appendChild(a);
+            em.appendChild(text);
+            noBookingsDiv.appendChild(p);
+            renterBookingsContainer.appendChild(noBookingsDiv);
             return;
         }
 
-        renterBookingsContainer.innerHTML = `
-            ${pendingBookings.length > 0 ? `
-                <div class="booking-section">
-                    <h4 style="color: #f39c12; margin-bottom: 1rem;">⏳ Pending Requests (${pendingBookings.length})</h4>
-                    <div class="booking-cards">
-                        ${pendingBookings.map(booking => this.createRenterBookingCard(booking)).join('')}
-                    </div>
-                </div>
-            ` : ''}
+        renterBookingsContainer.innerHTML = '';
 
-            ${upcomingBookings.length > 0 ? `
-                <div class="booking-section" style="margin-top: 2rem;">
-                    <h4 style="color: #27ae60; margin-bottom: 1rem;">✈️ Upcoming Trips (${upcomingBookings.length})</h4>
-                    <div class="booking-cards">
-                        ${upcomingBookings.map(booking => this.createRenterBookingCard(booking)).join('')}
-                    </div>
-                </div>
-            ` : ''}
-            
-            ${pastBookings.length > 0 ? `
-                <div class="booking-section" style="margin-top: 2rem;">
-                    <h4 style="margin-bottom: 1rem;">🏁 Past Trips</h4>
-                    <div class="booking-cards">
-                        ${pastBookings.map(booking => this.createRenterBookingCard(booking)).join('')}
-                    </div>
-                </div>
-            ` : ''}
-        `;
+        if (pendingBookings.length > 0) {
+            const pendingSection = this.#createRenterBookingSection(
+                `⏳ Pending Requests (${pendingBookings.length})`,
+                pendingBookings,
+                '#f39c12'
+            );
+            renterBookingsContainer.appendChild(pendingSection);
+        }
+
+        if (upcomingBookings.length > 0) {
+            const upcomingSection = this.#createRenterBookingSection(
+                `✈️ Upcoming Trips (${upcomingBookings.length})`,
+                upcomingBookings,
+                '#27ae60'
+            );
+            upcomingSection.style.marginTop = '2rem';
+            renterBookingsContainer.appendChild(upcomingSection);
+        }
+
+        if (pastBookings.length > 0) {
+            const pastSection = this.#createRenterBookingSection(
+                '🏁 Past Trips',
+                pastBookings
+            );
+            pastSection.style.marginTop = '2rem';
+            renterBookingsContainer.appendChild(pastSection);
+        }
     }
 
-    // Create renter booking card
-    createRenterBookingCard(booking) {
+    #createRenterBookingSection(title, bookings, titleColor = null) {
+        const section = document.createElement('div');
+        section.className = 'booking-section';
+
+        const h4 = document.createElement('h4');
+        h4.style.marginBottom = '1rem';
+        if (titleColor) {
+            h4.style.color = titleColor;
+        }
+        h4.textContent = title;
+
+        const cardsDiv = document.createElement('div');
+        cardsDiv.className = 'booking-cards';
+
+        bookings.forEach(booking => {
+            const card = this.#createRenterBookingCard(booking);
+            cardsDiv.appendChild(card);
+        });
+
+        section.appendChild(h4);
+        section.appendChild(cardsDiv);
+
+        return section;
+    }
+
+    #createRenterBookingCard(booking) {
+        const card = document.createElement('div');
+        card.className = 'booking-card';
+        card.style.cssText = `
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 1rem;
+        `;
+
         const property = booking.properties;
         const primaryImage = property?.property_images?.find(img => img.is_primary);
         const imageUrl = primaryImage?.image_url;
@@ -1403,129 +1513,145 @@ class DashboardManager {
             cancelled: '#e74c3c'
         };
 
-        return `
-            <div class="booking-card" style="
-                border: 1px solid #ddd;
-                border-radius: 8px;
-                padding: 1rem;
-                margin-bottom: 1rem;
-                background: white;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                display: flex;
-                gap: 1rem;
-            ">
-                ${imageUrl ? `
-                    <div class="booking-image" style="
-                        width: 100px;
-                        height: 80px;
-                        border-radius: 6px;
-                        overflow: hidden;
-                        flex-shrink: 0;
-                    ">
-                        <img src="${window.viewVistaApp.sanitizeHTML(imageUrl)}" 
-                             alt="${window.viewVistaApp.sanitizeHTML(property?.title || 'Property')}"
-                             style="width: 100%; height: 100%; object-fit: cover;">
-                    </div>
-                ` : ''}
-                
-                <div class="booking-content" style="flex: 1;">
-                    <div class="booking-header" style="
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: flex-start;
-                        margin-bottom: 0.5rem;
-                    ">
-                        <div>
-                            <h5 style="margin: 0 0 0.25rem 0; color: #2c3e50;">
-                                ${window.viewVistaApp.sanitizeHTML(property?.title || 'Property')}
-                            </h5>
-                            <p style="margin: 0; color: #666; font-size: 0.9rem;">
-                                ${window.viewVistaApp.sanitizeHTML(property?.city || '')}, ${window.viewVistaApp.sanitizeHTML(property?.state || '')}
-                            </p>
-                        </div>
-                        <span class="booking-status" style="
-                            background: ${statusColors[booking.status] || '#95a5a6'};
-                            color: white;
-                            padding: 0.25rem 0.75rem;
-                            border-radius: 12px;
-                            font-size: 0.8rem;
-                            font-weight: 500;
-                            text-transform: capitalize;
-                        ">
-                            ${booking.status}
-                        </span>
-                    </div>
+        if (imageUrl) {
+            const imageDiv = document.createElement('div');
+            imageDiv.className = 'booking-image';
+            imageDiv.style.cssText = 'width: 100px; height: 80px; border-radius: 6px; overflow: hidden; flex-shrink: 0;';
 
-                    <div class="booking-details" style="font-size: 0.9rem; color: #666;">
-                        <div style="margin-bottom: 0.25rem;">
-                            📅 ${this.formatDate(booking.check_in_date)} - ${this.formatDate(booking.check_out_date)} (${nights} night${nights > 1 ? 's' : ''})
-                        </div>
-                        <div style="margin-bottom: 0.25rem;">
-                            👥 ${booking.num_guests} guest${booking.num_guests > 1 ? 's' : ''}
-                        </div>
-                        <div style="font-weight: 500; color: #27ae60;">
-                            💰 $${booking.total_amount} total
-                        </div>
-                    </div>
+            const img = document.createElement('img');
+            img.src = this.#sanitize(imageUrl);
+            img.alt = this.#sanitize(property?.title || 'Property');
+            img.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
 
-                    ${booking.status === 'pending' ? `
-                        <div style="margin-top: 0.5rem; font-size: 0.85rem; color: #f39c12;">
-                            ⏳ Waiting for host approval
-                        </div>
-                    ` : isUpcoming && booking.status === 'confirmed' ? `
-                        <div style="margin-top: 0.5rem; font-size: 0.85rem; color: #27ae60;">
-                            ✅ Confirmed - Get ready for your trip!
-                        </div>
-                    ` : isPast && booking.status !== 'cancelled' ? `
-                        <div style="margin-top: 0.5rem;">
-                            <button class="btn btn-sm btn-primary" onclick="alert('Review feature coming soon!')" 
-                                    style="padding: 0.25rem 0.75rem; font-size: 0.8rem;">
-                                ⭐ Write Review
-                            </button>
-                        </div>
-                    ` : ''}
-                </div>
-            </div>
+            imageDiv.appendChild(img);
+            card.appendChild(imageDiv);
+        }
+
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'booking-content';
+        contentDiv.style.flex = '1';
+
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'booking-header';
+        headerDiv.style.cssText = 'display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;';
+
+        const headerInfo = document.createElement('div');
+        const h5 = document.createElement('h5');
+        h5.style.cssText = 'margin: 0 0 0.25rem 0; color: #2c3e50;';
+        h5.textContent = this.#sanitize(property?.title || 'Property');
+
+        const locationP = document.createElement('p');
+        locationP.style.cssText = 'margin: 0; color: #666; font-size: 0.9rem;';
+        locationP.textContent = `${this.#sanitize(property?.city || '')}, ${this.#sanitize(property?.state || '')}`;
+
+        headerInfo.appendChild(h5);
+        headerInfo.appendChild(locationP);
+
+        const statusSpan = document.createElement('span');
+        statusSpan.className = 'booking-status';
+        statusSpan.style.cssText = `
+            background: ${statusColors[booking.status] || '#95a5a6'};
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: capitalize;
         `;
+        statusSpan.textContent = booking.status;
+
+        headerDiv.appendChild(headerInfo);
+        headerDiv.appendChild(statusSpan);
+
+        const detailsDiv = document.createElement('div');
+        detailsDiv.className = 'booking-details';
+        detailsDiv.style.cssText = 'font-size: 0.9rem; color: #666;';
+
+        const datesDiv = document.createElement('div');
+        datesDiv.style.marginBottom = '0.25rem';
+        datesDiv.textContent = `📅 ${this.#formatDate(booking.check_in_date)} - ${this.#formatDate(booking.check_out_date)} (${nights} night${nights > 1 ? 's' : ''})`;
+
+        const guestsDiv = document.createElement('div');
+        guestsDiv.style.marginBottom = '0.25rem';
+        const numGuests = parseInt(booking.num_guests) || 0;
+        guestsDiv.textContent = `👥 ${numGuests} guest${numGuests > 1 ? 's' : ''}`;
+
+        const totalDiv = document.createElement('div');
+        totalDiv.style.cssText = 'font-weight: 500; color: #27ae60;';
+        totalDiv.textContent = `💰 $${parseFloat(booking.total_amount) || 0} total`;
+
+        detailsDiv.appendChild(datesDiv);
+        detailsDiv.appendChild(guestsDiv);
+        detailsDiv.appendChild(totalDiv);
+
+        contentDiv.appendChild(headerDiv);
+        contentDiv.appendChild(detailsDiv);
+
+        if (booking.status === 'pending') {
+            const statusDiv = document.createElement('div');
+            statusDiv.style.cssText = 'margin-top: 0.5rem; font-size: 0.85rem; color: #f39c12;';
+            statusDiv.textContent = '⏳ Waiting for host approval';
+            contentDiv.appendChild(statusDiv);
+        } else if (isUpcoming && booking.status === 'confirmed') {
+            const statusDiv = document.createElement('div');
+            statusDiv.style.cssText = 'margin-top: 0.5rem; font-size: 0.85rem; color: #27ae60;';
+            statusDiv.textContent = '✅ Confirmed - Get ready for your trip!';
+            contentDiv.appendChild(statusDiv);
+        } else if (isPast && booking.status !== 'cancelled') {
+            const actionDiv = document.createElement('div');
+            actionDiv.style.marginTop = '0.5rem';
+            const reviewBtn = document.createElement('button');
+            reviewBtn.className = 'btn btn-sm btn-primary';
+            reviewBtn.style.cssText = 'padding: 0.25rem 0.75rem; font-size: 0.8rem;';
+            reviewBtn.textContent = '⭐ Write Review';
+            reviewBtn.addEventListener('click', () => {
+                this.#showNotification('Review feature coming soon!', 'info');
+            });
+            actionDiv.appendChild(reviewBtn);
+            contentDiv.appendChild(actionDiv);
+        }
+
+        card.appendChild(contentDiv);
+
+        return card;
     }
 
-    // Update wishlist (placeholder implementation)
-    updateWishlist(wishlist) {
-        // This would populate the wishlist section
-        // Implementation depends on specific requirements
+    #updateWishlist(wishlist) {
     }
 
-    // Utility: Format currency
-    formatCurrency(amount, currency = 'USD') {
+    #formatCurrency(amount, currency = 'USD') {
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: currency
         }).format(amount);
     }
 
-    // Utility: Format date
-    formatDate(date, options = {}) {
+    #formatDate(date, options = {}) {
         const defaultOptions = {
             year: 'numeric',
             month: 'short',
             day: 'numeric'
         };
-        
+
         return new Intl.DateTimeFormat('en-US', { ...defaultOptions, ...options }).format(new Date(date));
+    }
+
+    #sanitize(str) {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
     }
 }
 
-// Initialize dashboard when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    // Only initialize if we're on a dashboard page
     const isDashboardPage = window.location.pathname.includes('dashboard');
-    
+
     if (isDashboardPage) {
         window.dashboardManager = new DashboardManager();
     }
 });
 
-// Export for module use
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = DashboardManager;
 }
