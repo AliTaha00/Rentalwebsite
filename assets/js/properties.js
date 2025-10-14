@@ -763,7 +763,7 @@ class PropertiesManager {
             showResults.addEventListener('click', () => {
 
                 filtersPanel.style.display = 'none';
-                this.#performSearch();
+                this.#handleSearch();
             });
         }
     }
