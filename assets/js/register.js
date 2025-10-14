@@ -1,195 +1,159 @@
-// Registration Page JavaScript
-// Handles account type selection and user registration flow
-
 class RegistrationManager {
+    #authManager;
+    #supabaseClient;
+    #selectedAccountType = null;
+
     constructor() {
-        this.authManager = window.authManager;
-        this.supabaseClient = window.supabaseClient;
-        this.selectedAccountType = null;
-        
+        this.#authManager = window.authManager;
+        this.#supabaseClient = window.supabaseClient;
         this.init();
     }
 
     async init() {
         try {
-            // Wait for Supabase to be initialized
-            await this.supabaseClient.waitForInit();
-            
-            this.setupAccountTypeSelection();
-            this.setupRegistrationForm();
-            this.handleUrlParameters();
+            await this.#supabaseClient.waitForInit();
+            this.#setupAccountTypeSelection();
+            this.#setupRegistrationForm();
+            this.#handleUrlParameters();
         } catch (error) {
-            console.error('Registration initialization error:', error);
-            this.authManager.showError('Failed to initialize registration. Please refresh the page.');
+            console.error('Registration initialization failed:', error.message);
+            this.#authManager.showError('Failed to initialize registration. Please refresh the page.');
         }
     }
 
-    // Setup account type selection
-    setupAccountTypeSelection() {
-        const typeSelection = document.getElementById('account-type-selection');
-        const registrationForm = document.getElementById('registration-form');
+    #setupAccountTypeSelection() {
         const selectButtons = document.querySelectorAll('.select-type-btn');
         const backButton = document.getElementById('back-to-selection');
 
-        // Handle account type selection
         selectButtons.forEach(button => {
             button.addEventListener('click', (e) => {
                 e.preventDefault();
                 const accountType = button.getAttribute('data-type');
-                this.selectAccountType(accountType);
+                this.#selectAccountType(accountType);
             });
         });
 
-        // Handle back button
-        if (backButton) {
-            backButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.showAccountTypeSelection();
-            });
-        }
+        backButton?.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.#showAccountTypeSelection();
+        });
 
-        // Handle account type option hover/click for better UX
-        const accountOptions = document.querySelectorAll('.account-type-option');
-        accountOptions.forEach(option => {
+        document.querySelectorAll('.account-type-option').forEach(option => {
             option.addEventListener('click', (e) => {
                 if (!e.target.classList.contains('select-type-btn')) {
                     const button = option.querySelector('.select-type-btn');
-                    if (button) {
-                        button.click();
-                    }
+                    button?.click();
                 }
             });
         });
     }
 
-    // Select account type and show registration form
-    selectAccountType(accountType) {
-        this.selectedAccountType = accountType;
-        
-        // Update URL parameter
-        this.authManager.setUrlParameter('type', accountType);
-        
-        // Update form title and subtitle
+    #selectAccountType(accountType) {
+        this.#selectedAccountType = accountType;
+        this.#authManager.setUrlParameter('type', accountType);
+
         const formTitle = document.getElementById('form-title');
         const formSubtitle = document.getElementById('form-subtitle');
         const ownerFields = document.getElementById('owner-fields');
         const accountTypeField = document.getElementById('accountType');
 
         if (accountType === 'owner') {
-            formTitle.textContent = 'Create Property Owner Account';
-            formSubtitle.textContent = 'Start listing your beautiful properties';
+            if (formTitle) formTitle.textContent = 'Create Property Owner Account';
+            if (formSubtitle) formSubtitle.textContent = 'Start listing your beautiful properties';
             if (ownerFields) ownerFields.style.display = 'block';
         } else {
-            formTitle.textContent = 'Create Renter Account';
-            formSubtitle.textContent = 'Start discovering amazing views';
+            if (formTitle) formTitle.textContent = 'Create Renter Account';
+            if (formSubtitle) formSubtitle.textContent = 'Start discovering amazing views';
             if (ownerFields) ownerFields.style.display = 'none';
         }
 
-        // Set hidden field value
         if (accountTypeField) {
             accountTypeField.value = accountType;
         }
 
-        // Show registration form
-        this.showRegistrationForm();
+        this.#showRegistrationForm();
     }
 
-    // Show account type selection
-    showAccountTypeSelection() {
+    #showAccountTypeSelection() {
         const typeSelection = document.getElementById('account-type-selection');
         const registrationForm = document.getElementById('registration-form');
 
         if (typeSelection) typeSelection.style.display = 'block';
         if (registrationForm) registrationForm.style.display = 'none';
 
-        // Clear URL parameter
-        this.authManager.setUrlParameter('type', null);
-        this.selectedAccountType = null;
+        this.#authManager.setUrlParameter('type', null);
+        this.#selectedAccountType = null;
     }
 
-    // Show registration form
-    showRegistrationForm() {
+    #showRegistrationForm() {
         const typeSelection = document.getElementById('account-type-selection');
         const registrationForm = document.getElementById('registration-form');
 
         if (typeSelection) typeSelection.style.display = 'none';
         if (registrationForm) registrationForm.style.display = 'block';
 
-        // Focus first input
-        const firstInput = registrationForm.querySelector('input');
+        const firstInput = registrationForm?.querySelector('input');
         if (firstInput) {
             setTimeout(() => firstInput.focus(), 100);
         }
     }
 
-    // Handle URL parameters for direct linking
-    handleUrlParameters() {
-        const typeParam = this.authManager.getUrlParameter('type');
-        if (typeParam && (typeParam === 'owner' || typeParam === 'renter')) {
-            this.selectAccountType(typeParam);
+    #handleUrlParameters() {
+        const typeParam = this.#authManager.getUrlParameter('type');
+        if (typeParam === 'owner' || typeParam === 'renter') {
+            this.#selectAccountType(typeParam);
         }
     }
 
-    // Setup registration form
-    setupRegistrationForm() {
+    #setupRegistrationForm() {
         const form = document.getElementById('registerForm');
         if (!form) return;
 
-        // Add real-time validation
-        this.authManager.addRealTimeValidation(form);
+        this.#authManager.addRealTimeValidation(form);
 
-        // Handle form submission
         form.addEventListener('submit', (e) => {
             e.preventDefault();
-            this.handleRegistration(form);
+            this.#handleRegistration(form);
         });
 
-        // Add input formatting
-        this.setupInputFormatting(form);
+        this.#setupInputFormatting(form);
     }
 
-    // Setup input formatting
-    setupInputFormatting(form) {
+    #setupInputFormatting(form) {
         const phoneField = form.querySelector('#phone');
-        
-        if (phoneField) {
-            phoneField.addEventListener('input', (e) => {
-                // Format phone number as user types
-                let value = e.target.value.replace(/\D/g, '');
-                if (value.length >= 6) {
-                    value = value.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
-                } else if (value.length >= 3) {
-                    value = value.replace(/(\d{3})(\d{0,3})/, '($1) $2');
-                }
-                e.target.value = value;
-            });
-        }
+        if (!phoneField) return;
+
+        phoneField.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 10) {
+                value = value.slice(0, 10);
+                value = value.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
+            } else if (value.length >= 6) {
+                value = value.replace(/(\d{3})(\d{3})/, '($1) $2-');
+            } else if (value.length >= 3) {
+                value = value.replace(/(\d{3})/, '($1) ');
+            }
+            e.target.value = value;
+        });
     }
 
-    // Handle registration
-    async handleRegistration(form) {
-        if (this.authManager.isProcessing) return;
+    async #handleRegistration(form) {
+        if (this.#authManager.isProcessing) return;
 
         try {
-            // Clear previous errors
-            this.authManager.clearAllErrors();
-            
-            // Set loading state
-            this.authManager.setFormLoading(true, form);
+            this.#authManager.clearAllErrors();
+            this.#authManager.setFormLoading(true, form);
 
-            // Validate form
-            const formData = this.validateRegistrationForm(form);
+            const formData = this.#validateRegistrationForm(form);
             if (!formData) {
-                this.authManager.setFormLoading(false, form);
+                this.#authManager.setFormLoading(false, form);
                 return;
             }
 
-            // Show loading state
-            this.showLoadingState();
+            this.#showLoadingState();
 
-            // Create user account
-            const authData = await this.supabaseClient.signUp(
-                formData.email, 
+            const authData = await this.#supabaseClient.signUp(
+                formData.email,
                 formData.password,
                 {
                     account_type: formData.accountType,
@@ -200,28 +164,20 @@ class RegistrationManager {
                 }
             );
 
-            // Create user profile in database
-            if (authData.user && !authData.user.email_confirmed_at) {
-                // User needs to confirm email
-                this.showSuccessState();
-            } else if (authData.user) {
-                // Auto-confirmed (if email confirmation is disabled)
-                await this.createUserProfile(authData.user.id, formData);
-                this.showSuccessState();
+            if (authData.user) {
+                await this.#createUserProfile(authData.user.id, formData);
+                this.#showSuccessState();
             }
-
         } catch (error) {
-            console.error('Registration error:', error);
-            this.authManager.handleAuthError(error);
-            this.showRegistrationForm();
+            console.error('Registration error:', error.message);
+            this.#authManager.handleAuthError(error);
+            this.#showRegistrationForm();
         } finally {
-            this.authManager.setFormLoading(false, form);
+            this.#authManager.setFormLoading(false, form);
         }
     }
 
-    // Validate registration form
-    validateRegistrationForm(form) {
-        // Use direct DOM access instead of FormData for more reliable field capture
+    #validateRegistrationForm(form) {
         const data = {
             email: form.querySelector('#email')?.value?.trim(),
             password: form.querySelector('#password')?.value,
@@ -235,74 +191,78 @@ class RegistrationManager {
             agreeTerms: form.querySelector('#agreeTerms')?.checked
         };
 
-        // Validate required fields
         if (!data.email) {
-            this.authManager.showFieldError('email', 'Email is required');
+            this.#authManager.showFieldError('email', 'Email is required');
             return null;
         }
 
-        if (!this.authManager.validateEmail(data.email)) {
-            this.authManager.showFieldError('email', 'Please enter a valid email address');
+        if (!this.#authManager.validateEmail(data.email)) {
+            this.#authManager.showFieldError('email', 'Please enter a valid email address');
             return null;
         }
 
         if (!data.password) {
-            this.authManager.showFieldError('password', 'Password is required');
+            this.#authManager.showFieldError('password', 'Password is required');
             return null;
         }
 
-        const passwordValidation = this.authManager.validatePassword(data.password);
+        const passwordValidation = this.#authManager.validatePassword(data.password);
         if (!passwordValidation.isValid) {
-            this.authManager.showFieldError('password', passwordValidation.errors[0]);
+            this.#authManager.showFieldError('password', passwordValidation.errors[0]);
             return null;
         }
 
         if (!data.confirmPassword) {
-            this.authManager.showFieldError('confirmPassword', 'Please confirm your password');
+            this.#authManager.showFieldError('confirmPassword', 'Please confirm your password');
             return null;
         }
 
-        if (!this.authManager.validatePasswordMatch(data.password, data.confirmPassword)) {
-            this.authManager.showFieldError('confirmPassword', 'Passwords do not match');
+        if (!this.#authManager.validatePasswordMatch(data.password, data.confirmPassword)) {
+            this.#authManager.showFieldError('confirmPassword', 'Passwords do not match');
             return null;
         }
 
         if (!data.firstName) {
-            this.authManager.showFieldError('firstName', 'First name is required');
+            this.#authManager.showFieldError('firstName', 'First name is required');
             return null;
         }
 
         if (!data.lastName) {
-            this.authManager.showFieldError('lastName', 'Last name is required');
+            this.#authManager.showFieldError('lastName', 'Last name is required');
             return null;
         }
 
         if (!data.phone) {
-            this.authManager.showFieldError('phone', 'Phone number is required');
+            this.#authManager.showFieldError('phone', 'Phone number is required');
             return null;
         }
 
-        if (!this.authManager.validatePhone(data.phone)) {
-            this.authManager.showFieldError('phone', 'Please enter a valid phone number');
+        if (!this.#authManager.validatePhone(data.phone)) {
+            this.#authManager.showFieldError('phone', 'Please enter a valid phone number');
             return null;
         }
 
         if (!data.accountType) {
-            this.authManager.showError('Please select an account type');
+            this.#authManager.showError('Please select an account type');
             return null;
         }
 
         if (!data.agreeTerms) {
-            this.authManager.showFieldError('agreeTerms', 'You must agree to the terms and conditions');
+            this.#authManager.showFieldError('agreeTerms', 'You must agree to the terms and conditions');
             return null;
         }
 
         return data;
     }
 
-    // Create user profile in database
-    async createUserProfile(userId, formData) {
+    async #createUserProfile(userId, formData) {
+        if (!this.#supabaseClient.supabase) {
+            throw new Error('Supabase client not initialized');
+        }
+
         const profileData = {
+            user_id: userId,
+            email: formData.email.toLowerCase(),
             first_name: formData.firstName,
             last_name: formData.lastName,
             phone: formData.phone,
@@ -310,14 +270,22 @@ class RegistrationManager {
             business_name: formData.businessName || null,
             address: formData.address || null,
             email_verified: false,
+            is_active: true,
             created_at: new Date().toISOString()
         };
 
-        await this.supabaseClient.insertUserProfile(userId, profileData);
+        const { data, error } = await this.#supabaseClient.supabase
+            .from('user_profiles')
+            .insert([profileData]);
+
+        if (error) {
+            throw error;
+        }
+
+        return data;
     }
 
-    // Show loading state
-    showLoadingState() {
+    #showLoadingState() {
         const loadingState = document.getElementById('loading-state');
         const registrationForm = document.getElementById('registration-form');
 
@@ -325,8 +293,7 @@ class RegistrationManager {
         if (loadingState) loadingState.style.display = 'block';
     }
 
-    // Show success state
-    showSuccessState() {
+    #showSuccessState() {
         const successState = document.getElementById('success-state');
         const loadingState = document.getElementById('loading-state');
 
@@ -335,12 +302,10 @@ class RegistrationManager {
     }
 }
 
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     new RegistrationManager();
 });
 
-// Export for module use
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = RegistrationManager;
 }
