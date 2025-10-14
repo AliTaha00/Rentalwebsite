@@ -6,7 +6,7 @@
     <title>Search Results - RentThatView</title>
     <link rel="stylesheet" href="../assets/css/main.css">
     <link rel="stylesheet" href="../assets/css/search-results.css">
-    <!-- Flatpickr CSS -->
+    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body>
@@ -16,7 +16,7 @@
                 <a href="../index.html"><h2>RentThatView</h2></a>
             </div>
             
-            <!-- Search bar always visible on this page -->
+            
             <div class="nav-search-results">
                 <form id="searchResultsForm" class="nav-search-form" role="search">
                     <div class="nav-search-seg">
@@ -142,7 +142,7 @@
     </nav>
 
     <main class="search-results-main">
-        <!-- Filters Bar -->
+        
         <div class="filters-bar">
             <div class="filters-container">
                 <button class="filter-btn" id="filtersToggle">
@@ -165,10 +165,10 @@
             </div>
         </div>
 
-        <!-- Filters Backdrop -->
+        
         <div class="filters-backdrop" id="filtersBackdrop"></div>
 
-        <!-- Filters Panel (Hidden by default) -->
+        
         <div class="filters-panel" id="filtersPanel">
             <div class="filters-panel-header">
                 <h3>Filters</h3>
@@ -179,7 +179,7 @@
                 </button>
             </div>
             <div class="filters-panel-content">
-                <!-- Amenities Quick Filters -->
+                
                 <div class="filter-section">
                     <div class="amenities-scroll-container">
                         <button class="amenity-icon-btn" data-amenity="Parking">
@@ -230,7 +230,7 @@
                     </div>
                 </div>
 
-                <!-- Type of Place -->
+                
                 <div class="filter-section">
                     <h4>Type of place</h4>
                     <div class="toggle-buttons">
@@ -240,7 +240,7 @@
                     </div>
                 </div>
 
-                <!-- Price Range -->
+                
                 <div class="filter-section">
                     <h4>Price range</h4>
                     <div class="price-range-display">
@@ -257,7 +257,7 @@
                     </div>
                 </div>
 
-                <!-- Property Details (Collapsible) -->
+                
                 <div class="filter-section">
                     <h4>Property type</h4>
                     <select id="propertyType" class="filter-select">
@@ -314,21 +314,21 @@
             </div>
         </div>
 
-        <!-- Main Content Area -->
+        
         <div class="content-wrapper">
-            <!-- Properties Grid -->
+            
             <div class="properties-section" id="propertiesSection">
                 <div class="properties-grid" id="propertiesGrid">
-                    <!-- Properties will be loaded here -->
+                    
                 </div>
                 
-                <!-- Loading State -->
+                
                 <div class="loading-state" id="loadingState">
                     <div class="spinner"></div>
                     <p>Loading properties...</p>
                 </div>
                 
-                <!-- Empty State -->
+                
                 <div class="empty-state" id="emptyState" style="display: none;">
                     <svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="32" cy="32" r="28"/>
@@ -339,18 +339,18 @@
                 </div>
             </div>
 
-            <!-- Map Section -->
+            
             <div class="map-section" id="mapSection">
                 <div id="map"></div>
             </div>
         </div>
     </main>
 
-    <!-- Flatpickr JS -->
+    
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <!-- Config (API keys) -->
+    
     <script src="../config.js"></script>
-    <!-- Google Maps JS (loaded dynamically with API key from config) -->
+    
     <script>
         (function() {
             const script = document.createElement('script');
@@ -360,7 +360,7 @@
             document.head.appendChild(script);
         })();
     </script>
-    <!-- Supabase -->
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../assets/js/env.js"></script>
     <script src="../assets/js/supabase-client.js"></script>

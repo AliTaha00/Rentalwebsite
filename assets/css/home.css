@@ -1,4 +1,4 @@
-/* ===== HERO SECTION ===== */
+
 .hero {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -52,7 +52,7 @@
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
-/* ===== FEATURES SECTION ===== */
+
 .features {
     padding: 5rem 0;
     background-color: white;
@@ -105,7 +105,7 @@
     margin-bottom: 0;
 }
 
-/* ===== HOW IT WORKS SECTION ===== */
+
 .how-it-works {
     padding: 5rem 0;
     background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
@@ -177,7 +177,7 @@
 }
 
 
-/* ===== RESPONSIVE DESIGN ===== */
+
 @media (max-width: 1024px) {
     .hero {
         grid-template-columns: 1fr;

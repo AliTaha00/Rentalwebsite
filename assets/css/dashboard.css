@@ -1,13 +1,13 @@
-/* ===== DASHBOARD STYLES ===== */
 
-/* ===== DASHBOARD MAIN ===== */
+
+
 .dashboard-main {
     min-height: calc(100vh - 70px);
     padding: 2rem 0;
     background-color: #f8fafc;
 }
 
-/* ===== DASHBOARD HEADER ===== */
+
 .dashboard-header {
     display: flex;
     justify-content: space-between;
@@ -36,7 +36,7 @@
     gap: 1rem;
 }
 
-/* ===== DASHBOARD STATS ===== */
+
 .dashboard-stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -86,14 +86,14 @@
     font-weight: 500;
 }
 
-/* ===== DASHBOARD CONTENT ===== */
+
 .dashboard-content {
     display: flex;
     flex-direction: column;
     gap: 2.5rem;
 }
 
-/* ===== DASHBOARD SECTIONS ===== */
+
 .dashboard-section {
     background: white;
     border-radius: 12px;
@@ -128,7 +128,7 @@
     text-decoration: underline;
 }
 
-/* ===== GRIDS ===== */
+
 .bookings-grid,
 .properties-grid,
 .wishlist-grid {
@@ -143,7 +143,7 @@
     gap: 1.5rem;
 }
 
-/* ===== LISTS ===== */
+
 .bookings-list,
 .messages-list,
 .reviews-list,
@@ -153,7 +153,7 @@
     gap: 1rem;
 }
 
-/* ===== CARDS ===== */
+
 .booking-card,
 .property-card-dashboard,
 .message-card,
@@ -194,7 +194,7 @@
     font-size: 0.9rem;
 }
 
-/* ===== PROPERTY CARDS ===== */
+
 .property-card-dashboard {
     position: relative;
 }
@@ -230,7 +230,7 @@
     font-size: 0.875rem;
 }
 
-/* ===== ANALYTICS CARDS ===== */
+
 .analytics-card {
     padding: 1.25rem;
     border: 1px solid #e5e7eb;
@@ -267,7 +267,7 @@
     letter-spacing: 0.025em;
 }
 
-/* ===== EMPTY STATES ===== */
+
 .empty-state {
     text-align: center;
     padding: 3rem 2rem;
@@ -292,7 +292,7 @@
     font-size: 1rem;
 }
 
-/* ===== LOGOUT BUTTON ===== */
+
 .logout-btn {
     background: none;
     border: none;
@@ -309,7 +309,7 @@
     color: #991b1b;
 }
 
-/* ===== BADGES ===== */
+
 .booking-status {
     display: inline-block;
     padding: 0.25rem 0.75rem;
@@ -340,7 +340,7 @@
     color: #3730a3;
 }
 
-/* ===== RATING DISPLAY ===== */
+
 .rating-display {
     display: flex;
     align-items: center;
@@ -357,7 +357,7 @@
     color: #374151;
 }
 
-/* ===== RESPONSIVE DESIGN ===== */
+
 @media (max-width: 1024px) {
     .dashboard-stats {
         grid-template-columns: repeat(2, 1fr);
@@ -469,7 +469,7 @@
     }
 }
 
-/* ===== LOADING STATES ===== */
+
 .loading-card {
     padding: 2rem;
     text-align: center;
@@ -482,7 +482,7 @@
     margin: 0 auto 1rem;
 }
 
-/* ===== ANIMATIONS ===== */
+
 .stat-card,
 .dashboard-section {
     animation: fadeInUp 0.6s ease-out;
@@ -507,7 +507,7 @@
     }
 }
 
-/* ===== ACCESSIBILITY ===== */
+
 .stat-card:focus,
 .booking-card:focus,
 .property-card-dashboard:focus {
@@ -515,7 +515,7 @@
     outline-offset: 2px;
 }
 
-/* ===== PRINT STYLES ===== */
+
 @media print {
     .dashboard-main {
         background: white;

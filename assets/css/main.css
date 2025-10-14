@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-/* ===== GLOBAL RESET AND BASE STYLES ===== */
+
 * {
     margin: 0;
     padding: 0;
@@ -17,7 +17,7 @@ body {
     background-color: #fafafa;
 }
 
-/* ===== TYPOGRAPHY ===== */
+
 h1 {
     font-size: 2.5rem;
     font-weight: 700;
@@ -58,7 +58,7 @@ a:hover {
     color: #5d704a;
 }
 
-/* ===== LAYOUT UTILITIES ===== */
+
 .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -88,7 +88,7 @@ a:hover {
     display: none;
 }
 
-/* ===== BUTTONS ===== */
+
 .btn {
     display: inline-block;
     padding: 0.75rem 1.5rem;
@@ -149,7 +149,7 @@ a:hover {
     box-shadow: none;
 }
 
-/* ===== NAVBAR ===== */
+
 .navbar {
     background-color: white;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -173,7 +173,7 @@ a:hover {
 }
 
 .nav-search-compact {
-    /* Positioned absolutely, no order needed */
+    
 }
 
 .nav-menu {
@@ -184,7 +184,7 @@ a:hover {
     margin-left: auto;
 }
 
-/* Compact navbar search (appears on scroll) */
+
 .nav-search-compact {
     display: none;
     align-items: center;
@@ -209,7 +209,7 @@ a:hover {
     background: #fff;
     border: 1px solid #ddd;
     border-radius: 40px;
-    padding: 5px 5px 5px 16px; /* equal padding on right for button */
+    padding: 5px 5px 5px 16px; 
     box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
     width: 370px;
     transition: box-shadow 0.2s ease;
@@ -276,7 +276,7 @@ a:hover {
     flex-shrink: 0;
     transition: transform 0.1s ease, box-shadow 0.2s ease;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
-    margin: 0 0 0 6px; /* small left margin for tight fit */
+    margin: 0 0 0 6px; 
     padding: 0;
     position: static;
 }
@@ -396,7 +396,7 @@ a:hover {
     color: white;
 }
 
-/* Profile Icon & Dropdown */
+
 .nav-profile {
     position: relative;
     margin-left: auto;
@@ -520,7 +520,7 @@ a:hover {
     flex-shrink: 0;
 }
 
-/* Mobile Menu Toggle */
+
 .nav-toggle {
     display: none;
     flex-direction: column;
@@ -535,7 +535,7 @@ a:hover {
     transition: 0.3s;
 }
 
-/* ===== FORMS ===== */
+
 .form-group {
     margin-bottom: 1.5rem;
 }
@@ -585,7 +585,7 @@ a:hover {
     border-color: #dc2626;
 }
 
-/* Checkbox Styles */
+
 .checkbox-label {
     display: flex;
     align-items: center;
@@ -598,7 +598,7 @@ a:hover {
     margin-right: 0.5rem;
 }
 
-/* ===== CARDS ===== */
+
 .card {
     background-color: white;
     border-radius: 12px;
@@ -611,7 +611,7 @@ a:hover {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* ===== MODAL ===== */
+
 .modal {
     position: fixed;
     top: 0;
@@ -654,7 +654,7 @@ a:hover {
     color: #333;
 }
 
-/* ===== LOADING STATES ===== */
+
 .loading-spinner {
     width: 40px;
     height: 40px;
@@ -670,7 +670,7 @@ a:hover {
     100% { transform: rotate(360deg); }
 }
 
-/* ===== ALERTS ===== */
+
 .alert {
     padding: 1rem;
     border-radius: 6px;
@@ -701,7 +701,7 @@ a:hover {
     color: #648e38;
 }
 
-/* ===== TOASTS ===== */
+
 .toast-container {
     position: fixed;
     top: 20px;
@@ -731,7 +731,7 @@ a:hover {
 
 .toast-hide { opacity: 0; transform: translateY(-6px); }
 
-/* ===== FOOTER ===== */
+
 .footer {
     background-color: #648e38;
     color: white;
@@ -779,7 +779,7 @@ a:hover {
     color: white !important;
 }
 
-/* ===== RESPONSIVE DESIGN ===== */
+
 @media (max-width: 768px) {
     .nav-menu {
         display: none;
@@ -843,7 +843,7 @@ a:hover {
     }
 }
 
-/* ===== UTILITY CLASSES ===== */
+
 .mt-1 { margin-top: 0.25rem; }
 .mt-2 { margin-top: 0.5rem; }
 .mt-3 { margin-top: 1rem; }

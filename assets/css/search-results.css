@@ -1,9 +1,9 @@
-/* ===== SEARCH RESULTS PAGE STYLES ===== */
 
-/* Import Flatpickr styles from properties.css */
+
+
 @import 'properties.css';
 
-/* Navbar Fixed */
+
 .navbar-fixed {
     position: fixed;
     top: 0;
@@ -39,7 +39,7 @@
     margin-left: auto;
 }
 
-/* Search bar in navbar for results page */
+
 .nav-search-results {
     display: flex;
     align-items: center;
@@ -52,9 +52,9 @@
     background: #fff;
     border: 1px solid #ddd;
     border-radius: 40px;
-    padding: 5px 5px 5px 16px; /* minimal right padding */
-    overflow: visible; /* allow dropdown to show */
-    position: relative; /* allow absolute-positioned search button */
+    padding: 5px 5px 5px 16px; 
+    overflow: visible; 
+    position: relative; 
     box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
     width: 430px;
     max-width: 100%;
@@ -153,7 +153,7 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
 }
 
-/* Guests Wrapper and Dropdown */
+
 .nav-search-results .guests-wrapper {
     position: relative;
     display: flex;
@@ -251,7 +251,7 @@
     color: #1f2937;
 }
 
-/* Autocomplete Dropdown */
+
 .nav-search-results .autocomplete-dropdown {
     position: absolute;
     top: calc(100% + 8px);
@@ -348,13 +348,13 @@
     color: #6b7280;
 }
 
-/* Main Content */
+
 .search-results-main {
     margin-top: 70px;
     min-height: calc(100vh - 70px);
 }
 
-/* Filters Bar */
+
 .filters-bar {
     background: white;
     border-bottom: 1px solid #e5e7eb;
@@ -422,7 +422,7 @@
     color: white;
 }
 
-/* Filters Backdrop */
+
 .filters-backdrop {
     position: fixed;
     top: 0;
@@ -441,7 +441,7 @@
     visibility: visible;
 }
 
-/* Filters Panel */
+
 .filters-panel {
     position: fixed;
     top: 50%;
@@ -526,7 +526,7 @@
     color: #1f2937;
 }
 
-/* Amenities Scroll Container */
+
 .amenities-scroll-container {
     display: flex;
     gap: 0.75rem;
@@ -541,7 +541,7 @@
     display: none;
 }
 
-/* Add padding to the last amenity button so it's not cut off */
+
 .amenity-icon-btn:last-child {
     margin-right: 0.5rem;
 }
@@ -591,7 +591,7 @@
     color: white;
 }
 
-/* Toggle Buttons */
+
 .toggle-buttons {
     display: flex;
     gap: 0.75rem;
@@ -621,7 +621,7 @@
     color: white;
 }
 
-/* Price Range Slider */
+
 .price-range-display {
     display: flex;
     justify-content: space-between;
@@ -832,14 +832,14 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* Content Wrapper */
+
 .content-wrapper {
     display: flex;
     height: calc(100vh - 140px);
     position: relative;
 }
 
-/* Properties Section */
+
 .properties-section {
     flex: 1;
     overflow-y: auto;
@@ -852,12 +852,12 @@
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 1.5rem;
     max-width: 1600px;
-    /* Prevent layout shift during loading */
+    
     min-height: 400px;
     transform: translateZ(0);
 }
 
-/* Property Card */
+
 .property-card {
     background: white;
     border-radius: 16px;
@@ -890,7 +890,7 @@
     transform: translateY(-4px) translateZ(0);
 }
 
-/* Property Card Image Container */
+
 .property-card-image-container {
     position: relative;
     width: 100%;
@@ -913,7 +913,7 @@
     display: block;
 }
 
-/* Property Card Wishlist Button */
+
 .property-card-wishlist {
     position: absolute;
     top: 12px;
@@ -944,7 +944,7 @@
     stroke: #FF385C;
 }
 
-/* Property Card Arrow Buttons */
+
 .property-card-arrow {
     position: absolute;
     top: 50%;
@@ -982,7 +982,7 @@
     right: 12px;
 }
 
-/* Property Card Dot Indicators */
+
 .property-card-dots {
     position: absolute;
     bottom: 12px;
@@ -1083,7 +1083,7 @@
     color: #222;
 }
 
-/* Loading State */
+
 .loading-state {
     display: flex;
     flex-direction: column;
@@ -1113,7 +1113,7 @@
     to { transform: rotate(360deg); }
 }
 
-/* Empty State */
+
 .empty-state {
     display: flex;
     flex-direction: column;
@@ -1141,7 +1141,7 @@
     color: #6b7280;
 }
 
-/* Map Section */
+
 .map-section {
     width: 50%;
     height: 100%;
@@ -1159,7 +1159,7 @@
     height: 100%;
 }
 
-/* When map is active, adjust properties section */
+
 .content-wrapper.map-active .properties-section {
     width: 50%;
 }
@@ -1168,7 +1168,7 @@
     display: block;
 }
 
-/* Google Maps custom styling */
+
 .gm-style .gm-style-iw-c {
     border-radius: 16px;
     padding: 0 !important;
@@ -1186,7 +1186,7 @@
     display: none !important;
 }
 
-/* Map Popup Card */
+
 .map-popup {
     width: 320px;
     background: white;
@@ -1217,7 +1217,7 @@
     display: block;
 }
 
-/* Top Right Icons (Close & Wishlist) */
+
 .map-popup-top-icons {
     position: absolute;
     top: 12px;
@@ -1251,7 +1251,7 @@
     color: #222;
 }
 
-/* Wishlist heart fill on active */
+
 .map-popup-wishlist.active svg {
     fill: #FF385C;
     stroke: #FF385C;
@@ -1261,7 +1261,7 @@
     transform: scale(1.1);
 }
 
-/* Arrow Buttons */
+
 .map-popup-arrow {
     position: absolute;
     top: 50%;
@@ -1298,7 +1298,7 @@
     right: 12px;
 }
 
-/* Dot Indicators */
+
 .map-popup-dots {
     position: absolute;
     bottom: 12px;
@@ -1329,7 +1329,7 @@
     height: 8px;
 }
 
-/* Popup Content */
+
 .map-popup-content {
     padding: 14px 16px 16px 16px;
 }
@@ -1390,7 +1390,7 @@
     font-weight: 400;
 }
 
-/* Custom map marker styling */
+
 .custom-marker {
     background: white;
     border: 2px solid #648e38;
@@ -1411,7 +1411,7 @@
     z-index: 1000;
 }
 
-/* Responsive */
+
 @media (max-width: 1200px) {
     .properties-grid {
         grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
