@@ -17,22 +17,37 @@ class PropertiesManager {
     }
 
     async #init() {
+        console.log('PropertiesManager #init started');
         try {
 
             await this.supabaseClient.waitForInit();
-            
+            console.log('Supabase initialized');
+
+            console.log('1. Setting up location autocomplete...');
             this.#setupLocationAutocomplete();
+            console.log('2. Setting up date pickers...');
             this.#setupDatePickers();
+            console.log('3. Setting up guests dropdown...');
             this.#setupGuestsDropdown();
+            console.log('4. Setting up event listeners...');
             this.#setupEventListeners();
+            console.log('5. Setting up advanced filters...');
             this.#setupAdvancedFilters();
+            console.log('6. Setting up view controls...');
             this.#setupViewControls();
+            console.log('7. Setting up category tabs...');
             this.#setupCategoryTabs();
+            console.log('8. Setting up compact nav search...');
             this.#setupCompactNavSearch();
+            console.log('9. Setting up pagination...');
             this.#setupPagination();
+            console.log('10. Handling URL parameters...');
             this.#handleUrlParameters();
+            console.log('11. Loading properties...');
             this.#loadProperties();
+            console.log('12. Updating auth UI...');
             this.#updateAuthUI();
+            console.log('Initialization complete!');
         } catch (error) {
             
             this.#showError('Failed to initialize properties page. Please refresh.');
@@ -617,6 +632,8 @@ class PropertiesManager {
     }
 
     #setupCompactNavSearch() {
+        console.log('=== setupCompactNavSearch called ===');
+
         const navSearchWrap = document.getElementById('navSearchCompact');
         const compactForm = document.getElementById('compactSearchForm');
         const mainLocation = document.getElementById('location');
@@ -626,7 +643,18 @@ class PropertiesManager {
         const navGuests = document.getElementById('navGuests');
         const navbar = document.querySelector('.navbar');
 
-        if (!navSearchWrap || !compactForm || !navbar) return;
+        console.log('Elements found:', {
+            navSearchWrap: !!navSearchWrap,
+            compactForm: !!compactForm,
+            navbar: !!navbar
+        });
+
+        if (!navSearchWrap || !compactForm || !navbar) {
+            console.error('Missing required elements - exiting setup');
+            return;
+        }
+
+        console.log('All elements found - continuing setup');
 
         const syncToMain = () => {
             if (mainLocation && navLocation) mainLocation.value = navLocation.value;
@@ -667,21 +695,45 @@ class PropertiesManager {
         });
 
         const showOrHide = () => {
-
             const mainSearchBar = document.querySelector('.main-search-bar');
-            if (!mainSearchBar) return;
-            
+            if (!mainSearchBar) {
+                console.log('Main search bar not found');
+                navSearchWrap.classList.remove('is-visible');
+                navSearchWrap.setAttribute('aria-hidden', 'true');
+                return;
+            }
+
             const searchBarBottom = mainSearchBar.getBoundingClientRect().bottom;
             const navbarHeight = navbar.offsetHeight;
+            const scrollY = window.scrollY || window.pageYOffset;
 
             const shouldShow = searchBarBottom < navbarHeight;
-            
-            navSearchWrap.classList.toggle('is-visible', shouldShow);
+
+            console.log('Scroll check:', {
+                scrollY: scrollY.toFixed(0),
+                searchBarBottom: searchBarBottom.toFixed(0),
+                navbarHeight,
+                shouldShow,
+                hasClass: navSearchWrap.classList.contains('is-visible')
+            });
+
+            if (shouldShow) {
+                navSearchWrap.classList.add('is-visible');
+                navSearchWrap.setAttribute('aria-hidden', 'false');
+                console.log('SHOWING compact search');
+            } else {
+                navSearchWrap.classList.remove('is-visible');
+                navSearchWrap.setAttribute('aria-hidden', 'true');
+                console.log('HIDING compact search');
+            }
         };
 
-        showOrHide();
-        window.addEventListener('scroll', this.debounce(showOrHide, 50));
-        window.addEventListener('resize', this.debounce(showOrHide, 100));
+        setTimeout(() => {
+            showOrHide();
+        }, 100);
+
+        window.addEventListener('scroll', () => showOrHide());
+        window.addEventListener('resize', () => showOrHide());
     }
 
     #setupEventListeners() {
@@ -695,7 +747,7 @@ class PropertiesManager {
 
         const locationInput = document.getElementById('location');
         if (locationInput) {
-            locationInput.addEventListener('input', this.debounce(() => {
+            locationInput.addEventListener('input', this.#debounce(() => {
                 this.#handleSearch();
             }, 500));
         }
@@ -720,7 +772,7 @@ class PropertiesManager {
         const filterInputs = document.querySelectorAll('#advancedFilters input, #advancedFilters select');
         filterInputs.forEach(input => {
             const eventType = input.type === 'checkbox' ? 'change' : 'input';
-            input.addEventListener(eventType, this.debounce(() => {
+            input.addEventListener(eventType, this.#debounce(() => {
                 this.#handleSearch();
             }, 300));
         });
@@ -2468,14 +2520,18 @@ window.clearFilters = function() {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOMContentLoaded - pathname:', window.location.pathname);
 
     const isPropertiesPage = window.location.pathname.includes('properties.html') ||
                             window.location.pathname.endsWith('properties') ||
                             window.location.pathname.endsWith('/') ||
                             window.location.pathname.endsWith('index.html') ||
                             window.location.pathname === '/index.html';
-    
+
+    console.log('Is properties page?', isPropertiesPage);
+
     if (isPropertiesPage) {
+        console.log('Creating PropertiesManager...');
         window.propertiesManager = new PropertiesManager();
     }
 });

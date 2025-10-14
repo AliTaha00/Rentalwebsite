@@ -172,10 +172,6 @@ a:hover {
     flex-shrink: 0;
 }
 
-.nav-search-compact {
-    
-}
-
 .nav-menu {
     flex-shrink: 0;
 }
@@ -184,22 +180,26 @@ a:hover {
     margin-left: auto;
 }
 
-
 .nav-search-compact {
-    display: none;
+    display: flex;
     align-items: center;
     justify-content: center;
     position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
+    left: 40%;
+    top: 50%;
+    transform: translate(-50%, -50%);
     opacity: 0;
-    transition: opacity 0.3s ease;
-    margin-left: -80px;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+    z-index: 100;
 }
 
-.nav-search-compact.is-visible { 
-    display: flex; 
+.nav-search-compact.is-visible {
     opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translate(-50%, -50%);
 }
 
 .nav-search-form {
@@ -341,7 +341,7 @@ a:hover {
     display: flex;
     align-items: center;
     gap: 2rem;
-    margin-left: 38rem;
+    margin-left: auto;
 }
 
 .nav-auth {

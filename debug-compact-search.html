@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Compact Search</title>
+</head>
+<body>
+    <h1>Debug Compact Search Bar</h1>
+    <button onclick="runDebug()">Run Debug</button>
+    <pre id="output"></pre>
+
+    <script>
+        function runDebug() {
+            const output = document.getElementById('output');
+            let log = '';
+
+            log += '=== CHECKING ELEMENTS ===\n';
+            const navSearchCompact = document.getElementById('navSearchCompact');
+            log += `navSearchCompact exists: ${!!navSearchCompact}\n`;
+
+            const mainSearchBar = document.querySelector('.main-search-bar');
+            log += `mainSearchBar exists: ${!!mainSearchBar}\n`;
+
+            const navbar = document.querySelector('.navbar');
+            log += `navbar exists: ${!!navbar}\n`;
+
+            if (navSearchCompact) {
+                log += `\n=== navSearchCompact DETAILS ===\n`;
+                log += `Classes: ${navSearchCompact.className}\n`;
+                log += `Has is-visible: ${navSearchCompact.classList.contains('is-visible')}\n`;
+                log += `aria-hidden: ${navSearchCompact.getAttribute('aria-hidden')}\n`;
+                log += `display style: ${window.getComputedStyle(navSearchCompact).display}\n`;
+                log += `opacity style: ${window.getComputedStyle(navSearchCompact).opacity}\n`;
+                log += `visibility style: ${window.getComputedStyle(navSearchCompact).visibility}\n`;
+            }
+
+            if (mainSearchBar && navbar) {
+                log += `\n=== POSITIONING ===\n`;
+                const rect = mainSearchBar.getBoundingClientRect();
+                log += `mainSearchBar bottom: ${rect.bottom}\n`;
+                log += `navbar height: ${navbar.offsetHeight}\n`;
+                log += `shouldShow: ${rect.bottom < navbar.offsetHeight}\n`;
+                log += `Current scrollY: ${window.scrollY}\n`;
+            }
+
+            log += `\n=== CHECKING PROPERTIES MANAGER ===\n`;
+            log += `window.propertiesManager exists: ${!!window.propertiesManager}\n`;
+
+            output.textContent = log;
+        }
+    </script>
+</body>
+</html>

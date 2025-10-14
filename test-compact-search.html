@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Compact Search</title>
+    <link rel="stylesheet" href="assets/css/main.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        .test-content {
+            height: 2000px;
+            padding: 20px;
+        }
+        .hero-section {
+            height: 500px;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .main-search-bar {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .debug-info {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h2>RentThatView</h2>
+            </div>
+
+            <div class="nav-search-compact" id="navSearchCompact" aria-hidden="true">
+                <form class="nav-search-form">
+                    <div class="nav-search-seg">
+                        <input type="text" placeholder="Where to?">
+                    </div>
+                    <span class="nav-search-divider"></span>
+                    <div class="nav-search-seg">
+                        <input type="text" placeholder="Dates">
+                    </div>
+                    <span class="nav-search-divider"></span>
+                    <div class="nav-search-seg">
+                        <input type="text" placeholder="Guests">
+                    </div>
+                    <button type="submit" class="nav-search-btn">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+
+            <div class="nav-menu">
+                <a href="#" class="nav-link">Home</a>
+                <a href="#" class="nav-link">About</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="test-content">
+        <div class="hero-section">
+            <div class="main-search-bar">
+                <h2>Main Search Bar</h2>
+                <p>Scroll down to see the compact search appear in the navbar</p>
+            </div>
+        </div>
+
+        <div style="padding: 40px;">
+            <h1>Test Content</h1>
+            <p>Keep scrolling to test the compact search bar...</p>
+            <p>The compact search should appear when the main search bar scrolls out of view.</p>
+        </div>
+    </div>
+
+    <div class="debug-info" id="debugInfo"></div>
+
+    <script>
+        const navSearchWrap = document.getElementById('navSearchCompact');
+        const navbar = document.querySelector('.navbar');
+        const debugInfo = document.getElementById('debugInfo');
+
+        function updateDebug() {
+            const mainSearchBar = document.querySelector('.main-search-bar');
+            if (!mainSearchBar) {
+                debugInfo.innerHTML = 'Main search bar not found!';
+                return;
+            }
+
+            const searchBarBottom = mainSearchBar.getBoundingClientRect().bottom;
+            const navbarHeight = navbar.offsetHeight;
+            const scrollY = window.scrollY || window.pageYOffset;
+            const shouldShow = searchBarBottom < navbarHeight;
+            const hasVisibleClass = navSearchWrap.classList.contains('is-visible');
+
+            debugInfo.innerHTML = `
+                Scroll Y: ${scrollY.toFixed(0)}px<br>
+                Search Bar Bottom: ${searchBarBottom.toFixed(0)}px<br>
+                Navbar Height: ${navbarHeight}px<br>
+                Should Show: ${shouldShow}<br>
+                Has is-visible class: ${hasVisibleClass}<br>
+                Display: ${window.getComputedStyle(navSearchWrap).display}<br>
+                Opacity: ${window.getComputedStyle(navSearchWrap).opacity}<br>
+                Visibility: ${window.getComputedStyle(navSearchWrap).visibility}
+            `;
+        }
+
+        function showOrHide() {
+            const mainSearchBar = document.querySelector('.main-search-bar');
+            if (!mainSearchBar) return;
+
+            const searchBarBottom = mainSearchBar.getBoundingClientRect().bottom;
+            const navbarHeight = navbar.offsetHeight;
+            const shouldShow = searchBarBottom < navbarHeight;
+
+            if (shouldShow) {
+                navSearchWrap.classList.add('is-visible');
+                navSearchWrap.setAttribute('aria-hidden', 'false');
+            } else {
+                navSearchWrap.classList.remove('is-visible');
+                navSearchWrap.setAttribute('aria-hidden', 'true');
+            }
+
+            updateDebug();
+        }
+
+        window.addEventListener('scroll', showOrHide);
+        window.addEventListener('resize', showOrHide);
+
+        setTimeout(() => {
+            showOrHide();
+            updateDebug();
+        }, 100);
+    </script>
+</body>
+</html>
