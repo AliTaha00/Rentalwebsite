@@ -1313,7 +1313,8 @@ class PropertiesManager {
             card.addEventListener('click', (e) => {
                 if (!e.target.closest('.property-favorite')) {
                     const propertyId = card.getAttribute('data-property-id');
-                    this.#showPropertyModal(propertyId);
+                    // Navigate to property detail page
+                    window.location.href = `property-detail.html?id=${propertyId}`;
                 }
             });
 
@@ -1321,7 +1322,8 @@ class PropertiesManager {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     const propertyId = card.getAttribute('data-property-id');
-                    this.#showPropertyModal(propertyId);
+                    // Navigate to property detail page
+                    window.location.href = `property-detail.html?id=${propertyId}`;
                 }
             });
         });

@@ -1,16 +1,36 @@
 # RentThatView - Premium Property Rentals with Stunning Views
 
-RentThatView is a modern rental property platform that connects property owners with travelers seeking accommodations with beautiful views. Built with security, scalability, and user experience in mind.
+RentThatView is a modern rental property platform that connects property owners with travelers seeking accommodations with beautiful views. Built with **clean architecture**, **scalability**, and **user experience** in mind.
+
+## ✨ Latest Updates (Architecture v2.0)
+
+### 🎉 New Features
+- ✅ **Property Detail Page**: Comprehensive property viewing with image gallery, amenities, reviews, and booking
+- ✅ **Modular Component System**: Reusable PropertyCard component with lazy loading
+- ✅ **Service Layer Architecture**: Centralized PropertyService with caching
+- ✅ **Design System**: CSS variables and component library for consistent styling
+- ✅ **Enhanced Performance**: Lazy image loading, caching, and optimized queries
+
+### 📐 Architecture Improvements
+- **CSS Variables** (`_variables.css`): Design tokens for colors, spacing, typography
+- **Component Library** (`_components.css`): Reusable UI components (cards, buttons, forms, badges)
+- **PropertyCard Component**: Reusable property card with lazy loading and wishlist support
+- **PropertyService**: Centralized data operations with built-in caching (5-min TTL)
+- **Page-Specific Logic**: Modular page controllers in `/assets/js/pages/`
+
+> 📖 **Full architecture documentation**: See [ARCHITECTURE.md](./ARCHITECTURE.md)
 
 ## 🌟 Features
 
 ### Core Functionality
+- **Property Detail Pages**: Full property information with booking functionality
 - **Dual Account Types**: Separate registration flows for property owners and renters
 - **Advanced Property Search**: Filter by location, price, view type, amenities, and dates
+- **Image Gallery**: Beautiful property showcases with lazy loading
 - **Secure Authentication**: Supabase-powered auth with email verification
 - **Review System**: Built-in rating and review system for properties and users
 - **Responsive Design**: Mobile-first approach with modern, clean interface
-- **Real-time Communication**: Message system between guests and hosts
+- **Real-time Communication**: Message system between guests and hosts (schema ready)
 
 ### Security Features
 - **Row Level Security (RLS)**: Database-level security policies
@@ -19,11 +39,13 @@ RentThatView is a modern rental property platform that connects property owners 
 - **Secure File Upload**: Protected image storage with access controls
 - **Environment Configuration**: Secure API key management
 
-### Future-Ready Architecture
-- **Modular JavaScript**: Well-organized, extensible codebase
-- **Database Schema**: Comprehensive PostgreSQL schema ready for scaling
+### Production-Ready Architecture
+- **Clean Architecture**: Service layer, component system, and modular pages
+- **Reusable Components**: PropertyCard, form components, UI utilities
+- **Performance Optimized**: Lazy loading, caching, skeleton screens
+- **Design System**: CSS variables for consistent theming
+- **Comprehensive Database**: PostgreSQL schema with RLS policies
 - **Payment Integration**: Stripe-ready for secure transactions
-- **Analytics Ready**: Built-in search logging and user tracking
 - **API-First Design**: Easy integration with mobile apps or third-party services
 
 ## 🚀 Tech Stack
@@ -39,27 +61,61 @@ RentThatView is a modern rental property platform that connects property owners 
 
 ```
 Rentalwebsite/
-├── index.html                 # Homepage
-├── README.md                  # Project documentation
-├── assets/                    # Static assets
+├── index.html                      # Homepage with featured properties
+├── README.md                       # Project overview (this file)
+├── ARCHITECTURE.md                 # Detailed architecture documentation
+├── CLAUDE.md                       # Project instructions for Claude Code
+│
+├── assets/
 │   ├── css/
-│   │   ├── main.css          # Global styles and utilities
-│   │   ├── auth.css          # Authentication page styles
-│   │   └── home.css          # Homepage specific styles
+│   │   ├── _variables.css         # ✨ Design system tokens
+│   │   ├── _components.css        # ✨ Reusable UI components
+│   │   ├── main.css               # Global styles, navbar, footer
+│   │   ├── property-detail.css    # ✨ Property detail page styles
+│   │   ├── properties.css         # Property listing styles
+│   │   ├── search-results.css     # Search results styles
+│   │   ├── dashboard.css          # Dashboard styles
+│   │   ├── home.css               # Homepage styles
+│   │   └── auth.css               # Authentication pages
+│   │
 │   └── js/
-│       ├── supabase-client.js # Supabase configuration and client
-│       ├── auth.js           # Authentication utilities
-│       ├── main.js           # Global app functionality
-│       ├── home.js           # Homepage interactions
-│       ├── register.js       # Registration flow management
-│       └── login.js          # Login functionality
-├── pages/                     # Additional pages
-│   ├── login.html            # User login page
-│   ├── register.html         # User registration with account type selection
-│   └── properties.html       # Property search and listing page
-└── config/                    # Configuration and documentation
-    ├── database-schema.sql    # Complete database schema
-    └── supabase-setup.md     # Supabase setup guide
+│       ├── supabase-client.js     # Supabase SDK wrapper & auth
+│       ├── main.js                # App initialization, navigation
+│       ├── ui.js                  # Toast notifications, modals
+│       │
+│       ├── components/
+│       │   └── property-card.js   # ✨ Reusable property card
+│       │
+│       ├── services/
+│       │   └── property-service.js # ✨ Property data operations
+│       │
+│       └── pages/
+│           ├── property-detail.js  # ✨ Property detail page logic
+│           ├── properties.js       # Property listing logic
+│           ├── dashboard.js        # Dashboard logic
+│           ├── property-form.js    # Property CRUD
+│           ├── search-results.js   # Search results logic
+│           ├── auth.js             # Auth form handlers
+│           ├── login.js            # Login logic
+│           ├── register.js         # Registration logic
+│           └── home.js             # Homepage interactions
+│
+├── pages/
+│   ├── property-detail.html       # ✨ Property detail page (NEW)
+│   ├── properties.html            # Property listings
+│   ├── search-results.html        # Search results
+│   ├── owner-dashboard.html       # Owner dashboard
+│   ├── renter-dashboard.html      # Renter dashboard
+│   ├── property-form.html         # Property add/edit
+│   ├── login.html                 # Login page
+│   ├── register.html              # Registration
+│   └── about.html                 # About page
+│
+└── config/
+    ├── database-schema.sql        # Complete database schema
+    └── supabase-setup.md          # Supabase setup guide
+
+✨ = New or significantly updated in v2.0
 ```
 
 ## 🛠️ Setup Instructions
@@ -194,11 +250,19 @@ SUPABASE_ANON_KEY=your-production-anon-key
 
 ## 📈 Future Enhancements
 
-### Immediate Next Steps
-1. **Properties CSS**: Complete styling for search and listing pages
-2. **Properties JavaScript**: Implement search functionality and property display
-3. **Dashboard Pages**: Create owner and renter management interfaces
-4. **Stripe Integration**: Add secure payment processing
+### Short Term (Next Sprint)
+1. **Booking System**: Complete reservation flow with payment processing
+2. **Review Submission**: UI for guests to leave reviews
+3. **Wishlist Functionality**: Save and manage favorite properties
+4. **Image Gallery Lightbox**: Full-screen image viewer
+5. **Messaging System**: Real-time chat between guests and hosts
+
+### Medium Term
+1. **State Management**: Lightweight state management library
+2. **Client-Side Routing**: SPA-like navigation
+3. **Build System**: Vite/esbuild for bundling and optimization
+4. **TypeScript Migration**: Type safety and better developer experience
+5. **Testing Suite**: Unit and integration tests
 
 ### Long-term Features
 - Mobile application (React Native/Flutter)

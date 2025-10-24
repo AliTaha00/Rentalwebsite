@@ -887,14 +887,33 @@ class SearchResultsManager {
 
             let query = this.supabaseClient.supabase
                 .from('properties')
-                .select('*')
+                .select(`
+                    *,
+                    property_images (
+                        id,
+                        image_url,
+                        display_order
+                    )
+                `)
                 .eq('is_active', true);
 
             const { data, error } = await query;
 
             if (error) throw error;
 
-            this.properties = data || [];
+            // Process properties to extract images
+            this.properties = (data || []).map(property => {
+                // Extract images from property_images relation
+                if (property.property_images && property.property_images.length > 0) {
+                    property.images = property.property_images
+                        .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+                        .map(img => img.image_url);
+                } else {
+                    property.images = [];
+                }
+                return property;
+            });
+
             this.#filterProperties();
 
         } catch (error) {
@@ -1142,7 +1161,7 @@ class SearchResultsManager {
 
         const card = document.createElement('div');
         card.className = 'property-card';
-        card.dataset.id = property.property_id;
+        card.dataset.id = property.id;
         card.dataset.images = JSON.stringify(images);
 
         const imageContainer = document.createElement('div');
@@ -1365,7 +1384,7 @@ class SearchResultsManager {
 
             const contentDiv = document.createElement('div');
             contentDiv.className = 'map-popup';
-            contentDiv.dataset.propertyId = property.property_id;
+            contentDiv.dataset.propertyId = property.id;
 
             const imageContainer = document.createElement('div');
             imageContainer.className = 'map-popup-image-container';
@@ -1618,7 +1637,7 @@ class SearchResultsManager {
     }
 
     #viewPropertyDetails(property) {
-        window.location.href = `property-details.html?id=${property.property_id}`;
+        window.location.href = `property-detail.html?id=${property.id}`;
     }
 
     #sanitize(str) {
