@@ -232,10 +232,27 @@ class DashboardManager {
 
             const { data: wishlist, error: wishlistError } = await this.#supabaseClient.supabase
                 .from('wishlists')
-                .select('*, properties(title, city, state, base_price)')
+                .select(`
+                    id,
+                    property_id,
+                    created_at,
+                    properties (
+                        id,
+                        title,
+                        city,
+                        state,
+                        base_price,
+                        view_type
+                    )
+                `)
                 .eq('user_id', userId);
 
-            if (wishlistError) throw wishlistError;
+            if (wishlistError) {
+                console.error('Wishlist error:', wishlistError);
+                throw wishlistError;
+            }
+
+            console.log('Wishlist data fetched:', wishlist);
 
             const { data: reviews, error: reviewsError } = await this.#supabaseClient.supabase
                 .from('reviews')
@@ -1617,6 +1634,114 @@ class DashboardManager {
     }
 
     #updateWishlist(wishlist) {
+        console.log('Updating wishlist:', wishlist);
+        const wishlistGrid = document.getElementById('wishlistGrid');
+        if (!wishlistGrid) return;
+
+        if (!wishlist || wishlist.length === 0) {
+            console.log('No wishlist items found');
+            wishlistGrid.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">♥</div>
+                    <h3>No saved properties</h3>
+                    <p>Save properties you love to easily find them later.</p>
+                    <a href="../pages/properties.html" class="btn btn-primary">Browse Properties</a>
+                </div>
+            `;
+            return;
+        }
+
+        wishlistGrid.innerHTML = wishlist.map(item => {
+            console.log('Processing wishlist item:', item);
+            const property = item.properties;
+            console.log('Property data:', property);
+            if (!property) {
+                console.warn('No property data for item:', item);
+                return '';
+            }
+
+            const imageUrl = this.#getPropertyImageUrl(property.view_type);
+            return `
+                <div class="property-card-dashboard wishlist-card" data-property-id="${property.id}">
+                    <img src="${imageUrl}"
+                         alt="${property.title}"
+                         onerror="this.src='https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&auto=format&fit=crop&q=80'">
+                    <div class="property-card-content">
+                        <h4>${property.title}</h4>
+                        <p class="property-location">${property.city}, ${property.state}</p>
+                        <p class="property-price">$${property.base_price}/night</p>
+                        <div class="property-actions">
+                            <button class="btn btn-primary btn-sm view-details-btn" data-property-id="${property.id}">
+                                View Details
+                            </button>
+                            <button class="btn btn-secondary btn-sm remove-wishlist-btn" data-wishlist-id="${item.id}">
+                                Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Add event listeners to the buttons
+        this.#setupWishlistButtons();
+    }
+
+    #setupWishlistButtons() {
+        // View Details buttons
+        const viewDetailsBtns = document.querySelectorAll('.view-details-btn');
+        viewDetailsBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const propertyId = btn.getAttribute('data-property-id');
+                window.location.href = `property-detail.html?id=${propertyId}`;
+            });
+        });
+
+        // Remove buttons
+        const removeBtns = document.querySelectorAll('.remove-wishlist-btn');
+        removeBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const wishlistId = btn.getAttribute('data-wishlist-id');
+                this.removeFromWishlist(wishlistId);
+            });
+        });
+    }
+
+    async removeFromWishlist(wishlistId) {
+        try {
+            const { error } = await this.#supabaseClient.supabase
+                .from('wishlists')
+                .delete()
+                .eq('id', wishlistId);
+
+            if (error) throw error;
+
+            // Reload renter data to refresh the display
+            await this.#loadRenterData();
+
+            if (window.UI?.showToast) {
+                window.UI.showToast('Removed from saved properties', 'success');
+            }
+        } catch (error) {
+            console.error('Error removing from wishlist:', error);
+            if (window.UI?.showToast) {
+                window.UI.showToast('Failed to remove property', 'error');
+            }
+        }
+    }
+
+    #getPropertyImageUrl(viewType) {
+        const imageMap = {
+            'Mountain View': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop&q=80',
+            'Ocean View': 'https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=800&auto=format&fit=crop&q=80',
+            'City View': 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=800&auto=format&fit=crop&q=80',
+            'Lake View': 'https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=800&auto=format&fit=crop&q=80',
+            'Forest View': 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&auto=format&fit=crop&q=80',
+            'default': 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&auto=format&fit=crop&q=80'
+        };
+        return imageMap[viewType] || imageMap['default'];
     }
 
     #formatCurrency(amount, currency = 'USD') {

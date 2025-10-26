@@ -1241,10 +1241,10 @@ class PropertiesManager {
                         `<img src="${imageUrl}" alt="${property.title}" class="property-image">` :
                         `<div class="image-placeholder">Beautiful ${property.view_type} views await</div>`
                     }
-                    ${isGuestFavorite ? `<div class="property-badge">Guest favorite</div>` : ''}
+                    ${property.view_type ? `<div class="property-badge">${property.view_type}</div>` : ''}
                     <button class="property-favorite" data-property-id="${property.id}">
                         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 21s-7.5-4.8-9.6-9.6C1.5 8.6 3.1 6 6 6c1.8 0 3 .9 4 2 1-1.1 2.2-2 4-2 2.9 0 4.5 2.6 3.6 5.4C19.5 16.2 12 21 12 21z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
                         </svg>
                     </button>
                 </div>

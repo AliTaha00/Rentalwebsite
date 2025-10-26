@@ -46,12 +46,53 @@
     position: absolute;
     top: var(--spacing-sm);
     right: var(--spacing-sm);
-    background: var(--bg-primary);
-    padding: var(--spacing-xs) var(--spacing-sm);
+    background: #22c55e;
+    color: white;
+    padding: var(--spacing-xs) var(--spacing-md);
     border-radius: var(--radius-full);
     font-size: var(--font-size-xs);
     font-weight: var(--font-weight-semibold);
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+    text-transform: capitalize;
+}
+
+.wishlist-btn {
+    position: absolute;
+    top: var(--spacing-sm);
+    left: var(--spacing-sm);
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 5;
+}
+
+.wishlist-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+}
+
+.wishlist-btn.active {
+    border-color: #bbf7d0;
+    background: #fff;
+}
+
+.wishlist-btn svg {
+    width: 20px;
+    height: 20px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.wishlist-btn.active svg {
+    fill: #22c55e;
+    stroke: #22c55e;
 }
 
 .property-card-content {

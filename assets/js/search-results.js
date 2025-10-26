@@ -1189,7 +1189,7 @@ class SearchResultsManager {
         svg.setAttribute('stroke', 'white');
         svg.setAttribute('stroke-width', '2');
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', 'M16 28c7-4.733 14-10 14-17a6.98 6.98 0 0 0-7-7c-1.8 0-3.5.973-4.977 2.227L16 8.25l-2.023-2.023C12.5 4.973 10.8 4 9 4a6.98 6.98 0 0 0-7 7c0 7 7 12.267 14 17z');
+        path.setAttribute('d', 'M16 2l4.12 8.36L30 11.72l-7 6.82 1.64 9.46L16 23.77 7.36 28l1.64-9.46-7-6.82 9.88-1.36L16 2z');
         svg.appendChild(path);
         wishlistBtn.appendChild(svg);
         imageContainer.appendChild(wishlistBtn);
@@ -1258,7 +1258,7 @@ class SearchResultsManager {
         if (property.view_type) {
             const ratingDiv = document.createElement('div');
             ratingDiv.className = 'property-rating';
-            ratingDiv.textContent = `★ ${this.#sanitize(property.view_type)}`;
+            ratingDiv.textContent = this.#sanitize(property.view_type);
             header.appendChild(ratingDiv);
         }
 

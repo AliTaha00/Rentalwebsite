@@ -1126,11 +1126,13 @@
     left: 12px;
     background: #22c55e;
     color: white;
-    padding: 4px 10px;
+    padding: 6px 12px;
     border-radius: 999px;
     font-size: 12px;
     font-weight: 700;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+    text-transform: capitalize;
 }
 
 .property-favorite {
@@ -1146,7 +1148,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .property-favorite:hover {
@@ -1155,7 +1157,7 @@
 }
 
 .property-favorite.active {
-    border-color: #fecaca;
+    border-color: #bbf7d0;
     background: #fff;
 }
 
@@ -1165,11 +1167,12 @@
     fill: none;
     stroke: #111827;
     stroke-width: 2;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .property-favorite.active svg {
-    fill: #ff385c;
-    stroke: #ff385c;
+    fill: #22c55e;
+    stroke: #22c55e;
 }
 
 

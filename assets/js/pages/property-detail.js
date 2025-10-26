@@ -33,6 +33,7 @@ class PropertyDetailPage {
 
             this.render();
             this.setupEventListeners();
+            await this.checkIfSaved();
         } catch (error) {
             console.error('Error initializing property detail page:', error);
             console.error('Error details:', error.message);
@@ -363,10 +364,9 @@ class PropertyDetailPage {
         });
 
         // Save button
-        document.getElementById('saveBtn').addEventListener('click', () => {
-            if (window.UI?.showToast) {
-                window.UI.showToast('Added to wishlist!', 'success');
-            }
+        const saveBtn = document.getElementById('saveBtn');
+        saveBtn.addEventListener('click', async () => {
+            await this.toggleWishlist();
         });
     }
 
@@ -393,6 +393,95 @@ class PropertyDetailPage {
         // TODO: Navigate to booking confirmation page
         if (window.UI?.showToast) {
             window.UI.showToast('Booking feature coming soon!', 'info');
+        }
+    }
+
+    async checkIfSaved() {
+        const isAuthenticated = window.supabaseClient?.isAuthenticated();
+        if (!isAuthenticated) return;
+
+        try {
+            const user = window.supabaseClient.user;
+            if (!user) return;
+
+            const { data, error } = await window.supabaseClient.supabase
+                .from('wishlists')
+                .select('id')
+                .eq('user_id', user.id)
+                .eq('property_id', this.propertyId)
+                .single();
+
+            if (data) {
+                const saveBtn = document.getElementById('saveBtn');
+                const textSpan = saveBtn?.querySelector('span');
+                const svg = saveBtn?.querySelector('svg');
+
+                if (saveBtn) {
+                    saveBtn.classList.add('saved');
+                    if (textSpan) textSpan.textContent = 'Saved';
+                    if (svg) svg.setAttribute('fill', 'currentColor');
+                }
+            }
+        } catch (error) {
+            // Property not in wishlist, which is fine
+            console.log('Property not in wishlist');
+        }
+    }
+
+    async toggleWishlist() {
+        const isAuthenticated = window.supabaseClient?.isAuthenticated();
+        if (!isAuthenticated) {
+            if (window.UI?.showToast) {
+                window.UI.showToast('Please log in to save properties', 'info');
+            }
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 1000);
+            return;
+        }
+
+        const saveBtn = document.getElementById('saveBtn');
+        const textSpan = saveBtn?.querySelector('span');
+        const svg = saveBtn?.querySelector('svg');
+        const isSaved = saveBtn.classList.contains('saved');
+
+        try {
+            const user = window.supabaseClient.user;
+            if (!user) return;
+
+            if (isSaved) {
+                // Remove from wishlist
+                const { error } = await window.supabaseClient.supabase
+                    .from('wishlists')
+                    .delete()
+                    .eq('user_id', user.id)
+                    .eq('property_id', this.propertyId);
+
+                if (error) throw error;
+
+                saveBtn.classList.remove('saved');
+                if (textSpan) textSpan.textContent = 'Save';
+                if (svg) svg.setAttribute('fill', 'none');
+            } else {
+                // Add to wishlist
+                const { error } = await window.supabaseClient.supabase
+                    .from('wishlists')
+                    .insert({
+                        user_id: user.id,
+                        property_id: this.propertyId
+                    });
+
+                if (error) throw error;
+
+                saveBtn.classList.add('saved');
+                if (textSpan) textSpan.textContent = 'Saved';
+                if (svg) svg.setAttribute('fill', 'currentColor');
+            }
+        } catch (error) {
+            console.error('Error toggling wishlist:', error);
+            if (window.UI?.showToast) {
+                window.UI.showToast('Failed to update saved properties', 'error');
+            }
         }
     }
 
