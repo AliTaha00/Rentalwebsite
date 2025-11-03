@@ -1,0 +1,50 @@
+{
+  "name": "rentthatview",
+  "version": "1.0.0",
+  "description": "A vacation rental platform specializing in properties with exceptional views",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python -m http.server 8000",
+    "start": "python -m http.server 8000",
+    "test": "echo \"No test suite configured yet\" && exit 0",
+    "generate-env": "node scripts/generate-env.js",
+    "validate": "node scripts/validate-env.js",
+    "prepare-deploy": "npm run generate-env && npm run validate",
+    "build": "npm run validate && npm run minify",
+    "minify": "npm run minify:css && npm run minify:js",
+    "minify:css": "echo \"CSS minification - use cssnano or similar\"",
+    "minify:js": "echo \"JS minification - use terser or similar\"",
+    "deploy:vercel": "npm run prepare-deploy && vercel --prod",
+    "deploy:netlify": "npm run prepare-deploy && netlify deploy --prod"
+  },
+  "keywords": [
+    "vacation-rental",
+    "property-management",
+    "booking",
+    "supabase",
+    "vanilla-javascript"
+  ],
+  "author": "RentThatView Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/rentthatview.git"
+  },
+  "devDependencies": {
+    "cssnano": "^6.0.0",
+    "postcss": "^8.4.0",
+    "postcss-cli": "^11.0.0",
+    "terser": "^5.27.0",
+    "http-server": "^14.1.1"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "browserslist": [
+    "defaults",
+    "not IE 11",
+    "not dead"
+  ]
+}

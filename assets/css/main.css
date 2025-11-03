@@ -104,13 +104,13 @@ a:hover {
 }
 
 .btn-primary {
-    background: linear-gradient(180deg, #89d957, #5d704a, #32491b);
+    background: #6B9F4A;
     color: white;
     border-color: #648e38;
 }
 
 .btn-primary:hover {
-    background: linear-gradient(180deg, #7bc74a, #52643d, #2b3f18);
+    background: #5F9E3E;
     border-color: #5d704a;
     color: white;
     transform: translateY(-1px);
@@ -271,7 +271,7 @@ a:hover {
     align-items: center;
     justify-content: center;
     color: white;
-    background: linear-gradient(180deg, #89d957, #5d704a, #32491b);
+    background: #6B9F4A;
     cursor: pointer;
     flex-shrink: 0;
     transition: transform 0.1s ease, box-shadow 0.2s ease;
@@ -455,7 +455,7 @@ a:hover {
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #648e38, #89d957);
+    background: #6B9F4A;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -778,6 +778,21 @@ a:hover {
 
 .footer-bottom p {
     color: white !important;
+}
+
+.footer-bottom .attribution {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    opacity: 0.8;
+}
+
+.footer-bottom .attribution a {
+    color: white;
+    text-decoration: underline;
+}
+
+.footer-bottom .attribution a:hover {
+    opacity: 0.8;
 }
 
 

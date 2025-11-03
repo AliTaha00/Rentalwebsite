@@ -187,6 +187,8 @@ class RegistrationManager {
             phone: form.querySelector('#phone')?.value?.trim(),
             accountType: form.querySelector('#accountType')?.value,
             businessName: form.querySelector('#businessName')?.value?.trim(),
+            country: form.querySelector('#country')?.value?.trim(),
+            city: form.querySelector('#city')?.value?.trim(),
             address: form.querySelector('#address')?.value?.trim(),
             agreeTerms: form.querySelector('#agreeTerms')?.checked
         };
@@ -252,6 +254,19 @@ class RegistrationManager {
             return null;
         }
 
+        // Additional validation for owners
+        if (data.accountType === 'owner') {
+            if (!data.country) {
+                this.#authManager.showFieldError('country', 'Country is required for property owners');
+                return null;
+            }
+
+            if (!data.city) {
+                this.#authManager.showFieldError('city', 'City is required for property owners');
+                return null;
+            }
+        }
+
         return data;
     }
 
@@ -268,6 +283,8 @@ class RegistrationManager {
             phone: formData.phone,
             account_type: formData.accountType,
             business_name: formData.businessName || null,
+            country: formData.country || null,
+            city: formData.city || null,
             address: formData.address || null,
             email_verified: false,
             is_active: true,

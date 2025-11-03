@@ -138,7 +138,7 @@
     align-items: center;
     justify-content: center;
     color: white;
-    background: linear-gradient(180deg, #89d957, #5d704a, #32491b);
+    background: #6B9F4A;
     cursor: pointer;
     flex-shrink: 0;
     transition: transform 0.15s ease, box-shadow 0.2s ease;
