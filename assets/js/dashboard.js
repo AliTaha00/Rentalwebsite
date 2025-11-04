@@ -1609,7 +1609,7 @@ class DashboardManager {
             statusDiv.style.cssText = 'margin-top: 0.5rem; font-size: 0.85rem; color: #f39c12;';
 
             // Check if payment is needed
-            const needsPayment = !booking.payment_status || booking.payment_status === 'unpaid';
+            const needsPayment = !booking.payment_status || booking.payment_status === 'pending';
 
             if (needsPayment) {
                 statusDiv.innerHTML = '⏳ Payment Required';

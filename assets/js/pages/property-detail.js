@@ -433,7 +433,7 @@ class PropertyDetailPage {
                     cleaning_fee: cleaningFee,
                     total_amount: totalAmount,
                     status: 'pending',
-                    payment_status: 'unpaid'
+                    payment_status: 'pending'
                 })
                 .select()
                 .single();
