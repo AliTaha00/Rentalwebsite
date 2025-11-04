@@ -28,11 +28,6 @@ const REQUIRED_VARS = {
     description: 'Supabase anonymous key',
     example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
     pattern: /^eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/
-  },
-  'GOOGLE_MAPS_API_KEY': {
-    description: 'Google Maps API key',
-    example: 'AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
-    pattern: /^AIza[A-Za-z0-9_-]{35}$/
   }
 };
 
@@ -41,6 +36,10 @@ const OPTIONAL_VARS = {
   'STRIPE_PUBLISHABLE_KEY': {
     description: 'Stripe publishable key (for payment processing)',
     pattern: /^pk_(test|live)_[A-Za-z0-9]+$/
+  },
+  'GOOGLE_MAPS_API_KEY': {
+    description: 'Google Maps API key (for location search)',
+    pattern: /^AIza[A-Za-z0-9_-]{35}$/
   },
   'SENTRY_DSN': {
     description: 'Sentry DSN (for error monitoring)',

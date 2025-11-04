@@ -51,3 +51,6 @@ coverage/
 *.temp
 tmp/
 temp/
+assets/js/env.js
+PRODUCTION_DEPLOYMENT.md
+STRIPE_QUICK_REFERENCE.md
