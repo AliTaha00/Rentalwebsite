@@ -401,10 +401,18 @@ class PropertyDetailPage {
             const checkOut = new Date(this.selectedDates.checkOut);
             const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
 
-            // Calculate total price
+            // Calculate pricing
             const basePrice = parseFloat(this.property.base_price);
             const cleaningFee = parseFloat(this.property.cleaning_fee || 0);
-            const totalAmount = (basePrice * nights) + cleaningFee;
+            const baseAmount = basePrice * nights;
+            const totalAmount = baseAmount + cleaningFee;
+
+            // Get owner ID from property
+            const ownerId = this.property.owner_id;
+
+            if (!ownerId) {
+                throw new Error('Property owner information not found');
+            }
 
             // Show loading
             if (window.UI?.showToast) {
@@ -417,9 +425,12 @@ class PropertyDetailPage {
                 .insert({
                     property_id: this.propertyId,
                     guest_id: user.id,
+                    owner_id: ownerId,
                     check_in_date: this.selectedDates.checkIn,
                     check_out_date: this.selectedDates.checkOut,
                     num_guests: guestCount,
+                    base_amount: baseAmount,
+                    cleaning_fee: cleaningFee,
                     total_amount: totalAmount,
                     status: 'pending',
                     payment_status: 'unpaid'
