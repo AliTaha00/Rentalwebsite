@@ -350,21 +350,20 @@
 
     
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    
-    <script src="../config.js"></script>
-    
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../assets/js/env.js"></script>
+
     <script>
+        // Load Google Maps after env.js is loaded
         (function() {
             const script = document.createElement('script');
-            script.src = `https://maps.googleapis.com/maps/api/js?key=${APP_CONFIG.googleMaps.apiKey}&libraries=places`;
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${window.ENV.GOOGLE_MAPS_API_KEY}&libraries=places`;
             script.async = true;
             script.defer = true;
             document.head.appendChild(script);
         })();
     </script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../assets/js/env.js"></script>
     <script src="../assets/js/supabase-client.js"></script>
     <script src="../assets/js/ui.js"></script>
     <script src="../assets/js/main.js"></script>
