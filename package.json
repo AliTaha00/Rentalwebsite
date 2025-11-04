@@ -37,7 +37,10 @@
     "terser": "^5.27.0",
     "http-server": "^14.1.1"
   },
-  "dependencies": {},
+  "dependencies": {
+    "stripe": "^14.0.0",
+    "@supabase/supabase-js": "^2.39.0"
+  },
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"

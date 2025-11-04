@@ -1607,7 +1607,35 @@ class DashboardManager {
         if (booking.status === 'pending') {
             const statusDiv = document.createElement('div');
             statusDiv.style.cssText = 'margin-top: 0.5rem; font-size: 0.85rem; color: #f39c12;';
-            statusDiv.textContent = '⏳ Waiting for host approval';
+
+            // Check if payment is needed
+            const needsPayment = !booking.payment_status || booking.payment_status === 'unpaid';
+
+            if (needsPayment) {
+                statusDiv.innerHTML = '⏳ Payment Required';
+
+                // Add payment button
+                const paymentDiv = document.createElement('div');
+                paymentDiv.style.cssText = 'margin-top: 0.75rem;';
+
+                const payButton = document.createElement('button');
+                payButton.className = 'btn btn-primary';
+                payButton.style.cssText = 'padding: 0.5rem 1.5rem; font-size: 0.9rem;';
+                payButton.textContent = '💳 Pay Now';
+                payButton.addEventListener('click', async () => {
+                    if (window.stripeCheckoutManager) {
+                        await window.stripeCheckoutManager.createCheckoutSession(booking.id);
+                    } else {
+                        this.#showNotification('Payment system not available', 'error');
+                    }
+                });
+
+                paymentDiv.appendChild(payButton);
+                statusDiv.appendChild(paymentDiv);
+            } else {
+                statusDiv.textContent = '⏳ Waiting for host approval';
+            }
+
             contentDiv.appendChild(statusDiv);
         } else if (isUpcoming && booking.status === 'confirmed') {
             const statusDiv = document.createElement('div');

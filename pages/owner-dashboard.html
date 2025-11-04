@@ -6,6 +6,7 @@
     <title>Host Dashboard - RentThatView</title>
     <link rel="stylesheet" href="../assets/css/main.css">
     <link rel="stylesheet" href="../assets/css/dashboard.css">
+    <link rel="stylesheet" href="../assets/css/stripe.css">
 </head>
 <body>
     <nav class="navbar">
@@ -122,9 +123,14 @@
                 </div>
             </div>
 
-            
+            <!-- Stripe Connect Status Section -->
+            <section class="dashboard-section">
+                <div id="stripeConnectContainer"></div>
+            </section>
+
+
             <div class="dashboard-content">
-                
+
                 <section class="dashboard-section">
                     <div class="section-header">
                         <h2>My Properties</h2>
@@ -293,5 +299,15 @@
     <script src="../assets/js/ui.js"></script>
     <script src="../assets/js/main.js"></script>
     <script src="../assets/js/dashboard.js"></script>
+    <script src="../assets/js/stripe-connect.js"></script>
+    <script>
+        // Initialize Stripe Connect UI on dashboard
+        document.addEventListener('DOMContentLoaded', async () => {
+            const container = document.getElementById('stripeConnectContainer');
+            if (container && window.stripeConnectManager) {
+                await window.stripeConnectManager.renderConnectStatus(container);
+            }
+        });
+    </script>
 </body>
 </html>
