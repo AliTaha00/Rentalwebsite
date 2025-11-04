@@ -370,7 +370,7 @@ class PropertyDetailPage {
         });
     }
 
-    handleBooking() {
+    async handleBooking() {
         const isAuthenticated = window.supabaseClient?.isAuthenticated();
 
         if (!isAuthenticated) {
@@ -390,9 +390,61 @@ class PropertyDetailPage {
             return;
         }
 
-        // TODO: Navigate to booking confirmation page
-        if (window.UI?.showToast) {
-            window.UI.showToast('Booking feature coming soon!', 'info');
+        try {
+            const user = window.supabaseClient.user;
+
+            // Get guest count
+            const guestCount = parseInt(document.getElementById('guestCount')?.value || 1);
+
+            // Calculate nights
+            const checkIn = new Date(this.selectedDates.checkIn);
+            const checkOut = new Date(this.selectedDates.checkOut);
+            const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+
+            // Calculate total price
+            const basePrice = parseFloat(this.property.base_price);
+            const cleaningFee = parseFloat(this.property.cleaning_fee || 0);
+            const totalAmount = (basePrice * nights) + cleaningFee;
+
+            // Show loading
+            if (window.UI?.showToast) {
+                window.UI.showToast('Creating booking...', 'info');
+            }
+
+            // Create booking in database
+            const { data: booking, error } = await window.supabaseClient.supabase
+                .from('bookings')
+                .insert({
+                    property_id: this.propertyId,
+                    guest_id: user.id,
+                    check_in_date: this.selectedDates.checkIn,
+                    check_out_date: this.selectedDates.checkOut,
+                    num_guests: guestCount,
+                    total_amount: totalAmount,
+                    status: 'pending',
+                    payment_status: 'unpaid'
+                })
+                .select()
+                .single();
+
+            if (error) {
+                throw error;
+            }
+
+            if (window.UI?.showToast) {
+                window.UI.showToast('Booking created! Redirecting to payment...', 'success');
+            }
+
+            // Redirect to renter dashboard where they can pay
+            setTimeout(() => {
+                window.location.href = 'renter-dashboard.html';
+            }, 1500);
+
+        } catch (error) {
+            console.error('Error creating booking:', error);
+            if (window.UI?.showToast) {
+                window.UI.showToast('Failed to create booking. Please try again.', 'error');
+            }
         }
     }
 
