@@ -398,6 +398,34 @@ body {
 }
 
 /* ============================================
+   CONTACT METHODS
+============================================ */
+.contact-method {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: all var(--transition-fast);
+}
+
+.contact-method:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.contact-method svg {
+    color: var(--primary-color);
+    flex-shrink: 0;
+}
+
+/* ============================================
    REVIEWS SECTION
 ============================================ */
 .reviews-header {

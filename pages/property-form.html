@@ -224,7 +224,37 @@
                         </div>
                     </div>
 
-                    
+
+                    <h3>Contact & Booking Information</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 14px;">
+                        Provide contact information or external booking links for guests to reach you directly.
+                    </p>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="owner_phone">Contact Phone (Optional)</label>
+                            <input type="tel" id="owner_phone" placeholder="+1 (555) 123-4567" />
+                            <small>Guests will see this phone number to contact you</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="owner_email">Contact Email (Optional)</label>
+                            <input type="email" id="owner_email" placeholder="your@email.com" />
+                            <small>Guests can email you directly</small>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="external_booking_url">External Booking Link (Optional)</label>
+                            <input type="url" id="external_booking_url" placeholder="https://airbnb.com/rooms/..." />
+                            <small>Link to your listing on Airbnb, VRBO, or your own website</small>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="booking_instructions">Booking Instructions (Optional)</label>
+                        <textarea id="booking_instructions" rows="3" placeholder="Special instructions for guests on how to book or contact you"></textarea>
+                        <small>Additional guidance for guests (e.g., "Call for last-minute bookings" or "Use the external link for instant booking")</small>
+                    </div>
+
+
                     <h3>Photos</h3>
                     <div class="form-group">
                         <input type="file" id="photos" accept="image/*" multiple />

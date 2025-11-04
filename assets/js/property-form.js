@@ -118,6 +118,10 @@ class PropertyFormManager {
         set('cancellation_policy', p.cancellation_policy);
         set('check_in_time', p.check_in_time);
         set('check_out_time', p.check_out_time);
+        set('owner_phone', p.owner_phone);
+        set('owner_email', p.owner_email);
+        set('external_booking_url', p.external_booking_url);
+        set('booking_instructions', p.booking_instructions);
 
         if (Array.isArray(p.amenities)) {
             document.querySelectorAll('.amenity').forEach(cb => {
@@ -160,6 +164,10 @@ class PropertyFormManager {
             cancellation_policy: read('cancellation_policy') || 'moderate',
             check_in_time: read('check_in_time') || '15:00',
             check_out_time: read('check_out_time') || '11:00',
+            owner_phone: read('owner_phone'),
+            owner_email: read('owner_email'),
+            external_booking_url: read('external_booking_url'),
+            booking_instructions: read('booking_instructions'),
             is_active: true
         };
 

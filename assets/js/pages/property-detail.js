@@ -9,8 +9,6 @@ class PropertyDetailPage {
     constructor() {
         this.propertyId = new URLSearchParams(window.location.search).get('id');
         this.property = null;
-        this.selectedDates = { checkIn: null, checkOut: null };
-        this.flatpickrInstance = null;
 
         if (!this.propertyId) {
             this.showError();
@@ -83,7 +81,7 @@ class PropertyDetailPage {
         this.renderPropertyDetails();
         this.renderDescription();
         this.renderAmenities();
-        this.renderBookingCard();
+        this.renderContactCard();
         this.loadReviews();
     }
 
@@ -254,53 +252,80 @@ class PropertyDetailPage {
         `).join('');
     }
 
-    renderBookingCard() {
+    renderContactCard() {
         const priceAmount = document.getElementById('priceAmount');
         priceAmount.textContent = `$${this.formatPrice(this.property.base_price)}`;
 
-        // Setup date picker
-        this.flatpickrInstance = flatpickr('#dateRange', {
-            mode: 'range',
-            minDate: 'today',
-            dateFormat: 'M j',
-            onChange: (selectedDates) => {
-                if (selectedDates.length === 2) {
-                    this.selectedDates.checkIn = selectedDates[0];
-                    this.selectedDates.checkOut = selectedDates[1];
-                    this.updateBookingSummary();
-                }
+        // Render contact information
+        const contactInfo = document.getElementById('contactInfo');
+
+        const hasPhone = this.property.owner_phone;
+        const hasEmail = this.property.owner_email;
+        const hasExternalLink = this.property.external_booking_url;
+        const hasInstructions = this.property.booking_instructions;
+
+        let contactHTML = '<h3 style="font-size: 18px; margin-bottom: 16px;">Contact Owner</h3>';
+
+        if (!hasPhone && !hasEmail && !hasExternalLink) {
+            contactHTML += '<p style="color: var(--text-secondary);">Contact information not available. Please check back later.</p>';
+        } else {
+            contactHTML += '<div style="display: flex; flex-direction: column; gap: 12px;">';
+
+            if (hasPhone) {
+                contactHTML += `
+                    <a href="tel:${this.escapeHtml(this.property.owner_phone)}" class="contact-method">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                            <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/>
+                        </svg>
+                        <div>
+                            <div style="font-weight: 500;">Call</div>
+                            <div style="font-size: 14px; color: var(--text-secondary);">${this.escapeHtml(this.property.owner_phone)}</div>
+                        </div>
+                    </a>
+                `;
             }
-        });
-    }
 
-    updateBookingSummary() {
-        if (!this.selectedDates.checkIn || !this.selectedDates.checkOut) {
-            document.getElementById('bookingSummary').style.display = 'none';
-            return;
+            if (hasEmail) {
+                contactHTML += `
+                    <a href="mailto:${this.escapeHtml(this.property.owner_email)}" class="contact-method">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                        </svg>
+                        <div>
+                            <div style="font-weight: 500;">Email</div>
+                            <div style="font-size: 14px; color: var(--text-secondary);">${this.escapeHtml(this.property.owner_email)}</div>
+                        </div>
+                    </a>
+                `;
+            }
+
+            if (hasExternalLink) {
+                contactHTML += `
+                    <a href="${this.escapeHtml(this.property.external_booking_url)}" target="_blank" rel="noopener noreferrer" class="contact-method">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                            <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
+                        </svg>
+                        <div>
+                            <div style="font-weight: 500;">Book Externally</div>
+                            <div style="font-size: 14px; color: var(--text-secondary);">View on booking site</div>
+                        </div>
+                    </a>
+                `;
+            }
+
+            contactHTML += '</div>';
         }
 
-        const nights = Math.ceil((this.selectedDates.checkOut - this.selectedDates.checkIn) / (1000 * 60 * 60 * 24));
-        const basePrice = this.property.base_price;
-        const subtotal = basePrice * nights;
-        const cleaningFee = this.property.cleaning_fee || 0;
-        const serviceFee = subtotal * (this.property.service_fee_percentage || 0) / 100;
-        const total = subtotal + cleaningFee + serviceFee;
-
-        document.getElementById('nightsLabel').textContent = `$${this.formatPrice(basePrice)} x ${nights} night${nights > 1 ? 's' : ''}`;
-        document.getElementById('subtotal').textContent = `$${this.formatPrice(subtotal)}`;
-
-        if (cleaningFee > 0) {
-            document.getElementById('cleaningFeeRow').style.display = 'flex';
-            document.getElementById('cleaningFee').textContent = `$${this.formatPrice(cleaningFee)}`;
+        if (hasInstructions) {
+            contactHTML += `
+                <div style="margin-top: 16px; padding: 12px; background: var(--bg-secondary); border-radius: 8px;">
+                    <h4 style="font-size: 14px; margin-bottom: 8px; font-weight: 600;">Booking Instructions</h4>
+                    <p style="font-size: 14px; color: var(--text-secondary); margin: 0;">${this.escapeHtml(this.property.booking_instructions)}</p>
+                </div>
+            `;
         }
 
-        if (serviceFee > 0) {
-            document.getElementById('serviceFeeRow').style.display = 'flex';
-            document.getElementById('serviceFee').textContent = `$${this.formatPrice(serviceFee)}`;
-        }
-
-        document.getElementById('totalPrice').textContent = `$${this.formatPrice(total)}`;
-        document.getElementById('bookingSummary').style.display = 'block';
+        contactInfo.innerHTML = contactHTML;
     }
 
     async loadReviews() {
@@ -342,12 +367,6 @@ class PropertyDetailPage {
     }
 
     setupEventListeners() {
-        // Booking form submission
-        document.getElementById('bookingForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.handleBooking();
-        });
-
         // Share button
         document.getElementById('shareBtn').addEventListener('click', () => {
             if (navigator.share) {
@@ -368,95 +387,6 @@ class PropertyDetailPage {
         saveBtn.addEventListener('click', async () => {
             await this.toggleWishlist();
         });
-    }
-
-    async handleBooking() {
-        const isAuthenticated = window.supabaseClient?.isAuthenticated();
-
-        if (!isAuthenticated) {
-            if (window.UI?.showToast) {
-                window.UI.showToast('Please log in to make a reservation', 'info');
-            }
-            setTimeout(() => {
-                window.location.href = 'login.html';
-            }, 1000);
-            return;
-        }
-
-        if (!this.selectedDates.checkIn || !this.selectedDates.checkOut) {
-            if (window.UI?.showToast) {
-                window.UI.showToast('Please select check-in and check-out dates', 'warning');
-            }
-            return;
-        }
-
-        try {
-            const user = window.supabaseClient.user;
-
-            // Get guest count
-            const guestCount = parseInt(document.getElementById('guestCount')?.value || 1);
-
-            // Calculate nights
-            const checkIn = new Date(this.selectedDates.checkIn);
-            const checkOut = new Date(this.selectedDates.checkOut);
-            const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
-
-            // Calculate pricing
-            const basePrice = parseFloat(this.property.base_price);
-            const cleaningFee = parseFloat(this.property.cleaning_fee || 0);
-            const baseAmount = basePrice * nights;
-            const totalAmount = baseAmount + cleaningFee;
-
-            // Get owner ID from property
-            const ownerId = this.property.owner_id;
-
-            if (!ownerId) {
-                throw new Error('Property owner information not found');
-            }
-
-            // Show loading
-            if (window.UI?.showToast) {
-                window.UI.showToast('Creating booking...', 'info');
-            }
-
-            // Create booking in database
-            const { data: booking, error } = await window.supabaseClient.supabase
-                .from('bookings')
-                .insert({
-                    property_id: this.propertyId,
-                    guest_id: user.id,
-                    owner_id: ownerId,
-                    check_in_date: this.selectedDates.checkIn,
-                    check_out_date: this.selectedDates.checkOut,
-                    num_guests: guestCount,
-                    base_amount: baseAmount,
-                    cleaning_fee: cleaningFee,
-                    total_amount: totalAmount,
-                    status: 'pending',
-                    payment_status: 'pending'
-                })
-                .select()
-                .single();
-
-            if (error) {
-                throw error;
-            }
-
-            if (window.UI?.showToast) {
-                window.UI.showToast('Booking created! Redirecting to payment...', 'success');
-            }
-
-            // Redirect to renter dashboard where they can pay
-            setTimeout(() => {
-                window.location.href = 'renter-dashboard.html';
-            }, 1500);
-
-        } catch (error) {
-            console.error('Error creating booking:', error);
-            if (window.UI?.showToast) {
-                window.UI.showToast('Failed to create booking. Please try again.', 'error');
-            }
-        }
     }
 
     async checkIfSaved() {
