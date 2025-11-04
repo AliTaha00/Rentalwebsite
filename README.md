@@ -345,4 +345,4 @@ For technical issues or questions:
 
 ---
 
-**RentThatView** - Connecting travelers with unforgettable views 🏔️🌊🏙️
+**RentThatView** - Connecting travelers with unforgettable views 🏔️🌊🏙️# Deployment fix
