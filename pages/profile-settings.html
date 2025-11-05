@@ -147,6 +147,13 @@
             margin-bottom: 0.25rem;
         }
 
+        .nav-actions {
+            display: flex !important;
+            align-items: center !important;
+            gap: 1rem !important;
+            margin-left: auto !important;
+        }
+
         .nav-logout-btn {
             background: #e74c3c !important;
             color: white !important;
@@ -160,7 +167,6 @@
             font-family: inherit !important;
             letter-spacing: 0.3px !important;
             box-shadow: 0 2px 4px rgba(231, 76, 60, 0.3) !important;
-            margin-left: 1rem !important;
         }
 
         .nav-logout-btn:hover {
@@ -171,6 +177,13 @@
 
         .nav-logout-btn:active {
             transform: translateY(0) !important;
+        }
+
+        /* Ensure navbar is flexbox */
+        .nav-container {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
         }
 
         @media (max-width: 768px) {
@@ -204,7 +217,7 @@
                 <a href="../index.html" class="nav-link">Browse Properties</a>
                 <a href="about.html" class="nav-link">About</a>
             </div>
-            <div class="nav-actions" style="display: flex; align-items: center; gap: 1rem; margin-left: auto;">
+            <div class="nav-actions">
                 <button class="nav-logout-btn" id="headerLogoutBtn">
                     Logout
                 </button>
