@@ -140,8 +140,10 @@ class PropertiesManager {
                     this.#renderAutocompleteResults(dropdown, results, selectItem);
                     showDropdown();
                 } catch (error) {
-                    
-                    dropdown.innerHTML = '<div class="autocomplete-no-results">Error loading results</div>';
+                    console.error('Location search error:', error);
+                    // Show popular destinations instead of error message
+                    this.#showPopularDestinations(dropdown, selectItem);
+                    showDropdown();
                 }
             }, 300);
         });
@@ -745,16 +747,13 @@ class PropertiesManager {
             });
         }
 
-        const locationInput = document.getElementById('location');
-        if (locationInput) {
-            locationInput.addEventListener('input', this.#debounce(() => {
-                this.#handleSearch();
-            }, 500));
-        }
+        // Location input now only shows autocomplete suggestions
+        // Actual search only triggers on form submit or date changes
+        // Removed auto-search on location input to prevent unwanted searches
 
         const checkInInput = document.getElementById('checkIn');
         const checkOutInput = document.getElementById('checkOut');
-        
+
         if (checkInInput && checkOutInput) {
             checkInInput.addEventListener('change', () => this.#handleSearch());
             checkOutInput.addEventListener('change', () => this.#validateDates());

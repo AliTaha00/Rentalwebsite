@@ -6,7 +6,6 @@
     <title>Host Dashboard - RentThatView</title>
     <link rel="stylesheet" href="../assets/css/main.css">
     <link rel="stylesheet" href="../assets/css/dashboard.css">
-    <link rel="stylesheet" href="../assets/css/stripe.css">
 </head>
 <body>
     <nav class="navbar">
@@ -79,8 +78,9 @@
                     <p>Manage your properties and connect with guests from around the world</p>
                 </div>
                 <div class="quick-actions">
-                    <button class="btn btn-primary">Add New Property</button>
-                    <button class="btn btn-secondary" onclick="alert('Profile management coming soon!')">Edit Profile</button>
+                    <a href="property-form.html" class="btn btn-primary">Add New Property</a>
+                    <a href="profile-settings.html" class="btn btn-secondary">Edit Profile</a>
+                    <button class="btn btn-secondary" id="dashboardLogoutBtn" style="background: #e74c3c; border-color: #e74c3c;">Logout</button>
                 </div>
             </div>
 
@@ -123,18 +123,12 @@
                 </div>
             </div>
 
-            <!-- Stripe Connect Status Section -->
-            <section class="dashboard-section">
-                <div id="stripeConnectContainer"></div>
-            </section>
-
-
             <div class="dashboard-content">
 
                 <section class="dashboard-section">
                     <div class="section-header">
                         <h2>My Properties</h2>
-                        <button class="btn btn-primary" onclick="alert('Property creation coming soon!')">Add Property</button>
+                        <a href="property-form.html" class="btn btn-primary">Add Property</a>
                     </div>
                     <div class="properties-grid" id="propertiesGrid">
                         
@@ -299,15 +293,5 @@
     <script src="../assets/js/ui.js"></script>
     <script src="../assets/js/main.js"></script>
     <script src="../assets/js/dashboard.js"></script>
-    <script src="../assets/js/stripe-connect.js"></script>
-    <script>
-        // Initialize Stripe Connect UI on dashboard
-        document.addEventListener('DOMContentLoaded', async () => {
-            const container = document.getElementById('stripeConnectContainer');
-            if (container && window.stripeConnectManager) {
-                await window.stripeConnectManager.renderConnectStatus(container);
-            }
-        });
-    </script>
 </body>
 </html>

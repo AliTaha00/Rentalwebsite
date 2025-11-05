@@ -6,7 +6,6 @@
     <title>My Dashboard - RentThatView</title>
     <link rel="stylesheet" href="../assets/css/main.css">
     <link rel="stylesheet" href="../assets/css/dashboard.css">
-    <link rel="stylesheet" href="../assets/css/stripe.css">
 </head>
 <body>
     <nav class="navbar">
@@ -79,7 +78,8 @@
                     <p>Manage your bookings and discover new properties with amazing views</p>
                 </div>
                 <div class="quick-actions">
-                    <button class="btn btn-secondary" onclick="alert('Profile management coming soon!')">Edit Profile</button>
+                    <a href="profile-settings.html" class="btn btn-secondary">Edit Profile</a>
+                    <button class="btn btn-secondary" id="dashboardLogoutBtn" style="background: #e74c3c; border-color: #e74c3c;">Logout</button>
                 </div>
             </div>
 
@@ -215,6 +215,5 @@
     <script src="../assets/js/ui.js"></script>
     <script src="../assets/js/main.js"></script>
     <script src="../assets/js/dashboard.js"></script>
-    <script src="../assets/js/stripe-checkout.js"></script>
 </body>
 </html>

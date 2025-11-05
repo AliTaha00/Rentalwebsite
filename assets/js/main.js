@@ -186,26 +186,32 @@ class RentThatViewApp {
                 try {
                     await auth.waitForInit();
                     await auth.signOut();
-                } catch (error) {
-                    console.error('Logout error:', error.message);
-                    if (error.message?.includes('session')) {
-                        auth.user = null;
-                        auth.session = null;
+
+                    // Show success message
+                    if (window.UI?.showToast) {
+                        window.UI.showToast('Successfully logged out', 'success');
+                    }
+
+                    // Redirect to home page after brief delay
+                    setTimeout(() => {
                         const isInPages = window.location.pathname.includes('/pages/');
                         window.location.href = isInPages ? '../index.html' : '/';
-                    }
+                    }, 500);
+                } catch (error) {
+                    console.error('Logout error:', error.message);
+                    // Even if there's an error, clear session and redirect
+                    auth.user = null;
+                    auth.session = null;
+                    const isInPages = window.location.pathname.includes('/pages/');
+                    window.location.href = isInPages ? '../index.html' : '/';
                 }
             });
         }
 
         const settingsLink = document.getElementById('profileSettingsLink');
         if (settingsLink) {
-            settingsLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (window.UI?.showToast) {
-                    window.UI.showToast('Profile settings coming soon!', 'info');
-                }
-            });
+            // Settings link href is already set in HTML to profile-settings.html
+            // No need for preventDefault - let default link behavior work
         }
     }
 }
