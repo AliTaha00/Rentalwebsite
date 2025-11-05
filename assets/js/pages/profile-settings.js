@@ -142,9 +142,13 @@ class ProfileSettingsPage {
         // Header Logout Button
         const headerLogoutBtn = document.getElementById('headerLogoutBtn');
         if (headerLogoutBtn) {
+            console.log('Header logout button found and handler attached');
             headerLogoutBtn.addEventListener('click', () => {
+                console.log('Header logout button clicked');
                 this.handleLogout();
             });
+        } else {
+            console.warn('Header logout button not found');
         }
     }
 
