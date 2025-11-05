@@ -138,6 +138,32 @@ class ProfileSettingsPage {
         document.getElementById('deleteAccountBtn').addEventListener('click', () => {
             this.confirmDeleteAccount();
         });
+
+        // Header Logout Button
+        const headerLogoutBtn = document.getElementById('headerLogoutBtn');
+        if (headerLogoutBtn) {
+            headerLogoutBtn.addEventListener('click', () => {
+                this.handleLogout();
+            });
+        }
+    }
+
+    async handleLogout() {
+        try {
+            await this.supabase.auth.signOut();
+
+            // Show success message
+            this.showSuccess('Successfully logged out');
+
+            // Redirect to home page
+            setTimeout(() => {
+                window.location.href = '../index.html';
+            }, 500);
+        } catch (error) {
+            console.error('Logout error:', error);
+            // Even if error, redirect to home
+            window.location.href = '../index.html';
+        }
     }
 
     async handlePhotoUpload(event) {
