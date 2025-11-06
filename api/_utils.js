@@ -1,11 +1,5 @@
 // Shared utilities for Vercel API functions
 const { createClient } = require('@supabase/supabase-js');
-const Stripe = require('stripe');
-
-// Initialize Stripe
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-10-16',
-});
 
 // Initialize Supabase with service role key (for admin operations)
 const getSupabaseAdmin = () => {
@@ -64,7 +58,6 @@ const verifyAuth = async (req) => {
 };
 
 module.exports = {
-  stripe,
   getSupabaseAdmin,
   corsHeaders,
   handleCors,

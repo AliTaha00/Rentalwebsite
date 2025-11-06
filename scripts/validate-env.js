@@ -33,10 +33,6 @@ const REQUIRED_VARS = {
 
 // Optional environment variables
 const OPTIONAL_VARS = {
-  'STRIPE_PUBLISHABLE_KEY': {
-    description: 'Stripe publishable key (for payment processing)',
-    pattern: /^pk_(test|live)_[A-Za-z0-9]+$/
-  },
   'GOOGLE_MAPS_API_KEY': {
     description: 'Google Maps API key (for location search)',
     pattern: /^AIza[A-Za-z0-9_-]{35}$/

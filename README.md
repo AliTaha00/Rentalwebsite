@@ -45,7 +45,6 @@ RentThatView is a modern rental property platform that connects property owners 
 - **Performance Optimized**: Lazy loading, caching, skeleton screens
 - **Design System**: CSS variables for consistent theming
 - **Comprehensive Database**: PostgreSQL schema with RLS policies
-- **Payment Integration**: Stripe-ready for secure transactions
 - **API-First Design**: Easy integration with mobile apps or third-party services
 
 ## 🚀 Tech Stack
@@ -54,7 +53,6 @@ RentThatView is a modern rental property platform that connects property owners 
 - **Backend**: Supabase (PostgreSQL, Authentication, Storage)
 - **Database**: PostgreSQL with PostGIS for location features
 - **Storage**: Supabase Storage for image management
-- **Payments**: Stripe (integration ready)
 - **Deployment**: Static hosting compatible (Netlify, Vercel, GitHub Pages)
 
 ## 📁 Project Structure
@@ -230,7 +228,6 @@ All tables include comprehensive Row Level Security policies.
 ### Booking Flow (Ready for Implementation)
 1. Date selection and guest count
 2. Price calculation with fees
-3. Stripe payment processing
 4. Confirmation and communication
 
 ## 🚀 Deployment
