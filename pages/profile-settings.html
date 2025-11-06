@@ -154,7 +154,10 @@
             margin-left: auto !important;
         }
 
-        .nav-logout-btn {
+        .nav-logout-btn,
+        button.nav-logout-btn,
+        .nav-actions .nav-logout-btn,
+        button#headerLogoutBtn {
             background: #e74c3c !important;
             color: #ffffff !important;
             padding: 0.6rem 1.8rem !important;
@@ -169,23 +172,33 @@
             box-shadow: 0 2px 4px rgba(231, 76, 60, 0.3) !important;
         }
 
-        .nav-logout-btn:hover {
+        .nav-logout-btn:hover,
+        button.nav-logout-btn:hover,
+        button#headerLogoutBtn:hover {
             background: #c0392b !important;
             color: #ffffff !important;
             transform: translateY(-2px) !important;
             box-shadow: 0 4px 8px rgba(231, 76, 60, 0.4) !important;
         }
 
-        .nav-logout-btn:active {
+        .nav-logout-btn:active,
+        button#headerLogoutBtn:active {
             color: #ffffff !important;
             transform: translateY(0) !important;
         }
 
-        .nav-logout-btn:focus {
+        .nav-logout-btn:focus,
+        button#headerLogoutBtn:focus {
             color: #ffffff !important;
         }
 
-        button.nav-logout-btn {
+        .nav-logout-btn:visited,
+        button#headerLogoutBtn:visited {
+            color: #ffffff !important;
+        }
+
+        .nav-logout-btn:link,
+        button#headerLogoutBtn:link {
             color: #ffffff !important;
         }
 
@@ -228,7 +241,7 @@
                 <a href="about.html" class="nav-link">About</a>
             </div>
             <div class="nav-actions">
-                <button class="nav-logout-btn" id="headerLogoutBtn">
+                <button class="nav-logout-btn" id="headerLogoutBtn" style="color: #ffffff !important;">
                     Logout
                 </button>
             </div>
