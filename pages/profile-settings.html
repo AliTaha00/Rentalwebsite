@@ -157,49 +157,63 @@
         .nav-logout-btn,
         button.nav-logout-btn,
         .nav-actions .nav-logout-btn,
-        button#headerLogoutBtn {
+        button#headerLogoutBtn,
+        #headerLogoutBtn {
+            background-color: #e74c3c !important;
             background: #e74c3c !important;
             color: #ffffff !important;
             padding: 0.6rem 1.8rem !important;
             border-radius: 8px !important;
             border: none !important;
             cursor: pointer !important;
-            transition: all 0.3s ease !important;
+            transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease !important;
             font-weight: 600 !important;
             font-size: 0.95rem !important;
             font-family: inherit !important;
             letter-spacing: 0.3px !important;
             box-shadow: 0 2px 4px rgba(231, 76, 60, 0.3) !important;
+            -webkit-text-fill-color: #ffffff !important;
         }
 
         .nav-logout-btn:hover,
         button.nav-logout-btn:hover,
-        button#headerLogoutBtn:hover {
+        button#headerLogoutBtn:hover,
+        #headerLogoutBtn:hover {
             background: #c0392b !important;
+            background-color: #c0392b !important;
             color: #ffffff !important;
             transform: translateY(-2px) !important;
             box-shadow: 0 4px 8px rgba(231, 76, 60, 0.4) !important;
+            -webkit-text-fill-color: #ffffff !important;
         }
 
         .nav-logout-btn:active,
-        button#headerLogoutBtn:active {
+        button#headerLogoutBtn:active,
+        #headerLogoutBtn:active {
             color: #ffffff !important;
             transform: translateY(0) !important;
+            -webkit-text-fill-color: #ffffff !important;
         }
 
         .nav-logout-btn:focus,
-        button#headerLogoutBtn:focus {
+        button#headerLogoutBtn:focus,
+        #headerLogoutBtn:focus {
             color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
         }
 
         .nav-logout-btn:visited,
-        button#headerLogoutBtn:visited {
+        button#headerLogoutBtn:visited,
+        #headerLogoutBtn:visited {
             color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
         }
 
         .nav-logout-btn:link,
-        button#headerLogoutBtn:link {
+        button#headerLogoutBtn:link,
+        #headerLogoutBtn:link {
             color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
         }
 
         /* Ensure navbar is flexbox */
@@ -241,7 +255,7 @@
                 <a href="about.html" class="nav-link">About</a>
             </div>
             <div class="nav-actions">
-                <button class="nav-logout-btn" id="headerLogoutBtn" style="color: #ffffff !important;">
+                <button class="nav-logout-btn" id="headerLogoutBtn" style="color: #ffffff !important; -webkit-text-fill-color: #ffffff !important;">
                     Logout
                 </button>
             </div>
