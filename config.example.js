@@ -5,10 +5,6 @@
 const APP_CONFIG = {
     googleMaps: {
         apiKey: 'YOUR_GOOGLE_MAPS_API_KEY_HERE'
-    },
-    stripe: {
-        publishableKey: 'pk_test_YOUR_STRIPE_PUBLISHABLE_KEY_HERE',
-        // For production, use: pk_live_...
     }
 };
 

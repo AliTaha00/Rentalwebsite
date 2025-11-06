@@ -59,9 +59,7 @@
         warnings.push('SENTRY_DSN not configured - Error monitoring disabled');
       }
 
-      if (!env.STRIPE_PUBLISHABLE_KEY) {
-        warnings.push('STRIPE_PUBLISHABLE_KEY not configured - Payment functionality disabled');
-      }
+      // Stripe is not used
 
       // Display results
       if (errors.length > 0) {
