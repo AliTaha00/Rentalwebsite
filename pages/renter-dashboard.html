@@ -43,7 +43,14 @@
                         </svg>
                         <span>Dashboard</span>
                     </a>
-                    <a href="#" class="profile-dropdown-item" id="profileSettingsLink">
+                    <a href="#" class="profile-dropdown-item" data-modal-trigger="profileModal">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <span>Profile</span>
+                    </a>
+                    <a href="#" class="profile-dropdown-item" data-modal-trigger="settingsModal">
                         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="3"></circle>
                             <path d="M12 1v6m0 6v6M5.6 5.6l4.2 4.2m4.4 4.4l4.2 4.2M1 12h6m6 0h6M5.6 18.4l4.2-4.2m4.4-4.4l4.2-4.2"></path>
@@ -87,9 +94,13 @@
                     <span class="sidebar-nav-icon">📊</span>
                     <span>Dashboard</span>
                 </a>
-                <a href="profile-settings.html" class="sidebar-nav-item">
+                <a href="#" class="sidebar-nav-item" data-modal-trigger="profileModal">
                     <span class="sidebar-nav-icon">👤</span>
                     <span>My Profile</span>
+                </a>
+                <a href="#" class="sidebar-nav-item" data-modal-trigger="settingsModal">
+                    <span class="sidebar-nav-icon">⚙️</span>
+                    <span>Settings</span>
                 </a>
                 <a href="../index.html" class="sidebar-nav-item">
                     <span class="sidebar-nav-icon">🏠</span>
@@ -204,7 +215,168 @@
                 <p>&copy; 2024 RentThatView. All rights reserved.</p>
             </div>
         </div>
-    </footer>    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    </footer>
+
+    <!-- Profile Modal -->
+    <div class="dashboard-modal-overlay" id="profileModal">
+        <div class="dashboard-modal">
+            <div class="dashboard-modal-header">
+                <h2>My Profile</h2>
+                <button class="dashboard-modal-close" data-modal="profileModal">&times;</button>
+            </div>
+            <div class="dashboard-modal-body">
+                <!-- Profile Photo -->
+                <div class="modal-section">
+                    <div class="modal-profile-photo">
+                        <div class="modal-profile-avatar" id="modalProfileAvatar">
+                            <span id="modalAvatarInitials">U</span>
+                        </div>
+                        <div class="modal-profile-info">
+                            <h3 id="modalProfileName">John Doe</h3>
+                            <p>Click to update your photo</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Personal Information -->
+                <div class="modal-section">
+                    <h3 class="modal-section-title">Personal Information</h3>
+                    <form id="modalProfileForm">
+                        <div class="modal-form-row">
+                            <label for="modalFullName">Full Name</label>
+                            <input type="text" id="modalFullName" placeholder="Enter your full name">
+                        </div>
+                        <div class="modal-form-row">
+                            <label for="modalEmail">Email Address</label>
+                            <input type="email" id="modalEmail" placeholder="Enter your email" disabled>
+                            <small>Email cannot be changed. Contact support if needed.</small>
+                        </div>
+                        <div class="modal-form-row">
+                            <label for="modalPhone">Phone Number</label>
+                            <input type="tel" id="modalPhone" placeholder="+1 (555) 123-4567">
+                        </div>
+                        <div class="modal-form-row">
+                            <label for="modalBio">About Me</label>
+                            <textarea id="modalBio" rows="4" placeholder="Tell us about yourself..."></textarea>
+                            <small>This will be visible on your profile</small>
+                        </div>
+                        <div class="modal-form-actions">
+                            <button type="button" class="btn btn-secondary" data-modal="profileModal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="dashboard-modal-overlay" id="settingsModal">
+        <div class="dashboard-modal">
+            <div class="dashboard-modal-header">
+                <h2>Settings</h2>
+                <button class="dashboard-modal-close" data-modal="settingsModal">&times;</button>
+            </div>
+            <div class="dashboard-modal-body">
+                <!-- Change Password -->
+                <div class="modal-section">
+                    <h3 class="modal-section-title">Change Password</h3>
+                    <form id="modalPasswordForm">
+                        <div class="modal-form-row">
+                            <label for="modalCurrentPassword">Current Password</label>
+                            <input type="password" id="modalCurrentPassword" placeholder="Enter current password">
+                        </div>
+                        <div class="modal-form-row">
+                            <label for="modalNewPassword">New Password</label>
+                            <input type="password" id="modalNewPassword" placeholder="Enter new password">
+                        </div>
+                        <div class="modal-form-row">
+                            <label for="modalConfirmPassword">Confirm New Password</label>
+                            <input type="password" id="modalConfirmPassword" placeholder="Confirm new password">
+                        </div>
+                        <div class="modal-password-requirements">
+                            <p>Password requirements:</p>
+                            <ul>
+                                <li>At least 8 characters long</li>
+                                <li>Contains uppercase and lowercase letters</li>
+                                <li>Contains at least one number</li>
+                                <li>Contains at least one special character</li>
+                            </ul>
+                        </div>
+                        <div class="modal-form-actions">
+                            <button type="button" class="btn btn-secondary" data-modal="settingsModal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Update Password</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Notification Preferences -->
+                <div class="modal-section">
+                    <h3 class="modal-section-title">Notification Preferences</h3>
+                    <form id="modalNotificationsForm">
+                        <div class="modal-checkbox-row">
+                            <label class="modal-checkbox-label">
+                                <input type="checkbox" id="modalEmailBookings" checked>
+                                <span>Email notifications for booking requests</span>
+                            </label>
+                        </div>
+                        <div class="modal-checkbox-row">
+                            <label class="modal-checkbox-label">
+                                <input type="checkbox" id="modalEmailMessages" checked>
+                                <span>Email notifications for new messages</span>
+                            </label>
+                        </div>
+                        <div class="modal-checkbox-row">
+                            <label class="modal-checkbox-label">
+                                <input type="checkbox" id="modalEmailPromotions">
+                                <span>Receive promotional emails and updates</span>
+                            </label>
+                        </div>
+                        <div class="modal-form-actions">
+                            <button type="submit" class="btn btn-primary">Save Preferences</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Account Preferences -->
+                <div class="modal-section">
+                    <h3 class="modal-section-title">Account Preferences</h3>
+                    <form id="modalAccountPreferencesForm">
+                        <div class="modal-form-row">
+                            <label for="modalLanguage">Language</label>
+                            <select id="modalLanguage">
+                                <option value="en">English</option>
+                                <option value="es">Español</option>
+                                <option value="fr">Français</option>
+                                <option value="de">Deutsch</option>
+                            </select>
+                        </div>
+                        <div class="modal-form-row">
+                            <label for="modalCurrency">Currency</label>
+                            <select id="modalCurrency">
+                                <option value="USD">USD - US Dollar</option>
+                                <option value="EUR">EUR - Euro</option>
+                                <option value="GBP">GBP - British Pound</option>
+                                <option value="CAD">CAD - Canadian Dollar</option>
+                            </select>
+                        </div>
+                        <div class="modal-form-actions">
+                            <button type="submit" class="btn btn-primary">Save Preferences</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Delete Account -->
+                <div class="modal-section modal-danger-section">
+                    <h3 class="modal-section-title">Delete Account</h3>
+                    <p class="modal-danger-text">Once you delete your account, there is no going back. Please be certain.</p>
+                    <button type="button" class="btn btn-danger" id="modalDeleteAccountBtn">Delete My Account</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 
     <script src="../assets/js/env.js"></script>

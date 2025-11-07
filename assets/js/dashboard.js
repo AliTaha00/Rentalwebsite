@@ -1813,11 +1813,350 @@ class DashboardManager {
     }
 }
 
+// Modal Management Class
+class DashboardModalManager {
+    constructor() {
+        this.#init();
+    }
+
+    #init() {
+        this.#setupModalTriggers();
+        this.#setupModalCloseButtons();
+        this.#setupBackdropClose();
+        this.#setupFormHandlers();
+    }
+
+    #setupModalTriggers() {
+        // Handle modal trigger clicks
+        document.querySelectorAll('[data-modal-trigger]').forEach(trigger => {
+            trigger.addEventListener('click', (e) => {
+                e.preventDefault();
+                const modalId = trigger.getAttribute('data-modal-trigger');
+                this.#openModal(modalId);
+            });
+        });
+    }
+
+    #setupModalCloseButtons() {
+        // Handle close button clicks
+        document.querySelectorAll('.dashboard-modal-close, [data-modal]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const modalId = btn.getAttribute('data-modal');
+                if (modalId) {
+                    this.#closeModal(modalId);
+                } else if (btn.classList.contains('dashboard-modal-close')) {
+                    const overlay = btn.closest('.dashboard-modal-overlay');
+                    if (overlay) {
+                        this.#closeModal(overlay.id);
+                    }
+                }
+            });
+        });
+    }
+
+    #setupBackdropClose() {
+        // Close modal when clicking backdrop
+        document.querySelectorAll('.dashboard-modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    this.#closeModal(overlay.id);
+                }
+            });
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const activeModal = document.querySelector('.dashboard-modal-overlay.active');
+                if (activeModal) {
+                    this.#closeModal(activeModal.id);
+                }
+            }
+        });
+    }
+
+    #setupFormHandlers() {
+        // Profile form
+        const profileForm = document.getElementById('modalProfileForm');
+        if (profileForm) {
+            profileForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.#handleProfileSave();
+            });
+        }
+
+        // Password form
+        const passwordForm = document.getElementById('modalPasswordForm');
+        if (passwordForm) {
+            passwordForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.#handlePasswordChange();
+            });
+        }
+
+        // Notifications form
+        const notificationsForm = document.getElementById('modalNotificationsForm');
+        if (notificationsForm) {
+            notificationsForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.#handleNotificationsUpdate();
+            });
+        }
+
+        // Account preferences form
+        const accountPreferencesForm = document.getElementById('modalAccountPreferencesForm');
+        if (accountPreferencesForm) {
+            accountPreferencesForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.#handleAccountPreferencesUpdate();
+            });
+        }
+
+        // Delete account button
+        const deleteBtn = document.getElementById('modalDeleteAccountBtn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', () => {
+                this.#handleDeleteAccount();
+            });
+        }
+    }
+
+    #openModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            // Load data into modal if it's the profile modal
+            if (modalId === 'profileModal') {
+                this.#loadProfileData();
+            } else if (modalId === 'settingsModal') {
+                this.#loadSettingsData();
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    #closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    }
+
+    #loadProfileData() {
+        if (!window.supabaseClient) return;
+
+        const user = window.supabaseClient.getCurrentUser();
+        if (!user) return;
+
+        const metadata = user.user_metadata || {};
+        
+        // Full name
+        const fullName = metadata.first_name && metadata.last_name 
+            ? `${metadata.first_name} ${metadata.last_name}`
+            : metadata.firstName && metadata.lastName
+                ? `${metadata.firstName} ${metadata.lastName}`
+                : user.email?.split('@')[0] || 'User';
+
+        // Update modal fields
+        const modalFullName = document.getElementById('modalFullName');
+        const modalEmail = document.getElementById('modalEmail');
+        const modalPhone = document.getElementById('modalPhone');
+        const modalBio = document.getElementById('modalBio');
+        const modalProfileName = document.getElementById('modalProfileName');
+        const modalAvatarInitials = document.getElementById('modalAvatarInitials');
+
+        if (modalFullName) modalFullName.value = fullName;
+        if (modalEmail) modalEmail.value = user.email || '';
+        if (modalPhone) modalPhone.value = metadata.phone || '';
+        if (modalBio) modalBio.value = metadata.bio || '';
+        if (modalProfileName) modalProfileName.textContent = fullName;
+        if (modalAvatarInitials) modalAvatarInitials.textContent = fullName.charAt(0).toUpperCase();
+    }
+
+    #loadSettingsData() {
+        // Load settings from localStorage or user metadata
+        const savedLanguage = localStorage.getItem('user_language') || 'en';
+        const savedCurrency = localStorage.getItem('user_currency') || 'USD';
+
+        const modalLanguage = document.getElementById('modalLanguage');
+        const modalCurrency = document.getElementById('modalCurrency');
+
+        if (modalLanguage) modalLanguage.value = savedLanguage;
+        if (modalCurrency) modalCurrency.value = savedCurrency;
+    }
+
+    async #handleProfileSave() {
+        if (!window.supabaseClient || !window.supabaseClient.supabase) {
+            this.#showNotification('Database not configured', 'error');
+            return;
+        }
+
+        const fullName = document.getElementById('modalFullName').value.trim();
+        const phone = document.getElementById('modalPhone').value.trim();
+        const bio = document.getElementById('modalBio').value.trim();
+
+        const [firstName = '', ...lastNameParts] = fullName.split(' ');
+        const lastName = lastNameParts.join(' ');
+
+        try {
+            const user = window.supabaseClient.getCurrentUser();
+            if (!user) throw new Error('Not authenticated');
+
+            const { error } = await window.supabaseClient.supabase
+                .from('user_profiles')
+                .upsert([{
+                    user_id: user.id,
+                    first_name: firstName,
+                    last_name: lastName,
+                    phone: phone,
+                    bio: bio,
+                    updated_at: new Date().toISOString()
+                }], { onConflict: 'user_id' });
+
+            if (error) throw error;
+
+            this.#showNotification('Profile updated successfully!', 'success');
+            this.#closeModal('profileModal');
+
+            // Reload dashboard data
+            if (window.dashboardManager) {
+                window.location.reload();
+            }
+        } catch (error) {
+            console.error('Profile save error:', error);
+            this.#showNotification('Failed to save profile', 'error');
+        }
+    }
+
+    async #handlePasswordChange() {
+        if (!window.supabaseClient || !window.supabaseClient.supabase) {
+            this.#showNotification('Authentication service not available', 'error');
+            return;
+        }
+
+        const newPassword = document.getElementById('modalNewPassword').value;
+        const confirmPassword = document.getElementById('modalConfirmPassword').value;
+
+        if (newPassword !== confirmPassword) {
+            this.#showNotification('Passwords do not match', 'error');
+            return;
+        }
+
+        if (newPassword.length < 8) {
+            this.#showNotification('Password must be at least 8 characters', 'error');
+            return;
+        }
+
+        try {
+            const { error } = await window.supabaseClient.supabase.auth.updateUser({
+                password: newPassword
+            });
+
+            if (error) throw error;
+
+            this.#showNotification('Password updated successfully!', 'success');
+            document.getElementById('modalPasswordForm').reset();
+            this.#closeModal('settingsModal');
+        } catch (error) {
+            console.error('Password change error:', error);
+            this.#showNotification(error.message || 'Failed to update password', 'error');
+        }
+    }
+
+    async #handleNotificationsUpdate() {
+        if (!window.supabaseClient || !window.supabaseClient.supabase) {
+            this.#showNotification('Database not configured', 'error');
+            return;
+        }
+
+        const emailBookings = document.getElementById('modalEmailBookings').checked;
+        const emailMessages = document.getElementById('modalEmailMessages').checked;
+        const emailPromotions = document.getElementById('modalEmailPromotions').checked;
+
+        try {
+            const user = window.supabaseClient.getCurrentUser();
+            if (!user) throw new Error('Not authenticated');
+
+            const { error } = await window.supabaseClient.supabase
+                .from('user_profiles')
+                .upsert([{
+                    user_id: user.id,
+                    email_notifications: emailBookings,
+                    message_notifications: emailMessages,
+                    promotional_emails: emailPromotions,
+                    updated_at: new Date().toISOString()
+                }], { onConflict: 'user_id' });
+
+            if (error) throw error;
+
+            this.#showNotification('Notification preferences saved!', 'success');
+        } catch (error) {
+            console.error('Notifications update error:', error);
+            this.#showNotification('Failed to save preferences', 'error');
+        }
+    }
+
+    async #handleAccountPreferencesUpdate() {
+        const language = document.getElementById('modalLanguage').value;
+        const currency = document.getElementById('modalCurrency').value;
+
+        localStorage.setItem('user_language', language);
+        localStorage.setItem('user_currency', currency);
+
+        if (window.supabaseClient && window.supabaseClient.supabase) {
+            try {
+                const user = window.supabaseClient.getCurrentUser();
+                if (user) {
+                    await window.supabaseClient.supabase
+                        .from('user_profiles')
+                        .upsert([{
+                            user_id: user.id,
+                            language: language,
+                            currency: currency,
+                            updated_at: new Date().toISOString()
+                        }], { onConflict: 'user_id' });
+                }
+            } catch (error) {
+                console.error('Account preferences update error:', error);
+            }
+        }
+
+        this.#showNotification('Account preferences saved!', 'success');
+    }
+
+    async #handleDeleteAccount() {
+        const confirmed = confirm(
+            'Are you absolutely sure you want to delete your account? This action cannot be undone.\n\nAll your data will be permanently deleted.'
+        );
+
+        if (!confirmed) return;
+
+        const doubleConfirm = confirm(
+            'This is your last chance. Are you REALLY sure?'
+        );
+
+        if (!doubleConfirm) return;
+
+        this.#showNotification('Account deletion feature coming soon. Please contact support.', 'info');
+    }
+
+    #showNotification(message, type = 'info') {
+        if (window.UI && window.UI.showToast) {
+            window.UI.showToast(message, type);
+        } else {
+            alert(message);
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const isDashboardPage = window.location.pathname.includes('dashboard');
 
     if (isDashboardPage) {
         window.dashboardManager = new DashboardManager();
+        window.modalManager = new DashboardModalManager();
     }
 });
 
