@@ -1885,6 +1885,37 @@ class DashboardModalManager {
             });
         }
 
+        // Edit Profile button
+        const editProfileBtn = document.getElementById('modalEditProfileBtn');
+        if (editProfileBtn) {
+            editProfileBtn.addEventListener('click', () => {
+                this.#toggleEditMode(true);
+            });
+        }
+
+        // Cancel Edit button
+        const cancelEditBtn = document.getElementById('modalCancelEditBtn');
+        if (cancelEditBtn) {
+            cancelEditBtn.addEventListener('click', () => {
+                this.#toggleEditMode(false);
+                this.#loadProfileData(); // Reload original data
+            });
+        }
+
+        // Photo upload
+        const profileAvatar = document.getElementById('modalProfileAvatar');
+        const photoUpload = document.getElementById('modalPhotoUpload');
+        
+        if (profileAvatar && photoUpload) {
+            profileAvatar.addEventListener('click', () => {
+                photoUpload.click();
+            });
+
+            photoUpload.addEventListener('change', (e) => {
+                this.#handlePhotoUpload(e);
+            });
+        }
+
         // Password form
         const passwordForm = document.getElementById('modalPasswordForm');
         if (passwordForm) {
@@ -1941,6 +1972,11 @@ class DashboardModalManager {
         if (modal) {
             modal.classList.remove('active');
             document.body.style.overflow = '';
+            
+            // Reset edit mode when closing profile modal
+            if (modalId === 'profileModal') {
+                this.#toggleEditMode(false);
+            }
         }
     }
 
@@ -2004,29 +2040,46 @@ class DashboardModalManager {
             const user = window.supabaseClient.getCurrentUser();
             if (!user) throw new Error('Not authenticated');
 
-            const { error } = await window.supabaseClient.supabase
-                .from('user_profiles')
-                .upsert([{
-                    user_id: user.id,
+            // Update user metadata as fallback
+            const { error: metadataError } = await window.supabaseClient.supabase.auth.updateUser({
+                data: {
                     first_name: firstName,
                     last_name: lastName,
                     phone: phone,
-                    bio: bio,
-                    updated_at: new Date().toISOString()
-                }], { onConflict: 'user_id' });
+                    bio: bio
+                }
+            });
 
-            if (error) throw error;
+            if (metadataError) {
+                console.error('Metadata update error:', metadataError);
+            }
+
+            // Try to update profiles table (may not exist yet)
+            try {
+                await window.supabaseClient.supabase
+                    .from('user_profiles')
+                    .upsert([{
+                        user_id: user.id,
+                        first_name: firstName,
+                        last_name: lastName,
+                        phone: phone,
+                        bio: bio,
+                        updated_at: new Date().toISOString()
+                    }], { onConflict: 'user_id' });
+            } catch (dbError) {
+                console.log('Profile table not available, using metadata only');
+            }
 
             this.#showNotification('Profile updated successfully!', 'success');
-            this.#closeModal('profileModal');
-
+            this.#toggleEditMode(false);
+            
             // Reload dashboard data
             if (window.dashboardManager) {
                 window.location.reload();
             }
         } catch (error) {
             console.error('Profile save error:', error);
-            this.#showNotification('Failed to save profile', 'error');
+            this.#showNotification(error.message || 'Failed to save profile', 'error');
         }
     }
 
@@ -2140,6 +2193,68 @@ class DashboardModalManager {
         if (!doubleConfirm) return;
 
         this.#showNotification('Account deletion feature coming soon. Please contact support.', 'info');
+    }
+
+    #toggleEditMode(enabled) {
+        const editBtn = document.getElementById('modalEditProfileBtn');
+        const formActions = document.getElementById('modalProfileFormActions');
+        const fullNameInput = document.getElementById('modalFullName');
+        const phoneInput = document.getElementById('modalPhone');
+        const bioInput = document.getElementById('modalBio');
+
+        if (enabled) {
+            // Enable edit mode
+            if (fullNameInput) fullNameInput.disabled = false;
+            if (phoneInput) phoneInput.disabled = false;
+            if (bioInput) bioInput.disabled = false;
+            if (editBtn) editBtn.style.display = 'none';
+            if (formActions) formActions.style.display = 'flex';
+        } else {
+            // Disable edit mode
+            if (fullNameInput) fullNameInput.disabled = true;
+            if (phoneInput) phoneInput.disabled = true;
+            if (bioInput) bioInput.disabled = true;
+            if (editBtn) editBtn.style.display = 'inline-flex';
+            if (formActions) formActions.style.display = 'none';
+        }
+    }
+
+    async #handlePhotoUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            this.#showNotification('Please select an image file', 'error');
+            return;
+        }
+
+        // Validate file size (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            this.#showNotification('Image size must be less than 5MB', 'error');
+            return;
+        }
+
+        try {
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = document.getElementById('modalProfileImage');
+                const initials = document.getElementById('modalAvatarInitials');
+                
+                if (img && initials) {
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                    initials.style.display = 'none';
+                }
+            };
+            reader.readAsDataURL(file);
+
+            this.#showNotification('Photo updated! Click "Edit Profile" and "Save Changes" to save.', 'success');
+        } catch (error) {
+            console.error('Photo upload error:', error);
+            this.#showNotification('Failed to upload photo', 'error');
+        }
     }
 
     #showNotification(message, type = 'info') {

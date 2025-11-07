@@ -40,12 +40,21 @@ class RentThatViewApp {
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', (e) => {
                 const href = anchor.getAttribute('href');
-                const target = href ? document.querySelector(href) : null;
-                if (!target) return;
+                
+                // Skip if href is just "#" or empty
+                if (!href || href === '#') return;
+                
+                try {
+                    const target = document.querySelector(href);
+                    if (!target) return;
 
-                e.preventDefault();
-                const offsetTop = Math.max(0, target.offsetTop - 100);
-                window.scrollTo({ top: offsetTop, behavior: 'smooth' });
+                    e.preventDefault();
+                    const offsetTop = Math.max(0, target.offsetTop - 100);
+                    window.scrollTo({ top: offsetTop, behavior: 'smooth' });
+                } catch (error) {
+                    // Invalid selector, skip
+                    return;
+                }
             });
         });
     }

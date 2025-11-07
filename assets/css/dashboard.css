@@ -1005,6 +1005,50 @@
     flex-shrink: 0;
     position: relative;
     overflow: hidden;
+    transition: transform 0.2s ease;
+}
+
+.modal-profile-avatar:hover {
+    transform: scale(1.05);
+}
+
+.modal-profile-avatar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 1;
+}
+
+.modal-profile-avatar:hover::before {
+    opacity: 1;
+}
+
+.modal-profile-avatar::after {
+    content: 'Change\APhoto';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: white;
+    text-align: center;
+    white-space: pre;
+    line-height: 1.4;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.modal-profile-avatar:hover::after {
+    opacity: 1;
 }
 
 .modal-profile-avatar img {
