@@ -70,182 +70,119 @@
     </nav>
 
     <main class="dashboard-main">
-        <div class="container">
-            
-            <div class="dashboard-header">
-                <div class="welcome-section">
-                    <h1>Welcome, <span id="userName">Host</span>!</h1>
-                    <p>Manage your properties and connect with guests from around the world</p>
+        <!-- Sidebar -->
+        <aside class="dashboard-sidebar">
+            <!-- Profile Section -->
+            <div class="sidebar-profile">
+                <div class="sidebar-profile-avatar" id="profileAvatar">
+                    <span id="profileAvatarInitials">H</span>
                 </div>
-                <div class="quick-actions">
-                    <a href="property-form.html" class="btn btn-primary">Add New Property</a>
-                    <a href="profile-settings.html" class="btn btn-secondary">Edit Profile</a>
-                    <button class="btn btn-secondary" id="dashboardLogoutBtn" style="background: #e74c3c; border-color: #e74c3c; color: #fff;">Logout</button>
-                </div>
+                <div class="sidebar-profile-name" id="sidebarProfileName">Host</div>
+                <div class="sidebar-profile-email" id="sidebarProfileEmail">host@example.com</div>
             </div>
 
-            
-            <div class="dashboard-stats">
-                <div class="stat-card">
-                    <div class="stat-icon">🏠</div>
-                    <div class="stat-content">
-                        <h3 id="totalProperties">0</h3>
-                        <p>Active Properties</p>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">⏳</div>
-                    <div class="stat-content">
-                        <h3 id="pendingBookings">0</h3>
-                        <p>Pending Requests</p>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">📅</div>
-                    <div class="stat-content">
-                        <h3 id="activeBookings">0</h3>
-                        <p>Active Bookings</p>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">💰</div>
-                    <div class="stat-content">
-                        <h3 id="monthlyEarnings">$0</h3>
-                        <p>This Month</p>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">⭐</div>
-                    <div class="stat-content">
-                        <h3 id="averageRating">0.0</h3>
-                        <p>Average Rating</p>
-                    </div>
-                </div>
+            <!-- Navigation -->
+            <nav class="sidebar-nav">
+                <a href="owner-dashboard.html" class="sidebar-nav-item active">
+                    <span class="sidebar-nav-icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="profile-settings.html" class="sidebar-nav-item">
+                    <span class="sidebar-nav-icon">👤</span>
+                    <span>My Profile</span>
+                </a>
+                <a href="#" class="sidebar-nav-item" id="myListingsNav">
+                    <span class="sidebar-nav-icon">🏠</span>
+                    <span>My Listings</span>
+                </a>
+                <a href="#" class="sidebar-nav-item">
+                    <span class="sidebar-nav-icon">💬</span>
+                    <span>Messages</span>
+                </a>
+            </nav>
+
+            <!-- Actions -->
+            <div class="sidebar-actions">
+                <a href="property-form.html" class="sidebar-btn">List a Property</a>
+                <a href="profile-settings.html" class="sidebar-btn secondary">Settings</a>
+                <button class="sidebar-btn danger" id="dashboardLogoutBtn">Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="dashboard-content-wrapper">
+            <!-- Welcome Header -->
+            <div class="dashboard-welcome">
+                <h1>Hello, <span id="userName">Host</span>!</h1>
+                <p>Welcome back, here is an overview of your account.</p>
             </div>
 
             <div class="dashboard-content">
-
-                <section class="dashboard-section">
-                    <div class="section-header">
-                        <h2>My Properties</h2>
-                        <a href="property-form.html" class="btn btn-primary">Add Property</a>
-                    </div>
-                    <div class="properties-grid" id="propertiesGrid">
-                        
-                        <div class="empty-state">
-                            <div class="empty-icon">🏠</div>
-                            <h3>No properties listed</h3>
-                            <p>Start earning by listing your property with beautiful views.</p>
-                        <button class="btn btn-primary">List Your First Property</button>
+                <!-- Top Row: My Listings + Quick Stats -->
+                <div class="dashboard-row">
+                    <section class="dashboard-section">
+                        <div class="section-header">
+                            <h2>My Listings</h2>
+                            <a href="property-form.html" class="section-link">View All</a>
                         </div>
-                    </div>
-                </section>
-
-                
-                <section class="dashboard-section">
-                    <div class="section-header">
-                        <h2>Recent Bookings</h2>
-                        <a href="#" class="section-link">View All</a>
-                    </div>
-                    <div class="bookings-list" id="recentBookings">
-                        
-                        <div class="empty-state">
-                            <div class="empty-icon">📋</div>
-                            <h3>No bookings yet</h3>
-                            <p>Bookings from guests will appear here.</p>
-                        </div>
-                    </div>
-                </section>
-
-                
-                <section class="dashboard-section">
-                    <div class="section-header">
-                        <h2>Messages</h2>
-                        <a href="#" class="section-link">View All</a>
-                    </div>
-                    <div class="messages-list" id="recentMessages">
-                        
-                        <div class="empty-state">
-                            <div class="empty-icon">💬</div>
-                            <h3>No messages</h3>
-                            <p>Communications with guests will appear here.</p>
-                        </div>
-                    </div>
-                </section>
-
-                
-                <section class="dashboard-section">
-                    <div class="section-header">
-                        <h2>Recent Reviews</h2>
-                        <a href="#" class="section-link">View All</a>
-                    </div>
-                    <div class="reviews-list" id="recentReviews">
-                        
-                        <div class="empty-state">
-                            <div class="empty-icon">⭐</div>
-                            <h3>No reviews yet</h3>
-                            <p>Guest reviews will help build your reputation.</p>
-                        </div>
-                    </div>
-                </section>
-
-                
-                <section class="dashboard-section">
-                    <div class="section-header">
-                        <h2>Performance</h2>
-                        <a href="#" class="section-link">Detailed Analytics</a>
-                    </div>
-                    <div class="analytics-grid">
-                        <div class="analytics-card">
-                            <h4>Property Views</h4>
-                            <div class="metric">
-                                <span class="number">0</span>
-                                <span class="period">this month</span>
+                        <div class="properties-grid" id="propertiesGrid">
+                            <div class="empty-state">
+                                <div class="empty-icon">🏠</div>
+                                <h3>No properties listed</h3>
+                                <p>Start earning by listing your property with beautiful views.</p>
+                                <button class="btn btn-primary">List Your First Property</button>
                             </div>
                         </div>
-                        <div class="analytics-card">
-                            <h4>Booking Rate</h4>
-                            <div class="metric">
-                                <span class="number">0%</span>
-                                <span class="period">conversion</span>
-                            </div>
-                        </div>
-                        <div class="analytics-card">
-                            <h4>Response Time</h4>
-                            <div class="metric">
-                                <span class="number">--</span>
-                                <span class="period">avg hours</span>
-                            </div>
-                        </div>
-                        <div class="analytics-card">
-                            <h4>Occupancy</h4>
-                            <div class="metric">
-                                <span class="number">0%</span>
-                                <span class="period">this month</span>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+                    </section>
 
-                
-                <section class="dashboard-section">
+                    <section class="dashboard-section">
+                        <div class="section-header">
+                            <h2>Quick Stats</h2>
+                        </div>
+                        <div class="dashboard-stats-mini">
+                            <div class="stat-mini-card">
+                                <div class="stat-mini-label">Properties</div>
+                                <div class="stat-mini-value" id="totalProperties">0</div>
+                            </div>
+                            <div class="stat-mini-card">
+                                <div class="stat-mini-label">Pending</div>
+                                <div class="stat-mini-value" id="pendingBookings">0</div>
+                            </div>
+                            <div class="stat-mini-card">
+                                <div class="stat-mini-label">Active</div>
+                                <div class="stat-mini-value" id="activeBookings">0</div>
+                            </div>
+                            <div class="stat-mini-card">
+                                <div class="stat-mini-label">This Month</div>
+                                <div class="stat-mini-value" id="monthlyEarnings">$0</div>
+                            </div>
+                            <div class="stat-mini-card">
+                                <div class="stat-mini-label">Rating</div>
+                                <div class="stat-mini-value" id="averageRating">0.0</div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Full Width: Booking Requests -->
+                <section class="dashboard-section dashboard-full-width">
                     <div class="section-header">
-                        <h3>Booking Requests</h3>
+                        <h2>Booking Requests</h2>
                     </div>
                     <div class="section-content" id="bookingRequestsContainer">
                         
                     </div>
                 </section>
 
-                
-                <section class="dashboard-section">
+                <!-- Full Width: Availability Calendar -->
+                <section class="dashboard-section dashboard-full-width">
                     <div class="section-header">
-                        <h3>Availability Calendar</h3>
+                        <h2>Availability Calendar</h2>
                         <div class="calendar-controls">
-                            <select id="calendarPropertySelect" style="margin-right: 1rem; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                            <select id="calendarPropertySelect" style="padding: 0.5rem; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 0.9375rem;">
                                 <option value="">Select a property...</option>
                             </select>
-                            <button class="btn btn-primary" id="bulkAvailabilityBtn" disabled>Bulk Update</button>
+                            <button class="btn btn-primary" id="bulkAvailabilityBtn" disabled style="background: #10b981; border-color: #10b981;">Bulk Update</button>
                         </div>
                     </div>
                     <div class="section-content" id="availabilityCalendarContainer">

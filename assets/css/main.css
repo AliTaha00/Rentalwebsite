@@ -104,17 +104,17 @@ a:hover {
 }
 
 .btn-primary {
-    background: #6B9F4A;
+    background: #10b981;
     color: white;
-    border-color: #648e38;
+    border-color: #10b981;
 }
 
 .btn-primary:hover {
-    background: #5F9E3E;
-    border-color: #5d704a;
+    background: #059669;
+    border-color: #059669;
     color: white;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(100, 142, 56, 0.3);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .btn-secondary {

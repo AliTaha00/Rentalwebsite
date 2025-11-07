@@ -105,13 +105,42 @@ class DashboardManager {
     }
 
     #updateUserNameDisplay(user) {
+        const firstName = user.user_metadata?.first_name ||
+                        user.user_metadata?.firstName ||
+                        user.email?.split('@')[0] ||
+                        'User';
+        
+        const sanitizedName = this.#sanitize(firstName);
+        const email = user.email || 'user@example.com';
+        
+        // Update main userName if it exists
         const userNameElement = document.getElementById('userName');
         if (userNameElement) {
-            const firstName = user.user_metadata?.first_name ||
-                            user.user_metadata?.firstName ||
-                            user.email?.split('@')[0] ||
-                            'User';
-            userNameElement.textContent = this.#sanitize(firstName);
+            userNameElement.textContent = sanitizedName;
+        }
+        
+        // Update sidebar userName (old layout)
+        const userNameSidebarElement = document.getElementById('userNameSidebar');
+        if (userNameSidebarElement) {
+            userNameSidebarElement.textContent = sanitizedName;
+        }
+        
+        // Update sidebar profile (new layout)
+        const sidebarProfileName = document.getElementById('sidebarProfileName');
+        if (sidebarProfileName) {
+            sidebarProfileName.textContent = sanitizedName;
+        }
+        
+        const sidebarProfileEmail = document.getElementById('sidebarProfileEmail');
+        if (sidebarProfileEmail) {
+            sidebarProfileEmail.textContent = this.#sanitize(email);
+        }
+        
+        // Update profile avatar initials
+        const initials = sanitizedName.charAt(0).toUpperCase();
+        const profileAvatarInitials = document.getElementById('profileAvatarInitials');
+        if (profileAvatarInitials) {
+            profileAvatarInitials.textContent = initials;
         }
     }
 
@@ -130,9 +159,18 @@ class DashboardManager {
 
             this.#userProfile = data;
 
-            const userNameElement = document.getElementById('userName');
-            if (userNameElement && data.first_name) {
-                userNameElement.textContent = this.#sanitize(data.first_name);
+            if (data.first_name) {
+                const sanitizedName = this.#sanitize(data.first_name);
+                
+                const userNameElement = document.getElementById('userName');
+                if (userNameElement) {
+                    userNameElement.textContent = sanitizedName;
+                }
+                
+                const userNameSidebarElement = document.getElementById('userNameSidebar');
+                if (userNameSidebarElement) {
+                    userNameSidebarElement.textContent = sanitizedName;
+                }
             }
 
         } catch (error) {
@@ -1439,7 +1477,7 @@ class DashboardManager {
             const em = document.createElement('em');
             em.textContent = 'No bookings yet. ';
             const a = document.createElement('a');
-            a.href = 'properties.html';
+            a.href = '../index.html';
             a.textContent = 'Browse properties';
             const text = document.createTextNode(' to make your first booking!');
             p.appendChild(em);
@@ -1651,7 +1689,7 @@ class DashboardManager {
                     <div class="empty-icon">♥</div>
                     <h3>No saved properties</h3>
                     <p>Save properties you love to easily find them later.</p>
-                    <a href="../pages/properties.html" class="btn btn-primary">Browse Properties</a>
+                    <a href="../index.html" class="btn btn-primary">Browse Properties</a>
                 </div>
             `;
             return;
