@@ -70,109 +70,106 @@
     </nav>
 
     <main class="dashboard-main">
-        <div class="container">
-            
-            <div class="dashboard-header">
-                <div class="welcome-section">
-                    <h1>Welcome back, <span id="userName">Guest</span>!</h1>
-                    <p>Manage your bookings and discover new properties with amazing views</p>
+        <!-- Sidebar -->
+        <aside class="dashboard-sidebar">
+            <!-- Profile Section -->
+            <div class="sidebar-profile">
+                <div class="sidebar-profile-avatar" id="profileAvatar">
+                    <span id="profileAvatarInitials">U</span>
                 </div>
-                <div class="quick-actions">
-                    <a href="profile-settings.html" class="btn btn-secondary">Edit Profile</a>
-                    <button class="btn btn-secondary" id="dashboardLogoutBtn" style="background: #e74c3c; border-color: #e74c3c; color: #fff;">Logout</button>
-                </div>
+                <div class="sidebar-profile-name" id="sidebarProfileName">Guest</div>
+                <div class="sidebar-profile-email" id="sidebarProfileEmail">user@example.com</div>
             </div>
 
-            
-            <div class="dashboard-stats">
-                <div class="stat-card">
-                    <div class="stat-icon">📅</div>
-                    <div class="stat-content">
-                        <h3 id="upcomingBookings">0</h3>
-                        <p>Upcoming Trips</p>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">✈️</div>
-                    <div class="stat-content">
-                        <h3 id="completedBookings">0</h3>
-                        <p>Completed Trips</p>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">♥</div>
-                    <div class="stat-content">
-                        <h3 id="wishlistCount">0</h3>
-                        <p>Saved Properties</p>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon">⭐</div>
-                    <div class="stat-content">
-                        <h3 id="reviewsGiven">0</h3>
-                        <p>Reviews Given</p>
-                    </div>
-                </div>
+            <!-- Navigation -->
+            <nav class="sidebar-nav">
+                <a href="renter-dashboard.html" class="sidebar-nav-item active">
+                    <span class="sidebar-nav-icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="profile-settings.html" class="sidebar-nav-item">
+                    <span class="sidebar-nav-icon">👤</span>
+                    <span>My Profile</span>
+                </a>
+                <a href="../index.html" class="sidebar-nav-item">
+                    <span class="sidebar-nav-icon">🏠</span>
+                    <span>Browse Properties</span>
+                </a>
+                <a href="#" class="sidebar-nav-item" id="savedPropertiesNav">
+                    <span class="sidebar-nav-icon">❤️</span>
+                    <span>Saved Properties</span>
+                </a>
+                <a href="#" class="sidebar-nav-item">
+                    <span class="sidebar-nav-icon">💬</span>
+                    <span>Messages</span>
+                </a>
+            </nav>
+
+            <!-- Actions -->
+            <div class="sidebar-actions">
+                <a href="profile-settings.html" class="sidebar-btn secondary">Settings</a>
+                <button class="sidebar-btn danger" id="dashboardLogoutBtn">Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="dashboard-content-wrapper">
+            <!-- Welcome Header -->
+            <div class="dashboard-welcome">
+                <h1>Hello, <span id="userName">Guest</span>!</h1>
+                <p>Welcome back, here is an overview of your account.</p>
             </div>
 
-            
             <div class="dashboard-content">
-                
-                <section class="dashboard-section">
-                    <div class="section-header">
-                        <h2>My Bookings</h2>
-                        <a href="properties.html" class="section-link">Book New Trip</a>
-                    </div>
-                    <div class="section-content" id="renterBookingsContainer">
-                        
-                    </div>
-                </section>
-
-                
-                <section class="dashboard-section">
-                    <div class="section-header">
-                        <h2>Recent Activity</h2>
-                        <a href="#" class="section-link">View All</a>
-                    </div>
-                    <div class="activity-list" id="recentActivity">
-                        
-                        <div class="empty-state">
-                            <div class="empty-icon">📋</div>
-                            <h3>No recent activity</h3>
-                            <p>Your booking history and activity will appear here.</p>
+                <!-- Top Row: My Bookings + Stats -->
+                <div class="dashboard-row">
+                    <section class="dashboard-section">
+                        <div class="section-header">
+                            <h2>My Bookings</h2>
+                            <a href="../index.html" class="section-link">View All</a>
                         </div>
-                    </div>
-                </section>
+                        <div class="section-content" id="renterBookingsContainer">
+                            <!-- Bookings will be loaded here -->
+                        </div>
+                    </section>
 
-                
-                <section class="dashboard-section">
+                    <section class="dashboard-section">
+                        <div class="section-header">
+                            <h2>Quick Stats</h2>
+                        </div>
+                        <div class="dashboard-stats-mini">
+                            <div class="stat-mini-card">
+                                <div class="stat-mini-label">Upcoming Trips</div>
+                                <div class="stat-mini-value" id="upcomingBookings">0</div>
+                            </div>
+                            <div class="stat-mini-card">
+                                <div class="stat-mini-label">Completed</div>
+                                <div class="stat-mini-value" id="completedBookings">0</div>
+                            </div>
+                            <div class="stat-mini-card">
+                                <div class="stat-mini-label">Saved</div>
+                                <div class="stat-mini-value" id="wishlistCount">0</div>
+                            </div>
+                            <div class="stat-mini-card">
+                                <div class="stat-mini-label">Reviews</div>
+                                <div class="stat-mini-value" id="reviewsGiven">0</div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Full Width: Saved Properties -->
+                <section class="dashboard-section dashboard-full-width">
                     <div class="section-header">
                         <h2>Saved Properties</h2>
-                        <a href="#" class="section-link">Manage Wishlist</a>
+                        <a href="#" class="section-link">View All</a>
                     </div>
                     <div class="wishlist-grid" id="wishlistGrid">
-                        
                         <div class="empty-state">
                             <div class="empty-icon">♥</div>
                             <h3>No saved properties</h3>
                             <p>Save properties you love to easily find them later.</p>
-                            <a href="properties.html" class="btn btn-primary">Browse Properties</a>
-                        </div>
-                    </div>
-                </section>
-
-                
-                <section class="dashboard-section">
-                    <div class="section-header">
-                        <h2>Past Trips</h2>
-                        <a href="#" class="section-link">View All</a>
-                    </div>
-                    <div class="bookings-grid" id="pastBookingsGrid">
-                        
-                        <div class="empty-state">
-                            <div class="empty-icon">📸</div>
-                            <h3>No past trips yet</h3>
-                            <p>Your travel memories will be saved here.</p>
+                            <a href="../index.html" class="btn btn-primary">Browse Properties</a>
                         </div>
                     </div>
                 </section>
@@ -189,7 +186,7 @@
                 </div>
                 <div class="footer-section">
                     <h4>For Guests</h4>
-                    <a href="properties.html">Browse Properties</a>
+                    <a href="../index.html">Browse Properties</a>
                     <a href="#support">Support</a>
                 </div>
                 <div class="footer-section">
