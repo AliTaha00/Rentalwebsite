@@ -62,6 +62,7 @@ test-properties-data.sql
 
 # Claude Code instructions
 CLAUDE.md
+.claude/
 
 # Internal dev notes
 DASHBOARD_REDESIGN.md
