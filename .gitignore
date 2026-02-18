@@ -60,6 +60,9 @@ complete-supabase-schema.sql
 supabase-storage-policies.sql
 test-properties-data.sql
 
+# Claude Code instructions
+CLAUDE.md
+
 # Internal dev notes
 DASHBOARD_REDESIGN.md
 QUICK_FIX.md
