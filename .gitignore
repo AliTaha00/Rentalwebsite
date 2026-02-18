@@ -64,6 +64,10 @@ test-properties-data.sql
 CLAUDE.md
 .claude/
 
+# Internal config/setup docs
+config/supabase-setup.md
+config/database-schema.sql
+
 # Internal dev notes
 DASHBOARD_REDESIGN.md
 QUICK_FIX.md
