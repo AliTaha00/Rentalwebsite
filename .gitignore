@@ -54,3 +54,17 @@ temp/
 assets/js/env.js
 PRODUCTION_DEPLOYMENT.md
 STRIPE_QUICK_REFERENCE.md
+
+# Loose SQL files in root (schema lives in config/)
+complete-supabase-schema.sql
+supabase-storage-policies.sql
+test-properties-data.sql
+
+# Internal dev notes
+DASHBOARD_REDESIGN.md
+QUICK_FIX.md
+IMPLEMENTATION_SUMMARY.md
+PROFILE_SETTINGS_SPLIT.md
+CONFIG_SETUP.md
+GOOGLE_MAPS_SETUP.md
+TROUBLESHOOTING.md
